@@ -1,0 +1,39 @@
+STRIPS OF 4 ROWS
+----------------
+Strips of 4 rows of valid content, so each final 8x8 tile will have half content as transparent pixels.
+Even strips have 4 bottom rows of transparent pixels.
+Odd strips have 4 top rows of transparent pixels.
+	magick titan256c.png -unique -depth 8 -colors 256 -crop x4 -define png:format=png8 -define histogram:unique-colors=false titan_%d.png
+	for /f "eol=: delims=" %F in ('dir /b /a-d titan_*.png^|findstr /irc:"[02468]\.png$"') do ^
+		magick "%F" -depth 8 -colors 256 -define png:format=png8 -background transparent -gravity south -splice 0x4 "%F"
+	for /f "eol=: delims=" %F in ('dir /b /a-d titan_*.png^|findstr /irc:"[13579]\.png$"') do ^
+		magick "%F" -depth 8 -colors 256 -define png:format=png8 -background transparent -gravity north -splice 0x4 "%F"
+	magick titan256c.png -unique -depth 8 -colors 256 -crop 8x2 -define png:format=png8 -define histogram:unique-colors=false tiles_to_count_%d.png
+    magick identify -format "%k\n" tiles_to_count_*.png >> count.txt
+    del /f /q tiles_to_count_*.png
+
+
+Post procesing for SGDK usage (NOT USED)
+----------------------------------------
+After using the commands, each generated image has its own palette. 
+We need to add at the beginning of each palette a "transparent" first color, mandatory by the SGDK. 
+We will use black (000). No matter if it's already used in the image.
+	Create a black 320x1 png image
+		magick -size 320x1 xc:black -depth 8 -colors 256 -define png:format=png8 black_row.png
+	Append the black_row image as a top row
+		magick -depth 8 -define png:format=png8 black_row.png input.png -append output_blackrow.png
+	Remove the top black row
+		convert output_blackrow.png -depth 8 -define png:preserve-colormap=true +repage -gravity north -crop +0+1 output.png
+		(this ends up adding a white color at the end of the palette because we can not use png:format=png8 and +repage)
+	Finally run next LUA script using Aseprite command tool to remove trailing white color in palette and black color if transparent background is used
+		aseprite -b input.png --script remove_unwanted_colors.lua
+
+
+All commands I used on titan256.png to generate the chunks
+----------------------------------------------------------
+	magick titan256c.png -unique -depth 8 -colors 256 -crop x4 -define png:format=png8 -define histogram:unique-colors=false titan_%d.png
+	FOR /L %i IN (0,1,55) DO magick -depth 8 -define png:format=png8 black_row.png titan_%i.png -append titan_%i_blackrow.png
+	FOR /L %i IN (0,1,55) DO convert titan_%i_blackrow.png -depth 8 -define png:preserve-colormap=true +repage -gravity north -crop +0+1 titan_%i.png
+		(this ends up adding a white color at the end of the palette because we can not use png:format=png8 and +repage)
+	DEL /F titan_*_blackrow.png
+	FOR /L %i IN (0,1,55) do (aseprite -b titan_%i.png --script remove_unwanted_colors.lua & ping 127.0.0.1 -n 1 -w 50 > nul)
