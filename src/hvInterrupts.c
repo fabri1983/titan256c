@@ -287,7 +287,6 @@ HINTERRUPT_CALLBACK horizIntOnTitan256cCallback_EveryN_DMA () {
     palCmdForDMA = palIdx == 0 ? 0xC0140080 : 0xC0540080;
 
     waitHCounter(134);
-    // SCANLINE 4 starts (few pixels ahead)
 
     setupDMAForPals(TITAN_256C_COLORS_PER_STRIP/3, fromAddrForDMA);
 
