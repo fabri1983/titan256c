@@ -99,15 +99,17 @@ static u16* currGradPtr;
 void vertIntOnTitan256cCallback_HIntEveryN () {
     titan256cPalsPtr = getUnpackedPtr() + 2 * TITAN_256C_COLORS_PER_STRIP;
     palIdx = 0;
+    VDP_setAutoInc(2); // Needed for DMA of colors in u32 type
 }
 
 void vertIntOnTitan256cCallback_HIntOneTime () {
     VDP_setHIntCounter(0);
     titan256cPalsPtr = getUnpackedPtr() + 2 * TITAN_256C_COLORS_PER_STRIP;
     palIdx = 0;
+    VDP_setAutoInc(2); // Needed for DMA of colors in u32 type
 }
 
-HINTERRUPT_CALLBACK horizIntOnTitan256cCallback_EveryN_CPU () {
+HINTERRUPT_CALLBACK horizIntOnTitan256cCallback_CPU_EveryN () {
 
     u16 vcounter = GET_VCOUNTER;
     // At strip 21 (0 based) titan chars appears. Chars color will be updated every 4 scanlines inside HInt.
@@ -134,110 +136,113 @@ HINTERRUPT_CALLBACK horizIntOnTitan256cCallback_EveryN_CPU () {
     */
 
     u32 cmdBaseAddress = (palIdx == 0) ? 0xC0000000 : 0xC0400000;
-    const u32 offset = 0x80000;
+    //u32 offset = 0x80000;
     u32 cmdAddress = cmdBaseAddress;
-    u16 gradColor_A = *currGradPtr * setPalBGGradientForChars;
-    u16 gradColor_B = *(currGradPtr + 1) * setPalBGGradientForChars;
+    u16 bgColor;
     u32 colors2_A;
     u32 colors2_B;
 
-    palIdx ^= 32; // cycles between 0 and 32
-    //palIdx = palIdx == 0 ? 32 : 0;
-    //palIdx = (palIdx + 32) & 63; // (palIdx + 32) % 64 => x mod y = x & (y-1) when y is power of 2
-
-    currGradPtr += setPalBGGradientForChars * 2; // advance 2 colors if condition is met
-
-    //VDP_setAutoInc(2); // needed for moving of colors in u32 type (but likely is already set)
-
-    u8 reg01 = VDP_getReg(0x01); // Holds current VDP register 1 value (it holds other bits than VDP ON/OFF status)
+    // Value under current conditions is always 116
+    //u8 reg01 = VDP_getReg(0x01); // Holds current VDP register 1 value (it holds other bits than VDP ON/OFF status)
 
     colors2_A = *((u32*) (titan256cPalsPtr + 0)); // 2 colors
     colors2_B = *((u32*) (titan256cPalsPtr + 2)); // next 2 colors
+    bgColor = *(currGradPtr + 0);
     waitHCounter(157);
-    turnOffVDP(reg01);
+    turnOffVDP(116);
     *((vu32*) VDP_CTRL_PORT) = cmdAddress;
     *((vu32*) VDP_DATA_PORT) = colors2_A;
     *((vu32*) VDP_DATA_PORT) = colors2_B;
         *((vu32*) VDP_CTRL_PORT) = 0xC0000000; // VDP_WRITE_CRAM_ADDR(0): write to CRAM color index 0 multiplied by 2
-        *((vu16*) VDP_DATA_PORT) = gradColor_A;
-    turnOnVDP(reg01);
+        *((vu16*) VDP_DATA_PORT) = bgColor;
+    turnOnVDP(116);
 
     colors2_A = *((u32*) (titan256cPalsPtr + 4)); // 2 colors
     colors2_B = *((u32*) (titan256cPalsPtr + 6)); // next 2 colors
-    cmdAddress += offset;
+    cmdAddress += 0x80000;
     waitHCounter(157);
-    turnOffVDP(reg01);
+    turnOffVDP(116);
     *((vu32*) VDP_CTRL_PORT) = cmdAddress;
     *((vu32*) VDP_DATA_PORT) = colors2_A;
     *((vu32*) VDP_DATA_PORT) = colors2_B;
-    turnOnVDP(reg01);
+    turnOnVDP(116);
 
     colors2_A = *((u32*) (titan256cPalsPtr + 8)); // 2 colors
     colors2_B = *((u32*) (titan256cPalsPtr + 10)); // next 2 colors
-    cmdAddress += offset;
+    cmdAddress += 0x80000;
     waitHCounter(157);
-    turnOffVDP(reg01);
+    turnOffVDP(116);
     *((vu32*) VDP_CTRL_PORT) = cmdAddress;
     *((vu32*) VDP_DATA_PORT) = colors2_A;
     *((vu32*) VDP_DATA_PORT) = colors2_B;
-    turnOnVDP(reg01);
+    turnOnVDP(116);
 
     colors2_A = *((u32*) (titan256cPalsPtr + 12)); // 2 colors
     colors2_B = *((u32*) (titan256cPalsPtr + 14)); // next 2 colors
-    cmdAddress += offset;
+    cmdAddress += 0x80000;
+    bgColor = *(currGradPtr + 1);
     waitHCounter(157);
-    turnOffVDP(reg01);
-    *((vu32*) VDP_CTRL_PORT) = cmdAddress;
-    *((vu32*) VDP_DATA_PORT) = colors2_A;
-    *((vu32*) VDP_DATA_PORT) = colors2_B;
-    turnOnVDP(reg01);
-
-    colors2_A = *((u32*) (titan256cPalsPtr + 16)); // 2 colors
-    colors2_B = *((u32*) (titan256cPalsPtr + 18)); // next 2 colors
-    cmdAddress += offset;
-    waitHCounter(157);
-    turnOffVDP(reg01);
-    *((vu32*) VDP_CTRL_PORT) = cmdAddress;
-    *((vu32*) VDP_DATA_PORT) = colors2_A;
-    *((vu32*) VDP_DATA_PORT) = colors2_B;
-    turnOnVDP(reg01);
-
-    colors2_A = *((u32*) (titan256cPalsPtr + 20)); // 2 colors
-    colors2_B = *((u32*) (titan256cPalsPtr + 22)); // next 2 colors
-    cmdAddress += offset;
-    waitHCounter(157);
-    turnOffVDP(reg01);
+    turnOffVDP(116);
     *((vu32*) VDP_CTRL_PORT) = cmdAddress;
     *((vu32*) VDP_DATA_PORT) = colors2_A;
     *((vu32*) VDP_DATA_PORT) = colors2_B;
         *((vu32*) VDP_CTRL_PORT) = 0xC0000000; // VDP_WRITE_CRAM_ADDR(0): write to CRAM color index 0 multiplied by 2
-        *((vu16*) VDP_DATA_PORT) = gradColor_B;
-    turnOnVDP(reg01);
+        *((vu16*) VDP_DATA_PORT) = bgColor;
+    turnOnVDP(116);
+
+    colors2_A = *((u32*) (titan256cPalsPtr + 16)); // 2 colors
+    colors2_B = *((u32*) (titan256cPalsPtr + 18)); // next 2 colors
+    cmdAddress += 0x80000;
+    waitHCounter(157);
+    turnOffVDP(116);
+    *((vu32*) VDP_CTRL_PORT) = cmdAddress;
+    *((vu32*) VDP_DATA_PORT) = colors2_A;
+    *((vu32*) VDP_DATA_PORT) = colors2_B;
+    turnOnVDP(116);
+
+    colors2_A = *((u32*) (titan256cPalsPtr + 20)); // 2 colors
+    colors2_B = *((u32*) (titan256cPalsPtr + 22)); // next 2 colors
+    cmdAddress += 0x80000;
+    waitHCounter(157);
+    turnOffVDP(116);
+    *((vu32*) VDP_CTRL_PORT) = cmdAddress;
+    *((vu32*) VDP_DATA_PORT) = colors2_A;
+    *((vu32*) VDP_DATA_PORT) = colors2_B;
+    turnOnVDP(116);
 
     colors2_A = *((u32*) (titan256cPalsPtr + 24)); // 2 colors
     colors2_B = *((u32*) (titan256cPalsPtr + 26)); // next 2 colors
-    cmdAddress += offset;
+    cmdAddress += 0x80000;
+    bgColor = *(currGradPtr + 2);
     waitHCounter(157);
-    turnOffVDP(reg01);
+    turnOffVDP(116);
     *((vu32*) VDP_CTRL_PORT) = cmdAddress;
     *((vu32*) VDP_DATA_PORT) = colors2_A;
     *((vu32*) VDP_DATA_PORT) = colors2_B;
-    turnOnVDP(reg01);
+        *((vu32*) VDP_CTRL_PORT) = 0xC0000000; // VDP_WRITE_CRAM_ADDR(0): write to CRAM color index 0 multiplied by 2
+        *((vu16*) VDP_DATA_PORT) = bgColor;
+    turnOnVDP(116);
 
     colors2_A = *((u32*) (titan256cPalsPtr + 28)); // 2 colors
     colors2_B = *((u32*) (titan256cPalsPtr + 30)); // next 2 colors
-    cmdAddress += offset;
+    cmdAddress += 0x80000;
     waitHCounter(157);
-    turnOffVDP(reg01);
+    turnOffVDP(116);
     *((vu32*) VDP_CTRL_PORT) = cmdAddress;
     *((vu32*) VDP_DATA_PORT) = colors2_A;
     *((vu32*) VDP_DATA_PORT) = colors2_B;
-    turnOnVDP(reg01);
+    turnOnVDP(116);
 
+    if (setPalBGGradientForChars) {
+        currGradPtr += 3; // advance 3 colors if condition is met
+    }
     titan256cPalsPtr += 32; // advance to next strip's palette
+    palIdx ^= 32; // cycles between 0 and 32
+    //palIdx = palIdx == 0 ? 32 : 0;
+    //palIdx = (palIdx + 32) & 63; // (palIdx + 32) % 64 => x mod y = x & (y-1) when y is power of 2
 }
 
-HINTERRUPT_CALLBACK horizIntOnTitan256cCallback_EveryN_DMA () {
+HINTERRUPT_CALLBACK horizIntOnTitan256cCallback_DMA_EveryN () {
 
     // At strip 21 (0 based) titan chars appears. Chars color will be updated every 4 scanlines inside HInt.
     u16 vcounter = GET_VCOUNTER;
@@ -254,76 +259,71 @@ HINTERRUPT_CALLBACK horizIntOnTitan256cCallback_EveryN_DMA () {
     */
 
     u32 palCmdForDMA;
-    u32 fromAddrForDMA;
-    u16 gradColor_A = *currGradPtr;
-    u16 gradColor_B = *(currGradPtr + 1);
-    currGradPtr += setPalBGGradientForChars * 2; // advance 2 colors if condition is met
+    u32 fromAddrForDMA;    
+    u16 bgColor;
 
-    VDP_setAutoInc(2); // Needed for DMA of colors in u32 type
-
-    u8 reg01 = VDP_getReg(0x01); // Holds current VDP register 1 value (it holds other bits than VDP ON/OFF status)
+    // Value under current conditions is always 116
+    //u8 reg01 = VDP_getReg(0x01); // Holds current VDP register 1 value (it holds other bits than VDP ON/OFF status)
 
     fromAddrForDMA = (u32) titan256cPalsPtr >> 1;
     titan256cPalsPtr += TITAN_256C_COLORS_PER_STRIP/3;
     palCmdForDMA = palIdx == 0 ? 0xC0000080 : 0xC0400080;
-
+    bgColor = *(currGradPtr + 0);
     waitHCounter(132);
-
     // set GB color before setup DMA
     if (setPalBGGradientForChars) {
         *((vu32*) VDP_CTRL_PORT) = 0xC0000000; // VDP_WRITE_CRAM_ADDR(0): write to CRAM color index 0 multiplied by 2
-        *((vu16*) VDP_DATA_PORT) = gradColor_A;
+        *((vu16*) VDP_DATA_PORT) = bgColor;
     }
     setupDMAForPals(TITAN_256C_COLORS_PER_STRIP/3, fromAddrForDMA);
-
     waitHCounter(158);
-
-    turnOffVDP(reg01);
+    turnOffVDP(116);
     *((vu32*) VDP_CTRL_PORT) = palCmdForDMA; // trigger DMA transfer
-    turnOnVDP(reg01);
+    turnOnVDP(116);
 
     fromAddrForDMA = (u32) titan256cPalsPtr >> 1;
     titan256cPalsPtr += TITAN_256C_COLORS_PER_STRIP/3;
     palCmdForDMA = palIdx == 0 ? 0xC0140080 : 0xC0540080;
-
-    waitHCounter(134);
-
+    bgColor = *(currGradPtr + 1);
+    waitHCounter(132);
+    // set GB color before setup DMA
+    if (setPalBGGradientForChars) {
+        *((vu32*) VDP_CTRL_PORT) = 0xC0000000; // VDP_WRITE_CRAM_ADDR(0): write to CRAM color index 0 multiplied by 2
+        *((vu16*) VDP_DATA_PORT) = bgColor;
+    }
     setupDMAForPals(TITAN_256C_COLORS_PER_STRIP/3, fromAddrForDMA);
-
     waitHCounter(158);
-
-    turnOffVDP(reg01);
+    turnOffVDP(116);
     *((vu32*) VDP_CTRL_PORT) = palCmdForDMA; // trigger DMA transfer
-    turnOnVDP(reg01);
+    turnOnVDP(116);
 
     fromAddrForDMA = (u32) titan256cPalsPtr >> 1;
     titan256cPalsPtr += TITAN_256C_COLORS_PER_STRIP/3 + TITAN_256C_COLORS_PER_STRIP_REMINDER(3);
     palCmdForDMA = palIdx == 0 ? 0xC0280080 : 0xC0680080;
-
+    bgColor = *(currGradPtr + 2);
     waitHCounter(132);
-
     // set GB color before setup DMA
     if (setPalBGGradientForChars) {
         *((vu32*) VDP_CTRL_PORT) = 0xC0000000; // VDP_WRITE_CRAM_ADDR(0): write to CRAM color index 0 multiplied by 2
-        *((vu16*) VDP_DATA_PORT) = gradColor_B;
+        *((vu16*) VDP_DATA_PORT) = bgColor;
     }
     setupDMAForPals(TITAN_256C_COLORS_PER_STRIP/3 + TITAN_256C_COLORS_PER_STRIP_REMINDER(3), fromAddrForDMA);
-
     waitHCounter(158);
-
-    turnOffVDP(reg01);
+    turnOffVDP(116);
     *((vu32*) VDP_CTRL_PORT) = palCmdForDMA; // trigger DMA transfer
-    turnOnVDP(reg01);
+    turnOnVDP(116);
 
+    if (setPalBGGradientForChars) {
+        currGradPtr += 3; // advance 3 colors if condition is met
+    }
     //titan256cPalsPtr += TITAN_256C_COLORS_PER_STRIP; // advance to next strip's palettes (if pointer wasn't incremented previously)
     palIdx ^= 32; // cycles between 0 and 32
     //palIdx = palIdx == 0 ? 32 : 0;
     //palIdx = (palIdx + 32) & 63; // (palIdx + 32) % 64 => x mod y = x & (y-1) when y is power of 2
 }
 
-HINTERRUPT_CALLBACK horizIntOnTitan256cCallback_OneTime_DMA () {
-    VDP_setHIntCounter(255);
-    VDP_setAutoInc(2); // Needed for DMA of colors in u32 type
+HINTERRUPT_CALLBACK horizIntOnTitan256cCallback_DMA_OneTime () {
+    VDP_setHIntCounter(223);
 
     // Giving the nature of SGDK hint callback it will be invoked several times until the VDP_setHIntCounter(255) makes effect.
     // So we need to cancel out the first invocations and only keep the 
@@ -331,6 +331,9 @@ HINTERRUPT_CALLBACK horizIntOnTitan256cCallback_OneTime_DMA () {
     if (vcounter > 1) {
         return;
     }
+
+    // Value under current conditions is always 116
+    //u8 reg01 = VDP_getReg(0x01); // Holds current VDP register 1 value (it holds other bits than VDP ON/OFF status)
 
     // Simulates waiting the first call to Simulates VDP_setHIntCounter(TITAN_256C_STRIP_HEIGHT-1)
     while (vcounter < TITAN_256C_STRIP_HEIGHT) {
@@ -356,52 +359,56 @@ HINTERRUPT_CALLBACK horizIntOnTitan256cCallback_OneTime_DMA () {
 
         u32 palCmdForDMA;
         u32 fromAddrForDMA;
-        u16 gradColor_A = *currGradPtr;
-        u16 gradColor_B = *(currGradPtr + 1);
-        currGradPtr += setPalBGGradientForChars * 2; // advance 2 colors if condition is met
-
-        u8 reg01 = VDP_getReg(0x01); // Holds current VDP register 1 value (it holds other bits than VDP ON/OFF status)
+        u16 bgColor;
 
         fromAddrForDMA = (u32) titan256cPalsPtr >> 1;
         titan256cPalsPtr += TITAN_256C_COLORS_PER_STRIP/3;
         palCmdForDMA = palIdx == 0 ? 0xC0000080 : 0xC0400080;
-        
+        bgColor = *(currGradPtr + 0);
+
         waitHCounter(132);
         // SCANLINE 2 starts (few pixels ahead)
         
         // set GB color before setup DMA
         if (setPalBGGradientForChars) {
             *((vu32*) VDP_CTRL_PORT) = 0xC0000000; // VDP_WRITE_CRAM_ADDR(0): write to CRAM color index 0 multiplied by 2
-            *((vu16*) VDP_DATA_PORT) = gradColor_A;
+            *((vu16*) VDP_DATA_PORT) = bgColor;
         }
         setupDMAForPals(TITAN_256C_COLORS_PER_STRIP/3, fromAddrForDMA);
 
         waitHCounter(158);
         // SCANLINE 3 starts (few pixels ahead)
 
-        turnOffVDP(reg01);
+        turnOffVDP(116);
         *((vu32*) VDP_CTRL_PORT) = palCmdForDMA; // trigger DMA transfer
-        turnOnVDP(reg01);
+        turnOnVDP(116);
 
         fromAddrForDMA = (u32) titan256cPalsPtr >> 1;
         titan256cPalsPtr += TITAN_256C_COLORS_PER_STRIP/3;
         palCmdForDMA = palIdx == 0 ? 0xC0140080 : 0xC0540080;
-        
-        waitHCounter(134);
+        bgColor = *(currGradPtr + 1);
+
+        waitHCounter(132);
         // SCANLINE 4 starts (few pixels ahead)
 
+        // set GB color before setup DMA
+        if (setPalBGGradientForChars) {
+            *((vu32*) VDP_CTRL_PORT) = 0xC0000000; // VDP_WRITE_CRAM_ADDR(0): write to CRAM color index 0 multiplied by 2
+            *((vu16*) VDP_DATA_PORT) = bgColor;
+        }
         setupDMAForPals(TITAN_256C_COLORS_PER_STRIP/3, fromAddrForDMA);
 
         waitHCounter(158);
         // SCANLINE 5 starts (few pixels ahead)
 
-        turnOffVDP(reg01);
+        turnOffVDP(116);
         *((vu32*) VDP_CTRL_PORT) = palCmdForDMA; // trigger DMA transfer
-        turnOnVDP(reg01);
+        turnOnVDP(116);
 
         fromAddrForDMA = (u32) titan256cPalsPtr >> 1;
         titan256cPalsPtr += TITAN_256C_COLORS_PER_STRIP/3 + TITAN_256C_COLORS_PER_STRIP_REMINDER(3);
         palCmdForDMA = palIdx == 0 ? 0xC0280080 : 0xC0680080;
+        bgColor = *(currGradPtr + 2);
 
         waitHCounter(132);
         // SCANLINE 6 starts (few pixels ahead)
@@ -409,17 +416,20 @@ HINTERRUPT_CALLBACK horizIntOnTitan256cCallback_OneTime_DMA () {
         // set GB color before setup DMA
         if (setPalBGGradientForChars) {
             *((vu32*) VDP_CTRL_PORT) = 0xC0000000; // VDP_WRITE_CRAM_ADDR(0): write to CRAM color index 0 multiplied by 2
-            *((vu16*) VDP_DATA_PORT) = gradColor_B;
+            *((vu16*) VDP_DATA_PORT) = bgColor;
         }
         setupDMAForPals(TITAN_256C_COLORS_PER_STRIP/3 + TITAN_256C_COLORS_PER_STRIP_REMINDER(3), fromAddrForDMA);
 
         waitHCounter(158);
         // SCANLINE 7 starts (few pixels ahead)
 
-        turnOffVDP(reg01);
+        turnOffVDP(116);
         *((vu32*) VDP_CTRL_PORT) = palCmdForDMA; // trigger DMA transfer
-        turnOnVDP(reg01);
+        turnOnVDP(116);
 
+        if (setPalBGGradientForChars) {
+            currGradPtr += 3; // advance 3 colors if condition is met
+        }
         //titan256cPalsPtr += TITAN_256C_COLORS_PER_STRIP; // advance to next strip's palettes (if pointer wasn't incremented previously)
         palIdx ^= 32; // cycles between 0 and 32
         //palIdx = palIdx == 0 ? 32 : 0;
@@ -429,15 +439,13 @@ HINTERRUPT_CALLBACK horizIntOnTitan256cCallback_OneTime_DMA () {
         while ( (*((vu16*)VDP_CTRL_PORT) & 4) == 0 ) {;} // Waits until HBlank flag becomes true
         // SCANLINE 8 starts (few pixels ahead)
 
-        waitHCounter(159);
-        while ( (*((vu16*)VDP_CTRL_PORT) & 4) == 0 ) {;} // Waits until HBlank flag becomes true
+        // waitHCounter(159);
+        // while ( (*((vu16*)VDP_CTRL_PORT) & 4) == 0 ) {;} // Waits until HBlank flag becomes true
         // SCANLINE 9 starts (few pixels ahead) which is wrapped around to SCANLINE 1
-
-        waitHCounter(132);
 
         vcounter = GET_VCOUNTER;
     }
-    while (vcounter < 224-TITAN_256C_STRIP_HEIGHT-1); // NTSC: 224. PAL: 240.
+    while (vcounter < (224 - (TITAN_256C_STRIP_HEIGHT + 1))); // NTSC: 224. PAL: 240.
 }
 
 static u16 titanCharsCycleCnt = 0;

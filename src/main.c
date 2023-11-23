@@ -30,7 +30,12 @@ static void setTitan256cFirstPaletteColor () {
     // }
 }
 
+#define TITAN256C_HINT_MODE 1
+
 static void titan256c () {
+
+    PAL_setColors(0, palette_black, 64, DMA_QUEUE);
+    SYS_doVBlankProcess();
 
     VDP_setEnable(FALSE);
 
@@ -41,14 +46,31 @@ static void titan256c () {
     unpackPalettes(&palTitanRGB);
     setTitan256cFirstPaletteColor();
 
-    SYS_disableInts();
-        SYS_setVBlankCallback(vertIntOnTitan256cCallback_HIntEveryN);
-        VDP_setHIntCounter(TITAN_256C_STRIP_HEIGHT - 1); // using TITAN_256C_STRIP_HEIGHT - 1 effectively calls the HInt TITAN_256C_STRIPS_COUNT times.
-        VDP_setHInterrupt(TRUE);
-        SYS_setHIntCallback(horizIntOnTitan256cCallback_EveryN_DMA);
-    SYS_enableInts();
-
     VDP_setEnable(TRUE);
+
+    SYS_doVBlankProcess(); // in case we need to flush DMA queue
+
+    SYS_disableInts();
+        // Call the HInt every N scanlines. Uses CPU for palette swapping
+        #if TITAN256C_HINT_MODE == 0
+        SYS_setVBlankCallback(vertIntOnTitan256cCallback_HIntEveryN);
+        VDP_setHIntCounter(TITAN_256C_STRIP_HEIGHT - 1);
+        SYS_setHIntCallback(horizIntOnTitan256cCallback_CPU_EveryN);
+        #endif
+        // Call the HInt every N scanlines. Uses DMA for palette swapping
+        #if TITAN256C_HINT_MODE == 1
+        SYS_setVBlankCallback(vertIntOnTitan256cCallback_HIntEveryN);
+        VDP_setHIntCounter(TITAN_256C_STRIP_HEIGHT - 1);
+        SYS_setHIntCallback(horizIntOnTitan256cCallback_DMA_EveryN);
+        #endif
+        // Use only one call to HInt to avoid method call overhead. Uses DMA for palette swapping
+        #if TITAN256C_HINT_MODE == 2
+        SYS_setVBlankCallback(vertIntOnTitan256cCallback_HIntOneTime);
+        VDP_setHIntCounter(0);
+        SYS_setHIntCallback(horizIntOnTitan256cCallback_DMA_OneTime);
+        #endif
+        VDP_setHInterrupt(TRUE);
+    SYS_enableInts();
 
     while (TRUE) {
         // Load 1st and 2nd strip's palette
@@ -67,15 +89,11 @@ static void titan256c () {
 
     VDP_clearPlane(BG_B, TRUE);
     VDP_clearPlane(BG_A, TRUE);
-
-    // Set BG color as Black
-    PAL_setColor(0x0, 0x000);
-
-    currTileIndex = TILE_USER_INDEX;
-
+    PAL_setColor(0x0, 0x000); // Set BG color as Black
     SYS_doVBlankProcess();
 
     freePalettes(&palTitanRGB);
+    currTileIndex = TILE_USER_INDEX;
 }
 
 static void basicEngineConfig () {
