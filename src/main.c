@@ -1,10 +1,10 @@
 #include <genesis.h>
+#include "utils.h"
 #include "segaLogo.h"
 #include "sgdkLogo.h"
 #include "teddyBearLogo.h"
 #include "titan256c.h"
 #include "hvInterrupts.h"
-#include "utils.h"
 
 static u16 currTileIndex;
 

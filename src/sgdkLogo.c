@@ -4,6 +4,7 @@
 */
 #include <genesis.h>
 #include "sgdkLogo.h"
+#include "utils.h"
 
 #ifdef __GNUC__
 #define INTERRUPT_ATTRIBUTE HINTERRUPT_CALLBACK

@@ -124,7 +124,7 @@ void displayTeddyBearLogo ()
     // Fade out all graphics to Black
     PAL_fadeOutAll(30, FALSE);
 
-    SPR_releaseSprite(teddyBearAnimSpr);
+    SPR_end();
 
     // restore SGDK's default palete for text
     VDP_setTextPalette(PAL0);
