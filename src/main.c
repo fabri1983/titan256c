@@ -10,7 +10,7 @@ static u16 currTileIndex;
 
 static void loadTitan256cTileSet () {
     const TileSet* tileset = titanRGB.tileset;
-    VDP_loadTileSet(tileset, currTileIndex, DMA); // only DMA or DMA_QUEUE_COPY (if tileset is compressed) to avoid glitches
+    VDP_loadTileSet(tileset, currTileIndex, DMA); // only DMA because total tileset size is bigger than DMA buffer if using DMA_QUEUE_COPY
     currTileIndex += tileset->numTile;
 }
 
@@ -20,21 +20,21 @@ static void loadTitan256cTileMap (u16 tileAttribIndex) {
     // even strips goes into BG_A, odd strips into BG_B (it seems doesn't matter the order)
     VDPPlane plane = BG_B;//(i % 2) == 0 ? BG_A : BG_B;
     const TileMap* tilemap = titanRGB.tilemap;
-    VDP_setTileMapEx(plane, tilemap, baseTileAttribs, 0, 0, 0, 0, TITAN_256C_WIDTH/8, TITAN_256C_HEIGHT/8, DMA); // only DMA or DMA_QUEUE_COPY (if tilemap is compressed) to avoid glitches
+    VDP_setTileMapEx(plane, tilemap, baseTileAttribs, 0, 0, 0, 0, TITAN_256C_WIDTH/8, TITAN_256C_HEIGHT/8, DMA_QUEUE_COPY); // only DMA or DMA_QUEUE_COPY (if tilemap is compressed) to avoid glitches
 }
 
-static void setTitan256cFirstPaletteColor () {
-    // copy every color at pos 1 to pos 0 on PAL0, so changing the BG color as the Titan 512 demo does (although this version is only every 8 scanlines)
-    // for (u16 i=0; i < TITAN_256C_STRIPS_COUNT * TITAN_256C_COLORS_PER_STRIP; i += TITAN_256C_COLORS_PER_STRIP) {
-    //     palTitanRGB.data[i] = palTitanRGB.data[i + 1];
-    // }
-}
+// static void setTitan256cFirstPaletteColor () {
+//     // copy every color at pos 1 to pos 0 on PAL0, so changing the BG color as the Titan 512 demo does (although this version is only every 8 scanlines)
+//     for (u16 i=0; i < TITAN_256C_STRIPS_COUNT * TITAN_256C_COLORS_PER_STRIP; i += TITAN_256C_COLORS_PER_STRIP) {
+//         palTitanRGB.data[i] = palTitanRGB.data[i + 1];
+//     }
+// }
 
 #define TITAN256C_HINT_MODE 1
 
 static void titan256c () {
 
-    PAL_setColors(0, palette_black, 64, DMA_QUEUE);
+    PAL_setColors(0, palette_black, 64, DMA);
     SYS_doVBlankProcess();
 
     VDP_setEnable(FALSE);
@@ -44,7 +44,6 @@ static void titan256c () {
     loadTitan256cTileSet();
     loadTitan256cTileMap(firstTileAttribIndex);
     unpackPalettes(&palTitanRGB);
-    setTitan256cFirstPaletteColor();
 
     VDP_setEnable(TRUE);
 

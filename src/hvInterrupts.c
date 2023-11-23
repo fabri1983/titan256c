@@ -12,18 +12,22 @@
 #define ASM_STATEMENT __asm
 #endif
 
-// static u8 reg01; // Holds current VDP register 1 value (it holds other bits than VDP ON/OFF status)
+// static u8 reg01; // Holds current VDP register 1 whole value (it holds other bits than VDP ON/OFF status)
 
 // static FORCE_INLINE void copyReg01 () {
 //     reg01 = VDP_getReg(0x01);
 // }
 
+/// @brief Set bit 6 (64 decimal, 0x40 hexa) of reg 1.
+/// @param reg01 VDP's Reg 1 holds other bits than just VDP ON/OFF status, so we need its current value.
 static FORCE_INLINE void turnOffVDP (u8 reg01) {
     //reg01 &= ~0x40;
     //*(vu16*) VDP_CTRL_PORT = 0x8100 | reg01;
     *(vu16*) VDP_CTRL_PORT = 0x8100 | (reg01 & ~0x40);
 }
 
+/// @brief Set bit 6 (64 decimal, 0x40 hexa) of reg 1.
+/// @param reg01 VDP's Reg 1 holds other bits than just VDP ON/OFF status, so we need its current value.
 static FORCE_INLINE void turnOnVDP (u8 reg01) {
     //reg01 |= 0x40;
     //*(vu16*) VDP_CTRL_PORT = 0x8100 | reg01;
@@ -47,7 +51,7 @@ static FORCE_INLINE void waitHCounter (u16 n) {
 /**
  * Shannon Birt version (seems slower when tested on Exodus because black lines appears earlier)
 */
-static FORCE_INLINE void waitHCounter_other (u16 n) {
+static FORCE_INLINE void waitHCounter_ShannonBirt (u16 n) {
     // vu32* regA=0; // placeholder used to indicate the use of an A register
     // vu16* regD=0; // placeholder used to indicate the use of a D register
     // ASM_STATEMENT volatile (
@@ -55,7 +59,7 @@ static FORCE_INLINE void waitHCounter_other (u16 n) {
     //     " move.w    #158, %1;"          // Load 158 into a D register
     //     " .LoopHBlank%=:" 
     //     "    cmp.b   (%0), %1;"         // Compares H Counter with 158. '()' specifies memory indirection or dereferencing
-    //     "    bhs     .LoopHBlank%=;"
+    //     "    blo     .LoopHBlank%=;"
     //     : "+a" (regA), "+d" (regD)
     //     :
     // );
@@ -99,14 +103,14 @@ static u16* currGradPtr;
 void vertIntOnTitan256cCallback_HIntEveryN () {
     titan256cPalsPtr = getUnpackedPtr() + 2 * TITAN_256C_COLORS_PER_STRIP;
     palIdx = 0;
-    VDP_setAutoInc(2); // Needed for DMA of colors in u32 type
+    VDP_setAutoInc(2); // Needed for DMA of colors in u32 type, and it seems is neeed for CPU too (had some black screen)
 }
 
 void vertIntOnTitan256cCallback_HIntOneTime () {
     VDP_setHIntCounter(0);
     titan256cPalsPtr = getUnpackedPtr() + 2 * TITAN_256C_COLORS_PER_STRIP;
     palIdx = 0;
-    VDP_setAutoInc(2); // Needed for DMA of colors in u32 type
+    VDP_setAutoInc(2); // Needed for DMA of colors in u32 type, and it seems is neeed for CPU too (had some black screen)
 }
 
 HINTERRUPT_CALLBACK horizIntOnTitan256cCallback_CPU_EveryN () {
@@ -135,7 +139,7 @@ HINTERRUPT_CALLBACK horizIntOnTitan256cCallback_CPU_EveryN () {
         8       0xC0380000      0xC0780000
     */
 
-    u32 cmdBaseAddress = (palIdx == 0) ? 0xC0000000 : 0xC0400000;
+    u32 cmdBaseAddress = palIdx == 0 ? 0xC0000000 : 0xC0400000;
     //u32 offset = 0x80000;
     u32 cmdAddress = cmdBaseAddress;
     u16 bgColor;
@@ -145,8 +149,13 @@ HINTERRUPT_CALLBACK horizIntOnTitan256cCallback_CPU_EveryN () {
     // Value under current conditions is always 116
     //u8 reg01 = VDP_getReg(0x01); // Holds current VDP register 1 value (it holds other bits than VDP ON/OFF status)
 
+// TODO: 
+//     use -> cmdAddress = palIdx == 0 ? 0xC0000000 : 0xC0400000;
+//     use -> if (setPalBGGradientForChars)
+
     colors2_A = *((u32*) (titan256cPalsPtr + 0)); // 2 colors
     colors2_B = *((u32*) (titan256cPalsPtr + 2)); // next 2 colors
+    cmdAddress += 0;
     bgColor = *(currGradPtr + 0);
     waitHCounter(157);
     turnOffVDP(116);
