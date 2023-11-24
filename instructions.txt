@@ -1,3 +1,10 @@
+STRIPS OF 8 ROWS
+----------------
+This is what I finally used.
+	magick titan256c.png -unique -depth 8 -colors 256 -crop x8 -define png:format=png8 -define histogram:unique-colors=false titan_%d.png
+And then use custom implementation of tiledpalettequant (original is from https://rilden.github.io/tiledpalettequant/)
+
+
 STRIPS OF 4 ROWS
 ----------------
 Strips of 4 rows of valid content, so each final 8x8 tile will have half content as transparent pixels.
