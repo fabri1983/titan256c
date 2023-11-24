@@ -6,7 +6,7 @@
 #include "titan256c.h"
 #include "hvInterrupts.h"
 
-static u16 currTileIndex;
+static u16 currTileIndex = TILE_USER_INDEX;
 
 static void loadTitan256cTileSet () {
     const TileSet* tileset = titanRGB.tileset;
@@ -30,7 +30,7 @@ static void loadTitan256cTileMap (u16 tileAttribIndex) {
 //     }
 // }
 
-#define TITAN256C_HINT_MODE 1
+static u16 titan256cHIntMode;
 
 static void titan256c () {
 
@@ -39,7 +39,6 @@ static void titan256c () {
 
     VDP_setEnable(FALSE);
 
-    currTileIndex = TILE_USER_INDEX; // this resets the index for all previous loaded tiles
     u16 firstTileAttribIndex = currTileIndex;
     loadTitan256cTileSet();
     loadTitan256cTileMap(firstTileAttribIndex);
@@ -51,23 +50,23 @@ static void titan256c () {
 
     SYS_disableInts();
         // Call the HInt every N scanlines. Uses CPU for palette swapping
-        #if TITAN256C_HINT_MODE == 0
-        SYS_setVBlankCallback(vertIntOnTitan256cCallback_HIntEveryN);
-        VDP_setHIntCounter(TITAN_256C_STRIP_HEIGHT - 1);
-        SYS_setHIntCallback(horizIntOnTitan256cCallback_CPU_EveryN);
-        #endif
+        if (titan256cHIntMode == 0) {
+            SYS_setVBlankCallback(vertIntOnTitan256cCallback_HIntEveryN);
+            VDP_setHIntCounter(TITAN_256C_STRIP_HEIGHT - 1);
+            SYS_setHIntCallback(horizIntOnTitan256cCallback_CPU_EveryN);
+        }
         // Call the HInt every N scanlines. Uses DMA for palette swapping
-        #if TITAN256C_HINT_MODE == 1
-        SYS_setVBlankCallback(vertIntOnTitan256cCallback_HIntEveryN);
-        VDP_setHIntCounter(TITAN_256C_STRIP_HEIGHT - 1);
-        SYS_setHIntCallback(horizIntOnTitan256cCallback_DMA_EveryN);
-        #endif
+        else if (titan256cHIntMode == 1) {
+            SYS_setVBlankCallback(vertIntOnTitan256cCallback_HIntEveryN);
+            VDP_setHIntCounter(TITAN_256C_STRIP_HEIGHT - 1);
+            SYS_setHIntCallback(horizIntOnTitan256cCallback_DMA_EveryN);
+        }
         // Use only one call to HInt to avoid method call overhead. Uses DMA for palette swapping
-        #if TITAN256C_HINT_MODE == 2
-        SYS_setVBlankCallback(vertIntOnTitan256cCallback_HIntOneTime);
-        VDP_setHIntCounter(0);
-        SYS_setHIntCallback(horizIntOnTitan256cCallback_DMA_OneTime);
-        #endif
+        else if (titan256cHIntMode == 2) {
+            SYS_setVBlankCallback(vertIntOnTitan256cCallback_HIntOneTime);
+            VDP_setHIntCounter(0);
+            SYS_setHIntCallback(horizIntOnTitan256cCallback_DMA_OneTime);
+        }
         VDP_setHInterrupt(TRUE);
     SYS_enableInts();
 
@@ -78,6 +77,12 @@ static void titan256c () {
         beforeVBlankProcOnTitan256c_DMA_QUEUE();
         SYS_doVBlankProcess();
         afterVBlankProcOnTitan256c_VDP_or_DMA();
+
+        const u16 joyState = JOY_readJoypad(JOY_1);
+        if (joyState & BUTTON_START) {
+            titan256cHIntMode = (titan256cHIntMode + 1) % 3;
+            break;
+        }
     }
 
     SYS_disableInts();
@@ -92,6 +97,7 @@ static void titan256c () {
     SYS_doVBlankProcess();
 
     freePalettes(&palTitanRGB);
+    MEM_pack();
     currTileIndex = TILE_USER_INDEX;
 }
 
@@ -107,6 +113,10 @@ static void basicEngineConfig () {
     VDP_setPlaneSize(64, 32, TRUE);
 }
 
+static void initGameStatus () {
+    titan256cHIntMode = 0;
+}
+
 int main (bool hard) {
 
     if (!hard) SYS_hardReset();
@@ -119,6 +129,8 @@ int main (bool hard) {
     // waitMillis(200);
 
     basicEngineConfig(); // setup basic engine configurations
+
+    initGameStatus();
 
     while (1) {
         VDP_resetScreen();

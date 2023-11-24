@@ -7,7 +7,7 @@ However this version displays up to 250 colors.
 **Work In Progress.**
 
 
-**3 approaches:**
+### 3 approaches:
 
 
 **A**. Writing 2 u32 vars (4 colors) by CPU to CRAM every scanline. That's done 7 times inside the duration of 7 scanlines. 
@@ -26,6 +26,9 @@ counter only takes effect in the next invocation. Here is where I use `if GET_VC
 the second unwanted HInt invocation).
 
 
+**Pressing START you can cycle between them**
+
+
 *A*
 ![titan_cpu.jpg](screenshots/titan_cpu.jpg?raw=true "titan_cpu.jpg")
 
@@ -41,3 +44,10 @@ the second unwanted HInt invocation).
 So far only **B** approach has no CRAM dots in Blastem. Although it shows two black lines over the text color ramp.  
 **A** has one region with some flickering in continuos dots. The captured image doesn't show that.  
 **C** still WIP. I'm timing some instructions and see where is the right place to put them.
+
+
+### TODO:
+- Fix approach C.
+- Add colorful border as original titan demo has. Likely using shade mode?
+- Final transition by fading out to black as original titan demo does.
+- Add DMA command buffering as Stef does. See dma.c.
