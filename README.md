@@ -38,6 +38,6 @@ the second unwanted HInt invocation).
 ![titan_dma_onetime.jpg](screenshots/titan_dma_onetime.jpg?raw=true "titan_dma_onetime.jpg")
 
 
-So far only **B** approach has no CRAM dots in Blastem.  
+So far only **B** approach has no CRAM dots in Blastem. Although it shows two black lines over the text color ramp.  
 **A** has one region with some flickering in continuos dots. The captured image doesn't show that.  
-**C** still wip. I'm timing some instructions and see where is the right place to put them.
+**C** still WIP. I'm timing some instructions and see where is the right place to put them.
