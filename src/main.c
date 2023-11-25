@@ -40,7 +40,6 @@ static void titan256c () {
     loadTitan256cTileSet();
     loadTitan256cTileMap(BG_B);
     unpackPalettes(&palTitanRGB);
-    resetGradientColors();
 
     VDP_setEnable(TRUE);
 
@@ -77,6 +76,9 @@ static void titan256c () {
         // Load 1st and 2nd strip's palette
         set2FirstStripsPals();
 
+        // Update ramp color effect for the titan text section
+        updateCharsGradientColors();
+
         // update fading to black 2 palettes per strip
         if (animStatus == 1) {
             ++fadingStripCnt;
@@ -95,9 +97,7 @@ static void titan256c () {
             }
         }
 
-        beforeVBlankProcOnTitan256c_DMA_QUEUE();
         SYS_doVBlankProcess();
-        afterVBlankProcOnTitan256c_VDP_or_DMA();
 
         if (animStatus == 0) {
             u16 joyState = JOY_readJoypad(JOY_1);

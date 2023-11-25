@@ -117,14 +117,14 @@ static u16* currGradPtr;
 void vertIntOnTitan256cCallback_HIntEveryN () {
     titan256cPalsPtr = getUnpackedPtr() + 2 * TITAN_256C_COLORS_PER_STRIP;
     palIdx = 0;
-    VDP_setAutoInc(2); // Needed for DMA of colors in u32 type, and it seems is neeed for CPU too (had some black screen)
+    VDP_setAutoInc(2); // Needed for DMA of colors in u32 type, and it seems is neeed for CPU too (had some black screen flickering if not set)
 }
 
 void vertIntOnTitan256cCallback_HIntOneTime () {
     VDP_setHIntCounter(0);
     titan256cPalsPtr = getUnpackedPtr() + 2 * TITAN_256C_COLORS_PER_STRIP;
     palIdx = 0;
-    VDP_setAutoInc(2); // Needed for DMA of colors in u32 type, and it seems is neeed for CPU too (had some black screen)
+    VDP_setAutoInc(2); // Needed for DMA of colors in u32 type, and it seems is neeed for CPU too (had some black screen flickering if not set)
 }
 
 HINTERRUPT_CALLBACK horizIntOnTitan256cCallback_CPU_EveryN () {
@@ -165,7 +165,7 @@ HINTERRUPT_CALLBACK horizIntOnTitan256cCallback_CPU_EveryN () {
     colors2_B = *((u32*) (titan256cPalsPtr + 2)); // next 2 colors
     cmdAddress = palIdx == 0 ? 0xC0000000 : 0xC0400000;
     bgColor = *(currGradPtr + 0) * setPalBGGradientForChars;
-    waitHCounter(146);
+    waitHCounter(145);
     turnOffVDP(116);
     *((vu32*) VDP_CTRL_PORT) = cmdAddress;
     *((vu32*) VDP_DATA_PORT) = colors2_A;
@@ -179,7 +179,7 @@ HINTERRUPT_CALLBACK horizIntOnTitan256cCallback_CPU_EveryN () {
     colors2_C = *((u32*) (titan256cPalsPtr + 8)); // next2 colors
     colors2_D = *((u32*) (titan256cPalsPtr + 10)); // next 2 colors
     cmdAddress = palIdx == 0 ? 0xC0080000 : 0xC0480000;
-    waitHCounter(146);
+    waitHCounter(145);
     turnOffVDP(116);
     *((vu32*) VDP_CTRL_PORT) = cmdAddress;
     *((vu32*) VDP_DATA_PORT) = colors2_A;
@@ -192,7 +192,7 @@ HINTERRUPT_CALLBACK horizIntOnTitan256cCallback_CPU_EveryN () {
     colors2_B = *((u32*) (titan256cPalsPtr + 14)); // next 2 colors
     cmdAddress = palIdx == 0 ? 0xC0180000 : 0xC0580000;
     bgColor = *(currGradPtr + 1) * setPalBGGradientForChars;
-    waitHCounter(146);
+    waitHCounter(145);
     turnOffVDP(116);
     *((vu32*) VDP_CTRL_PORT) = cmdAddress;
     *((vu32*) VDP_DATA_PORT) = colors2_A;
@@ -206,7 +206,7 @@ HINTERRUPT_CALLBACK horizIntOnTitan256cCallback_CPU_EveryN () {
     colors2_C = *((u32*) (titan256cPalsPtr + 20)); // next colors
     colors2_D = *((u32*) (titan256cPalsPtr + 22)); // next 2 colors
     cmdAddress = palIdx == 0 ? 0xC0200000 : 0xC0600000;
-    waitHCounter(146);
+    waitHCounter(145);
     turnOffVDP(116);
     *((vu32*) VDP_CTRL_PORT) = cmdAddress;
     *((vu32*) VDP_DATA_PORT) = colors2_A;
@@ -219,7 +219,7 @@ HINTERRUPT_CALLBACK horizIntOnTitan256cCallback_CPU_EveryN () {
     colors2_B = *((u32*) (titan256cPalsPtr + 26)); // next 2 colors
     cmdAddress = palIdx == 0 ? 0xC0300000 : 0xC0700000;
     bgColor = *(currGradPtr + 2) * setPalBGGradientForChars;
-    waitHCounter(146);
+    waitHCounter(145);
     turnOffVDP(116);
     *((vu32*) VDP_CTRL_PORT) = cmdAddress;
     *((vu32*) VDP_DATA_PORT) = colors2_A;
@@ -231,7 +231,7 @@ HINTERRUPT_CALLBACK horizIntOnTitan256cCallback_CPU_EveryN () {
     colors2_A = *((u32*) (titan256cPalsPtr + 28)); // 2 colors
     colors2_B = *((u32*) (titan256cPalsPtr + 30)); // next 2 colors
     cmdAddress = palIdx == 0 ? 0xC0380000 : 0xC0780000;
-    waitHCounter(146);
+    waitHCounter(145);
     turnOffVDP(116);
     *((vu32*) VDP_CTRL_PORT) = cmdAddress;
     *((vu32*) VDP_DATA_PORT) = colors2_A;
@@ -435,26 +435,23 @@ HINTERRUPT_CALLBACK horizIntOnTitan256cCallback_DMA_OneTime () {
 }
 
 static u16 titanCharsCycleCnt = 0;
-static u16 titanCurrentGradient[TITAN_CURR_GRADIENT_ELEMS];
 
-void beforeVBlankProcOnTitan256c_DMA_QUEUE () {
+void updateCharsGradientColors () {
     // Strips [21,25] (0 based) renders the letters using transparent color, and we want to use a gradient scrolling over time.
     // So 5 strips. However each strip is 8 scanlines meaning we need to render every 4 scanlines inside the HInt.
 
-    s16 shift = titanCharsCycleCnt / TITAN_CHARS_GRADIENT_SCROLL_FREQ; // every N frames
-    currGradPtr = titanCurrentGradient;
-    for (u16 i=0; i < TITAN_CURR_GRADIENT_ELEMS; ++i) {
-        u16 c = titanCharsGradientColors[abs(TITAN_CHARS_GRADIENT_MAX_COLORS + i - shift) % TITAN_CHARS_GRADIENT_MAX_COLORS];
+    s16 shift = divu(titanCharsCycleCnt, TITAN_CHARS_GRADIENT_SCROLL_FREQ); // advance ramp color every N frames
+    currGradPtr = getGradientColorsBuffer();
+    for (s16 i=0; i < TITAN_CURR_GRADIENT_ELEMS; ++i) {
+        u16 colorIdx = modu(abs(TITAN_CHARS_GRADIENT_MAX_COLORS + i - shift), TITAN_CHARS_GRADIENT_MAX_COLORS);
+        u16 c = titanCharsGradientColors[colorIdx];
         *currGradPtr++ = c;
     }
-    currGradPtr = titanCurrentGradient; // reset pointer to first element
+    currGradPtr = getGradientColorsBuffer(); // reset pointer to first element
 
     ++titanCharsCycleCnt;
     if (titanCharsCycleCnt == TITAN_CHARS_GRADIENT_SCROLL_FREQ * TITAN_CHARS_GRADIENT_MAX_COLORS)
         titanCharsCycleCnt = 0;
-}
-
-void afterVBlankProcOnTitan256c_VDP_or_DMA () {
 }
 
 // void horizIntOnMainMenuCallback_ASM () {

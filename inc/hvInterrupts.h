@@ -14,8 +14,6 @@ HINTERRUPT_CALLBACK horizIntOnTitan256cCallback_DMA_EveryN ();
 
 HINTERRUPT_CALLBACK horizIntOnTitan256cCallback_DMA_OneTime ();
 
-void beforeVBlankProcOnTitan256c_DMA_QUEUE ();
-
-void afterVBlankProcOnTitan256c_VDP_or_DMA ();
+void updateCharsGradientColors ();
 
 #endif

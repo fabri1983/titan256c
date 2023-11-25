@@ -1,8 +1,10 @@
 STRIPS OF 8 ROWS
 ----------------
 This is what I finally used.
+```sh
 	magick titan256c.png -unique -depth 8 -colors 256 -crop x8 -define png:format=png8 -define histogram:unique-colors=false titan_%d.png
-And then use custom implementation of tiledpalettequant (original is from https://rilden.github.io/tiledpalettequant/)
+```
+And then use custom implementation of tiledpalettequant for generating RGB images with palettes ready to be consumed by SGDK's rescomp.
 
 
 STRIPS OF 4 ROWS
