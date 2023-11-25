@@ -11,14 +11,12 @@ static u16 currTileIndex = TILE_USER_INDEX;
 static void loadTitan256cTileSet () {
     const TileSet* tileset = titanRGB.tileset;
     VDP_loadTileSet(tileset, currTileIndex, DMA); // only DMA because total tileset size is bigger than DMA buffer if using DMA_QUEUE_COPY
-    currTileIndex += tileset->numTile;
+    
 }
 
-static void loadTitan256cTileMap (u16 tileAttribIndex) {
-    u16 baseTileAttribs = TILE_ATTR_FULL(PAL0, 0, FALSE, FALSE, tileAttribIndex);
-    tileAttribIndex += titanRGB.tileset->numTile;
-    // even strips goes into BG_A, odd strips into BG_B (it seems doesn't matter the order)
-    VDPPlane plane = BG_B;//(i % 2) == 0 ? BG_A : BG_B;
+static void loadTitan256cTileMap (VDPPlane plane) {
+    u16 baseTileAttribs = TILE_ATTR_FULL(PAL0, 0, FALSE, FALSE, currTileIndex);
+    currTileIndex += titanRGB.tileset->numTile;
     const TileMap* tilemap = titanRGB.tilemap;
     VDP_setTileMapEx(plane, tilemap, baseTileAttribs, 0, 0, 0, 0, TITAN_256C_WIDTH/8, TITAN_256C_HEIGHT/8, DMA_QUEUE_COPY); // only DMA or DMA_QUEUE_COPY (if tilemap is compressed) to avoid glitches
 }
@@ -34,15 +32,15 @@ static u16 titan256cHIntMode;
 
 static void titan256c () {
 
-    PAL_setColors(0, palette_black, 64, DMA);
+    PAL_setColors(0, palette_black, 64, DMA); // palette_black is an array of 64
     SYS_doVBlankProcess();
 
     VDP_setEnable(FALSE);
 
-    u16 firstTileAttribIndex = currTileIndex;
     loadTitan256cTileSet();
-    loadTitan256cTileMap(firstTileAttribIndex);
+    loadTitan256cTileMap(BG_B);
     unpackPalettes(&palTitanRGB);
+    resetGradientColors();
 
     VDP_setEnable(TRUE);
 
@@ -70,17 +68,46 @@ static void titan256c () {
         VDP_setHInterrupt(TRUE);
     SYS_enableInts();
 
+    u16 animStatus = 0;
+    bool faceToBlackIsDone = FALSE;
+    u16 fadingStripCnt = 0;
+    u16 prevFadingStrip = 0;
+
     while (TRUE) {
         // Load 1st and 2nd strip's palette
-        PAL_setColors(0, getUnpackedPtr(), TITAN_256C_COLORS_PER_STRIP * 2, DMA_QUEUE);
+        set2FirstStripsPals();
+
+        // update fading to black 2 palettes per strip
+        if (animStatus == 1) {
+            ++fadingStripCnt;
+            s16 currFadingStrip = fadingStripCnt >> 2; // advance 1 strip every 4 frames. Use divu() for N non power of 2
+            // strip changed? let's do one fading step
+            if (currFadingStrip != prevFadingStrip) {
+                prevFadingStrip = currFadingStrip;
+                // apply fade to black from currFadingStrip up to FADE_OUT_STEPS previous strips (limit is strip 0)
+                for (s16 i=currFadingStrip; i >= max(currFadingStrip - FADE_OUT_STEPS, 0); --i) {
+                    fadingStepToBlack(i);
+                }
+            }
+            // moved ahead last strip? then fading is finished
+            if (currFadingStrip > (screenHeight / TITAN_256C_STRIP_HEIGHT)) {
+                faceToBlackIsDone = TRUE;
+            }
+        }
 
         beforeVBlankProcOnTitan256c_DMA_QUEUE();
         SYS_doVBlankProcess();
         afterVBlankProcOnTitan256c_VDP_or_DMA();
 
-        const u16 joyState = JOY_readJoypad(JOY_1);
-        if (joyState & BUTTON_START) {
-            titan256cHIntMode = (titan256cHIntMode + 1) % 3;
+        if (animStatus == 0) {
+            u16 joyState = JOY_readJoypad(JOY_1);
+            if (joyState & BUTTON_START) {
+                ++animStatus;
+            }
+        }
+        else if (animStatus == 1 && faceToBlackIsDone) {
+            ++animStatus;
+            titan256cHIntMode = modu(titan256cHIntMode + 1, 3); // set to move into next Titan256c HInt mode
             break;
         }
     }

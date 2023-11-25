@@ -47,7 +47,9 @@ So far only **B** approach has no CRAM dots in Blastem. Although it shows two bl
 
 
 ### TODO:
+- Use fast maths ops divu, mulu, modu from maths.h.
 - Fix approach C.
+- Fix black BG color lines over text in approaches B and C.
 - Add colorful border as original titan demo has. Likely using shade mode?
 - Final transition by fading out to black as original titan demo does.
 - Add DMA command buffering as Stef does. See dma.c.

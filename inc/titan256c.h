@@ -13,13 +13,20 @@
 #define TITAN_256C_COLORS_PER_STRIP 32
 #define TITAN_256C_COLORS_PER_STRIP_REMINDER(n) (TITAN_256C_COLORS_PER_STRIP - n*(TITAN_256C_COLORS_PER_STRIP/n))
 
+#define TITAN_CHARS_GRADIENT_SCROLL_FREQ 4
+#define TITAN_CHARS_GRADIENT_MAX_COLORS 42
+#define TITAN_CURR_GRADIENT_ELEMS 15
+u16 titanCharsGradientColors[TITAN_CHARS_GRADIENT_MAX_COLORS];
+
+void resetGradientColors ();
+
+#define FADE_OUT_STEPS 7
+void fadingStepToBlack (const u16 stripN);
+
 void unpackPalettes (const Palette32AllStrips* pals32);
 void freePalettes (const Palette32AllStrips* pals32);
 u16* getUnpackedPtr ();
 
-#define TITAN_CHARS_GRADIENT_SCROLL_FREQ 4
-#define TITAN_CHARS_GRADIENT_MAX_COLORS 42
-#define TITAN_CURR_GRADIENT_ELEMS 15
-const u16 titanCharsGradientColors[TITAN_CHARS_GRADIENT_MAX_COLORS];
+void set2FirstStripsPals ();
 
 #endif
