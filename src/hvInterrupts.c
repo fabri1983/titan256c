@@ -117,13 +117,15 @@ static u16* currGradPtr;
 void vertIntOnTitan256cCallback_HIntEveryN () {
     titan256cPalsPtr = getUnpackedPtr() + 2 * TITAN_256C_COLORS_PER_STRIP;
     palIdx = 0;
+    currGradPtr = getGradientColorsBuffer();
     VDP_setAutoInc(2); // Needed for DMA of colors in u32 type, and it seems is neeed for CPU too (had some black screen flickering if not set)
 }
 
 void vertIntOnTitan256cCallback_HIntOneTime () {
-    VDP_setHIntCounter(0);
     titan256cPalsPtr = getUnpackedPtr() + 2 * TITAN_256C_COLORS_PER_STRIP;
     palIdx = 0;
+    currGradPtr = getGradientColorsBuffer();
+    VDP_setHIntCounter(0);
     VDP_setAutoInc(2); // Needed for DMA of colors in u32 type, and it seems is neeed for CPU too (had some black screen flickering if not set)
 }
 
@@ -432,26 +434,6 @@ HINTERRUPT_CALLBACK horizIntOnTitan256cCallback_DMA_OneTime () {
         // while ( (*((vu16*)VDP_CTRL_PORT) & 4) == 0 ) {;} // Waits until HBlank flag becomes true
         // SCANLINE 9 starts (few pixels ahead) which is wrapped around to SCANLINE 1
     }
-}
-
-static u16 titanCharsCycleCnt = 0;
-
-void updateCharsGradientColors () {
-    // Strips [21,25] (0 based) renders the letters using transparent color, and we want to use a gradient scrolling over time.
-    // So 5 strips. However each strip is 8 scanlines meaning we need to render every 4 scanlines inside the HInt.
-
-    s16 shift = divu(titanCharsCycleCnt, TITAN_CHARS_GRADIENT_SCROLL_FREQ); // advance ramp color every N frames
-    currGradPtr = getGradientColorsBuffer();
-    for (s16 i=0; i < TITAN_CURR_GRADIENT_ELEMS; ++i) {
-        u16 colorIdx = modu(abs(TITAN_CHARS_GRADIENT_MAX_COLORS + i - shift), TITAN_CHARS_GRADIENT_MAX_COLORS);
-        u16 c = titanCharsGradientColors[colorIdx];
-        *currGradPtr++ = c;
-    }
-    currGradPtr = getGradientColorsBuffer(); // reset pointer to first element
-
-    ++titanCharsCycleCnt;
-    if (titanCharsCycleCnt == TITAN_CHARS_GRADIENT_SCROLL_FREQ * TITAN_CHARS_GRADIENT_MAX_COLORS)
-        titanCharsCycleCnt = 0;
 }
 
 // void horizIntOnMainMenuCallback_ASM () {

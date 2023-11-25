@@ -16,9 +16,9 @@
 #define TITAN_CHARS_GRADIENT_SCROLL_FREQ 4
 #define TITAN_CHARS_GRADIENT_MAX_COLORS 42
 #define TITAN_CURR_GRADIENT_ELEMS 15
-const u16 titanCharsGradientColors[TITAN_CHARS_GRADIENT_MAX_COLORS];
 
 u16* getGradientColorsBuffer ();
+void updateCharsGradientColors ();
 
 #define FADE_OUT_STEPS 7
 void fadingStepToBlack (const u16 stripN);
