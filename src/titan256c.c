@@ -69,25 +69,42 @@ FORCE_INLINE u16* getGradientColorsBuffer () {
     return (u16*) gradColorsBuffer;
 }
 
-void NO_INLINE fadingStepToBlack (const u16 stripN) {
-    u16 colorDst = 0x0;
-    // fade the palettes
-    u16* palsPtr = unpackedData + stripN*32;
-    for (u16 i=4; i > 0; --i) {
-        *palsPtr++ = colorDst;
-        *palsPtr++ = colorDst;
-        *palsPtr++ = colorDst;
-        *palsPtr++ = colorDst;
-        *palsPtr++ = colorDst;
-        *palsPtr++ = colorDst;
-        *palsPtr++ = colorDst;
-        *palsPtr++ = colorDst;
-    }
-    // fade the gradient colors
-    if (stripN >= 21 && stripN <= 25) {
-        u16* rampBufPtr = gradColorsBuffer;
-        for (u16 i=0; i < TITAN_CURR_GRADIENT_ELEMS; ++i) {
-            *rampBufPtr++ = colorDst;
+void NO_INLINE fadingStepToBlack (const u16 currFadingStrip) {
+    for (s16 stripN=currFadingStrip; stripN >= max(currFadingStrip - FADE_OUT_STEPS, 0); --stripN) {
+        // fade the palettes of stripN
+        u16* palsPtr = unpackedData + stripN * TITAN_256C_COLORS_PER_STRIP;
+        for (s16 i=TITAN_256C_COLORS_PER_STRIP; i > 0; --i) {
+            // const u16 s = *palsPtr;
+            // u16 d;
+            // *palsPtr++ = d;
+            *palsPtr++ = 0x0;
         }
+        // fade the gradient colors
+        // if (stripN >= 21 && stripN <= 25) {
+        //     u16* rampBufPtr = gradColorsBuffer;
+        //     for (u16 i=0; i < TITAN_CURR_GRADIENT_ELEMS; ++i) {
+        //         *rampBufPtr++ = 0x0;
+        //     }
+        // }
     }
 }
+
+// void NO_INLINE fadingStepToBlack (const u16 currFadingStrip) {
+//     for (s16 stripN=currFadingStrip; stripN >= max(currFadingStrip - FADE_OUT_STEPS, 0); --stripN) {
+//         // fade the palettes of stripN
+//         u16* palsPtr = unpackedData + stripN * TITAN_256C_COLORS_PER_STRIP;
+//         for (s16 i=TITAN_256C_COLORS_PER_STRIP; i > 0; --i) {
+//             const u16 s = *palsPtr;
+//             const u16 rs = (s & VDPPALETTE_REDMASK) >> VDPPALETTE_REDSFT;
+//             const u16 gs = (s & VDPPALETTE_GREENMASK) >> VDPPALETTE_GREENSFT;
+//             const u16 bs = (s & VDPPALETTE_BLUEMASK) >> VDPPALETTE_BLUESFT;
+//             const u16 rd = divu(rs * (FADE_OUT_STEPS - 1), FADE_OUT_STEPS) << VDPPALETTE_REDSFT;
+//             const u16 gd = divu(gs * (FADE_OUT_STEPS - 1), FADE_OUT_STEPS) << VDPPALETTE_GREENSFT;
+//             const u16 bd = divu(bs * (FADE_OUT_STEPS - 1), FADE_OUT_STEPS) << VDPPALETTE_BLUESFT;
+//             const u16 d = rd | gd | bd;
+//             *palsPtr++ = d;
+//             //kprintf("%X %X %X %X", bd, gd, rd, d);
+//             kprintf("0x%03X %d", d, s);
+//         }
+//     }
+// }

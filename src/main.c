@@ -87,12 +87,10 @@ static void titan256c () {
             if (currFadingStrip != prevFadingStrip) {
                 prevFadingStrip = currFadingStrip;
                 // apply fade to black from currFadingStrip up to FADE_OUT_STEPS previous strips (limit is strip 0)
-                for (s16 i=currFadingStrip; i >= max(currFadingStrip - FADE_OUT_STEPS, 0); --i) {
-                    fadingStepToBlack(i);
-                }
+                fadingStepToBlack(currFadingStrip);
             }
-            // moved ahead last strip? then fading is finished
-            if (currFadingStrip > (screenHeight / TITAN_256C_STRIP_HEIGHT)) {
+            // last strip? then fading is finished
+            if (currFadingStrip == (screenHeight / TITAN_256C_STRIP_HEIGHT)) {
                 faceToBlackIsDone = TRUE;
             }
         }
@@ -148,14 +146,14 @@ int main (bool hard) {
 
     if (!hard) SYS_hardReset();
 
-    // displaySegaLogo();
-    // waitMillis(200);
+    displaySegaLogo();
+    waitMillis(200);
     // displaySgdkLogo();
     // waitMillis(200);
-    // displayTeddyBearLogo();
-    // waitMillis(200);
+    displayTeddyBearLogo();
+    waitMillis(200);
 
-    basicEngineConfig(); // setup basic engine configurations
+    basicEngineConfig();
 
     initGameStatus();
 

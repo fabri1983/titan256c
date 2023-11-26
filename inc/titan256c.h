@@ -20,8 +20,8 @@
 u16* getGradientColorsBuffer ();
 void updateCharsGradientColors ();
 
-#define FADE_OUT_STEPS 7
-void fadingStepToBlack (const u16 stripN);
+#define FADE_OUT_STEPS 8 // only use multiple of 2
+void fadingStepToBlack (const u16 currFadingStrip);
 
 void unpackPalettes (const Palette32AllStrips* pals32);
 void freePalettes (const Palette32AllStrips* pals32);
