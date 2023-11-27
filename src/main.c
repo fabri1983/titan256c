@@ -95,7 +95,7 @@ static void titan256c () {
             }
             ++fadingStripCnt;
             // already passed last strip? then fading is finished
-            if (currFadingStrip == (screenHeight / TITAN_256C_STRIP_HEIGHT + (FADE_OUT_COLOR_STEPS / FADE_OUT_STRIPS_SPLIT_CYCLES))) {
+            if (currFadingStrip == (TITAN_256C_STRIPS_COUNT + FADE_OUT_COLOR_STEPS - 1)) {
                 faceToBlackIsDone = TRUE;
             }
         }

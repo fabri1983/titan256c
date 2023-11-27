@@ -70,18 +70,18 @@ FORCE_INLINE u16* getGradientColorsBuffer () {
 }
 
 void NO_INLINE fadingStepToBlack (s16 currFadingStrip, u16 cycle) {
-    // consider non exact division so the stepping is adjusted accordingly
-    // u16 stripsStepping = (FADE_OUT_COLOR_STEPS + 1) / FADE_OUT_STRIPS_SPLIT_CYCLES;
-    // if (cycle * stripsStepping > FADE_OUT_COLOR_STEPS) {
-    //     stripsStepping = FADE_OUT_COLOR_STEPS - (cycle - 1) * stripsStepping;
-    // }
-    // currFadingStrip = max(currFadingStrip - cycle * stripsStepping, 0);
-    // currFadingStrip = min(currFadingStrip, TITAN_256C_STRIPS_COUNT);
-    // s16 limit = max(currFadingStrip - stripsStepping + 1, 0);
+    // No need to fade strip when currFadingStrip is inside the stepping
+    if (cycle > 0 && currFadingStrip < (FADE_OUT_COLOR_STEPS / FADE_OUT_STRIPS_SPLIT_CYCLES)) {
+        return;
+    }
+    currFadingStrip = max(0, currFadingStrip - cycle * (FADE_OUT_COLOR_STEPS / FADE_OUT_STRIPS_SPLIT_CYCLES));
 
-    currFadingStrip = max(currFadingStrip - cycle * (FADE_OUT_COLOR_STEPS / FADE_OUT_STRIPS_SPLIT_CYCLES), 0);
-    currFadingStrip = min(currFadingStrip, TITAN_256C_STRIPS_COUNT);
-    s16 limit = max(currFadingStrip - (FADE_OUT_COLOR_STEPS / FADE_OUT_STRIPS_SPLIT_CYCLES) + 1, 0);
+    // No need to fade strips ahead the current limit
+    if (currFadingStrip > TITAN_256C_STRIPS_COUNT){
+        return;
+    }
+
+    u16 limit = max(0, currFadingStrip - (FADE_OUT_COLOR_STEPS / FADE_OUT_STRIPS_SPLIT_CYCLES) + 1);
 
     for (; currFadingStrip >= limit; --currFadingStrip) {
         // fade the palettes of stripN
@@ -95,9 +95,12 @@ void NO_INLINE fadingStepToBlack (s16 currFadingStrip, u16 cycle) {
             u16 rs = s & VDPPALETTE_REDMASK;
             u16 gs = s & VDPPALETTE_GREENMASK;
             u16 bs = s & VDPPALETTE_BLUEMASK;
-            if (rs != 0) rs -= 0x002;
-            if (gs != 0) gs -= 0x020;
-            if (bs != 0) bs -= 0x200;
+            if (rs == 0x004) rs = 0; // this done due to missing step on last cycle value due to non exactly division
+            else if (rs != 0) rs -= 0x002;
+            if (gs == 0x040) gs = 0; // this done due to missing step on last cycle value due to non exactly division
+            else if (gs != 0) gs -= 0x020;
+            if (bs == 0x400) bs = 0; // this done due to missing step on last cycle value due to non exactly division
+            else if (bs != 0) bs -= 0x200;
             *palsPtr++ = rs | gs | bs;
         }
         // fade the gradient colors
