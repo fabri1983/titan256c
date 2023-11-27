@@ -20,8 +20,9 @@
 u16* getGradientColorsBuffer ();
 void updateCharsGradientColors ();
 
-#define FADE_OUT_STEPS 8 // only use multiple of 2
-void fadingStepToBlack (const u16 currFadingStrip);
+#define FADE_OUT_COLOR_STEPS 8 // Only use multiple of 2. Changing this value will affect assumptions made in fadingStepToBlack() for fading color calculations
+#define FADE_OUT_STRIPS_SPLIT_CYCLES 3 // In how many parts do we split the strips visited for fading calculation to aliviate lenghty execution
+void fadingStepToBlack (s16 currFadingStrip, u16 cycle);
 
 void unpackPalettes (const Palette32AllStrips* pals32);
 void freePalettes (const Palette32AllStrips* pals32);

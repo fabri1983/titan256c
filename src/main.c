@@ -70,7 +70,8 @@ static void titan256c () {
     u16 animStatus = 0;
     bool faceToBlackIsDone = FALSE;
     u16 fadingStripCnt = 0;
-    u16 prevFadingStrip = 0;
+    u16 prevFadingStrip = 255;
+    u16 fadingCycle = 0; // use to split the fading to black into N cycles, due to its lenghty execution
 
     while (TRUE) {
         // Load 1st and 2nd strip's palette
@@ -81,16 +82,20 @@ static void titan256c () {
 
         // update fading to black 2 palettes per strip
         if (animStatus == 1) {
-            ++fadingStripCnt;
-            s16 currFadingStrip = fadingStripCnt >> 2; // advance 1 strip every 4 frames. Use divu() for N non power of 2
-            // strip changed? let's do one fading step
-            if (currFadingStrip != prevFadingStrip) {
+            // advance 1 strip every 3 frames. This must be >= INNER_STRIPS_CYCLES used to execute the fading for current strip
+            s16 currFadingStrip = divu(fadingStripCnt, 3); // Use divu() for N non power of 2
+            // strip changed? let's do one fading step. fadingCycle > 0 means there are fading cycles to complete for current strip
+            if (currFadingStrip != prevFadingStrip || fadingCycle > 0) {
                 prevFadingStrip = currFadingStrip;
                 // apply fade to black from currFadingStrip up to FADE_OUT_STEPS previous strips (limit is strip 0)
-                fadingStepToBlack(currFadingStrip);
+                fadingStepToBlack(currFadingStrip, fadingCycle);
+                // inner cycles for strip go between 0 and N-1
+                ++fadingCycle;
+                if (fadingCycle == FADE_OUT_STRIPS_SPLIT_CYCLES) fadingCycle = 0;
             }
-            // last strip? then fading is finished
-            if (currFadingStrip == (screenHeight / TITAN_256C_STRIP_HEIGHT)) {
+            ++fadingStripCnt;
+            // already passed last strip? then fading is finished
+            if (currFadingStrip == (screenHeight / TITAN_256C_STRIP_HEIGHT + (FADE_OUT_COLOR_STEPS / FADE_OUT_STRIPS_SPLIT_CYCLES))) {
                 faceToBlackIsDone = TRUE;
             }
         }
@@ -154,10 +159,9 @@ int main (bool hard) {
     waitMillis(200);
 
     basicEngineConfig();
-
     initGameStatus();
 
-    while (1) {
+    for (;;) {
         VDP_resetScreen();
         titan256c();
     }

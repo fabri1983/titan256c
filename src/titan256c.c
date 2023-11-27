@@ -69,18 +69,39 @@ FORCE_INLINE u16* getGradientColorsBuffer () {
     return (u16*) gradColorsBuffer;
 }
 
-void NO_INLINE fadingStepToBlack (const u16 currFadingStrip) {
-    for (s16 stripN=currFadingStrip; stripN >= max(currFadingStrip - FADE_OUT_STEPS, 0); --stripN) {
+void NO_INLINE fadingStepToBlack (s16 currFadingStrip, u16 cycle) {
+    // consider non exact division so the stepping is adjusted accordingly
+    // u16 stripsStepping = (FADE_OUT_COLOR_STEPS + 1) / FADE_OUT_STRIPS_SPLIT_CYCLES;
+    // if (cycle * stripsStepping > FADE_OUT_COLOR_STEPS) {
+    //     stripsStepping = FADE_OUT_COLOR_STEPS - (cycle - 1) * stripsStepping;
+    // }
+    // currFadingStrip = max(currFadingStrip - cycle * stripsStepping, 0);
+    // currFadingStrip = min(currFadingStrip, TITAN_256C_STRIPS_COUNT);
+    // s16 limit = max(currFadingStrip - stripsStepping + 1, 0);
+
+    currFadingStrip = max(currFadingStrip - cycle * (FADE_OUT_COLOR_STEPS / FADE_OUT_STRIPS_SPLIT_CYCLES), 0);
+    currFadingStrip = min(currFadingStrip, TITAN_256C_STRIPS_COUNT);
+    s16 limit = max(currFadingStrip - (FADE_OUT_COLOR_STEPS / FADE_OUT_STRIPS_SPLIT_CYCLES) + 1, 0);
+
+    for (; currFadingStrip >= limit; --currFadingStrip) {
         // fade the palettes of stripN
-        u16* palsPtr = unpackedData + stripN * TITAN_256C_COLORS_PER_STRIP;
+        u16* palsPtr = unpackedData + currFadingStrip * TITAN_256C_COLORS_PER_STRIP;
         for (s16 i=TITAN_256C_COLORS_PER_STRIP; i > 0; --i) {
-            // const u16 s = *palsPtr;
-            // u16 d;
-            // *palsPtr++ = d;
-            *palsPtr++ = 0x0;
+            u16 s = *palsPtr;
+            if (s == 0) {
+                ++palsPtr;
+                continue;
+            };
+            u16 rs = s & VDPPALETTE_REDMASK;
+            u16 gs = s & VDPPALETTE_GREENMASK;
+            u16 bs = s & VDPPALETTE_BLUEMASK;
+            if (rs != 0) rs -= 0x002;
+            if (gs != 0) gs -= 0x020;
+            if (bs != 0) bs -= 0x200;
+            *palsPtr++ = rs | gs | bs;
         }
         // fade the gradient colors
-        // if (stripN >= 21 && stripN <= 25) {
+        // if (currFadingStrip >= 21 && currFadingStrip <= 25) {
         //     u16* rampBufPtr = gradColorsBuffer;
         //     for (u16 i=0; i < TITAN_CURR_GRADIENT_ELEMS; ++i) {
         //         *rampBufPtr++ = 0x0;
@@ -95,16 +116,20 @@ void NO_INLINE fadingStepToBlack (const u16 currFadingStrip) {
 //         u16* palsPtr = unpackedData + stripN * TITAN_256C_COLORS_PER_STRIP;
 //         for (s16 i=TITAN_256C_COLORS_PER_STRIP; i > 0; --i) {
 //             const u16 s = *palsPtr;
+//             if (s == 0) {
+//                 ++palsPtr;
+//                 continue;
+//             };
 //             const u16 rs = (s & VDPPALETTE_REDMASK) >> VDPPALETTE_REDSFT;
 //             const u16 gs = (s & VDPPALETTE_GREENMASK) >> VDPPALETTE_GREENSFT;
 //             const u16 bs = (s & VDPPALETTE_BLUEMASK) >> VDPPALETTE_BLUESFT;
-//             const u16 rd = divu(rs * (FADE_OUT_STEPS - 1), FADE_OUT_STEPS) << VDPPALETTE_REDSFT;
-//             const u16 gd = divu(gs * (FADE_OUT_STEPS - 1), FADE_OUT_STEPS) << VDPPALETTE_GREENSFT;
-//             const u16 bd = divu(bs * (FADE_OUT_STEPS - 1), FADE_OUT_STEPS) << VDPPALETTE_BLUESFT;
+//             const u16 rd = rs == 0 ? 0 : divu(rs * (FADE_OUT_STEPS - 1), FADE_OUT_STEPS) << VDPPALETTE_REDSFT;
+//             const u16 gd = gs == 0 ? 0 : divu(gs * (FADE_OUT_STEPS - 1), FADE_OUT_STEPS) << VDPPALETTE_GREENSFT;
+//             const u16 bd = bs == 0 ? 0 : divu(bs * (FADE_OUT_STEPS - 1), FADE_OUT_STEPS) << VDPPALETTE_BLUESFT;
 //             const u16 d = rd | gd | bd;
 //             *palsPtr++ = d;
 //             //kprintf("%X %X %X %X", bd, gd, rd, d);
-//             kprintf("0x%03X %d", d, s);
+//             kprintf("0x%03X 0x%03X", s, d);
 //         }
 //     }
 // }
