@@ -5,24 +5,15 @@
 #include "titan256c.h"
 #include "hvInterrupts.h"
 
-static u16 currTileIndex = TILE_USER_INDEX;
-
-static void loadTitan256cTileSet () {
-    const TileSet* tileset = titanRGB.tileset;
-    // only DMA because total tileset size is bigger than DMA buffer if using DMA_QUEUE_COPY
-    VDP_loadTileSet(tileset, currTileIndex, DMA);
-}
-
-static void loadTitan256cTileMap (VDPPlane plane) {
-    u16 baseTileAttribs = TILE_ATTR_FULL(PAL0, 0, FALSE, FALSE, currTileIndex);
-    currTileIndex += titanRGB.tileset->numTile;
-    const TileMap* tilemap = titanRGB.tilemap;
-    // only DMA or DMA_QUEUE_COPY (if tilemap is compressed) to avoid glitches
-    VDP_setTileMapEx(plane, tilemap, baseTileAttribs, 0, 0, 0, 0, TITAN_256C_WIDTH/8, TITAN_256C_HEIGHT/8, DMA_QUEUE_COPY);
-}
-
 #define HINT_MODES 3
 static u16 titan256cHIntMode;
+
+#define GAME_STATE_TITAN256C_FALLING 0
+#define GAME_STATE_TITAN256C_SHOW 1
+#define GAME_STATE_TITAN256C_FADING_TO_BLACK 2
+#define GAME_STATE_TITAN256C_NEXT 3
+
+static u16 currTileIndex;
 
 static void titan256c () {
 
@@ -31,8 +22,9 @@ static void titan256c () {
 
     VDP_setEnable(FALSE);
 
-    loadTitan256cTileSet();
-    loadTitan256cTileMap(BG_B);
+    currTileIndex = TILE_USER_INDEX;
+    loadTitan256cTileSet(currTileIndex);
+    currTileIndex = loadTitan256cTileMap(BG_B, currTileIndex);
     unpackPalettes();
 
     SYS_disableInts();
@@ -59,23 +51,30 @@ static void titan256c () {
 
     VDP_setEnable(TRUE);
 
-    u16 animStatus = 0;
-    bool faceToBlackIsDone = FALSE;
+    u16 gameState = GAME_STATE_TITAN256C_SHOW;
     u16 fadingStripCnt = 0;
     u16 prevFadingStrip = 255;
     u16 fadingCycle = 0; // use to split the fading to black into N cycles, due to its lenghty execution
 
-    while (TRUE) {
+    while (gameState != GAME_STATE_TITAN256C_NEXT) {
+
         // Load 1st and 2nd strip's palette
         set2FirstStripsPals();
 
         // Update ramp color effect for the titan text section
         updateCharsGradientColors();
 
+        if (gameState == GAME_STATE_TITAN256C_SHOW) {
+            u16 joyState = JOY_readJoypad(JOY_1);
+            if (joyState & BUTTON_START) {
+                gameState = GAME_STATE_TITAN256C_FADING_TO_BLACK;
+            }
+        }
+
         // update fading to black 2 palettes per strip
-        if (animStatus == 1) {
-            // advance 1 strip every 3 frames. This must be >= INNER_STRIPS_CYCLES used to execute the fading for current strip
-            s16 currFadingStrip = divu(fadingStripCnt, 3); // Use divu() for N non power of 2
+        if (gameState == GAME_STATE_TITAN256C_FADING_TO_BLACK) {
+            // advance 1 strip every N frames. This must be >= FADE_OUT_STRIPS_SPLIT_CYCLES used to execute the fading for current strip
+            u16 currFadingStrip = divu(fadingStripCnt, 3); // Use divu() for N non power of 2
             // strip changed? let's do one fading step. fadingCycle > 0 means there are fading cycles to complete for current strip
             if (currFadingStrip != prevFadingStrip || fadingCycle > 0) {
                 prevFadingStrip = currFadingStrip;
@@ -88,23 +87,11 @@ static void titan256c () {
             ++fadingStripCnt;
             // already passed last strip? then fading is finished
             if (currFadingStrip == (TITAN_256C_STRIPS_COUNT + FADE_OUT_COLOR_STEPS - 1)) {
-                faceToBlackIsDone = TRUE;
+                gameState = GAME_STATE_TITAN256C_NEXT;
             }
         }
 
         SYS_doVBlankProcess();
-
-        if (animStatus == 0) {
-            u16 joyState = JOY_readJoypad(JOY_1);
-            if (joyState & BUTTON_START) {
-                ++animStatus;
-            }
-        }
-        else if (animStatus == 1 && faceToBlackIsDone) {
-            ++animStatus;
-            titan256cHIntMode = modu(titan256cHIntMode + 1, HINT_MODES); // set to move into next Titan256c HInt mode
-            break;
-        }
     }
 
     SYS_disableInts();
@@ -155,6 +142,7 @@ int main (bool hard) {
 
     for (;;) {        
         titan256c();
+        titan256cHIntMode = modu(titan256cHIntMode + 1, HINT_MODES); // set to move into next Titan256c HInt mode
     }
 
     return 0;

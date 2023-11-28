@@ -103,7 +103,7 @@ static FORCE_INLINE void waitVCounterReg (u16 n) {
  * \param len How many colors to move.
  * \param fromAddr Must be >> 1.
 */
-static FORCE_INLINE void setupDMAForPals (u16 len, u32 fromAddr) {
+static void NO_INLINE setupDMAForPals (u16 len, u32 fromAddr) {
     // Uncomment if you previously change it to 1 (CPU access to VRAM is 1 byte lenght, and 2 bytes length for CRAM and VSRAM)
     //VDP_setAutoInc(2);
 
@@ -329,9 +329,10 @@ HINTERRUPT_CALLBACK horizIntOnTitan256cCallback_DMA_EveryN () {
 }
 
 HINTERRUPT_CALLBACK horizIntOnTitan256cCallback_DMA_OneTime () {
-    VDP_setHIntCounter(255);
+    // instead of VDP_setHIntCounter(0xFF) due to additionals read and write from/to internal regValues[]
+    *((u16*) VDP_CTRL_PORT) = 0x8A00 | 0xFF;
 
-    // Giving the nature of SGDK hint callback it will be invoked several times until the VDP_setHIntCounter(255) makes effect.
+    // Giving the nature of SGDK hint callback it will be invoked several times until the VDP_setHIntCounter(0xFF) makes effect.
     // So we need to cancel out the subsequent invocations which are those having VCOUNTER > 0 (is 0 based).
     if (GET_VCOUNTER > 0) {
         return;
@@ -343,12 +344,12 @@ HINTERRUPT_CALLBACK horizIntOnTitan256cCallback_DMA_OneTime () {
     // Simulates waiting the first call to Simulates VDP_setHIntCounter(TITAN_256C_STRIP_HEIGHT - 1)
     waitVCounter(TITAN_256C_STRIP_HEIGHT - 1 - 1);
     // at this point GET_VCOUNTER value is TITAN_256C_STRIP_HEIGHT - 1
-    u16 vcounter = TITAN_256C_STRIP_HEIGHT-1;
+    u16 vcounter = TITAN_256C_STRIP_HEIGHT - 1;
 
     for (;;) {
         // SCANLINE 1 starts right here
 
-        if (vcounter > (224 - TITAN_256C_STRIP_HEIGHT - 1)) { // valid for NTSC and PAL since titan image size is fixed
+        if (vcounter > (TITAN_256C_HEIGHT - TITAN_256C_STRIP_HEIGHT - 1)) { // valid for NTSC and PAL since titan image size is fixed
             return;
         }
 

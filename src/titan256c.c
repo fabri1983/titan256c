@@ -5,6 +5,23 @@
 #include <memory.h>
 #include "titan256c.h"
 
+void loadTitan256cTileSet (u16 currTileIndex) {
+    const TileSet* tileset = titanRGB.tileset;
+    // only DMA because total tileset size is bigger than defualt DMA buffer when using DMA_QUEUE_COPY
+    VDP_loadTileSet(tileset, currTileIndex, DMA);
+}
+
+static u16 yTilePos = 0; // use for the falling and bounce effect
+
+u16 loadTitan256cTileMap (VDPPlane plane, u16 currTileIndex) {
+    u16 baseTileAttribs = TILE_ATTR_FULL(PAL0, 0, FALSE, FALSE, currTileIndex);
+    currTileIndex += titanRGB.tileset->numTile;
+    const TileMap* tilemap = titanRGB.tilemap;
+    // only DMA or DMA_QUEUE_COPY (if tilemap is compressed) to avoid glitches
+    VDP_setTileMapEx(plane, tilemap, baseTileAttribs, 0, 0, 0, yTilePos, TITAN_256C_WIDTH/8, (TITAN_256C_HEIGHT/8) - yTilePos, DMA_QUEUE_COPY);
+    return currTileIndex;
+}
+
 static u16* unpackedData;
 
 void unpackPalettes () {
@@ -35,8 +52,9 @@ FORCE_INLINE void set2FirstStripsPals () {
     PAL_setColors(0, unpackedData, TITAN_256C_COLORS_PER_STRIP * 2, DMA_QUEUE);
 }
 
+// rmap color effect in VDP format: BGR
 static const u16 titanCharsGradientColors[TITAN_CHARS_GRADIENT_MAX_COLORS] = {
-    0xE00, 0xE02, 0xE04, 0xE06, 0xE08, 0xE0A, 0xE0C, // this values are in VDP format: BGR
+    0xE00, 0xE02, 0xE04, 0xE06, 0xE08, 0xE0A, 0xE0C,
     0xE0E, 0xC0E, 0xA0E, 0x80E, 0x60E, 0x40E, 0x20E, 
     0x00E, 0x02E, 0x04E, 0x06E, 0x08E, 0x0AE, 0x0CE, 
     0x0EE, 0x0EC, 0x0EA, 0x0E8, 0x0E6, 0x0E4, 0x0E2,
@@ -48,14 +66,14 @@ static u16 gradColorsBuffer[TITAN_CURR_GRADIENT_ELEMS];
 
 static u16 titanCharsCycleCnt = 0;
 
-void updateCharsGradientColors () {
+void NO_INLINE updateCharsGradientColors () {
     // Strips [21,25] (0 based) renders the letters using transparent color, and we want to use a gradient scrolling over time.
     // So 5 strips. However each strip is 8 scanlines meaning we need to render every 4 scanlines inside the HInt.
 
     s16 shift = divu(titanCharsCycleCnt, TITAN_CHARS_GRADIENT_SCROLL_FREQ); // advance ramp color every N frames
     u16* gradPtr = gradColorsBuffer;
     for (s16 i=0; i < TITAN_CURR_GRADIENT_ELEMS; ++i) {
-        u16 colorIdx = modu(TITAN_CHARS_GRADIENT_MAX_COLORS + i - shift, TITAN_CHARS_GRADIENT_MAX_COLORS);
+        u16 colorIdx = modu(TITAN_CHARS_GRADIENT_MAX_COLORS + i + shift, TITAN_CHARS_GRADIENT_MAX_COLORS);
         u16 c = *(titanCharsGradientColors + colorIdx);
         *gradPtr++ = c;
     }
@@ -69,46 +87,53 @@ FORCE_INLINE u16* getGradientColorsBuffer () {
     return (u16*) gradColorsBuffer;
 }
 
-void NO_INLINE fadingStepToBlack (s16 currFadingStrip, u16 cycle) {
+void NO_INLINE fadingStepToBlack (u16 currFadingStrip, u16 cycle) {
     // No need to fade strip when currFadingStrip is inside the stepping
-    if (cycle > 0 && currFadingStrip < (FADE_OUT_COLOR_STEPS / FADE_OUT_STRIPS_SPLIT_CYCLES)) {
+    if (cycle > 0 && currFadingStrip < ((FADE_OUT_COLOR_STEPS + 1) / FADE_OUT_STRIPS_SPLIT_CYCLES)) {
         return;
     }
 
-    currFadingStrip = max(0, currFadingStrip - cycle * (FADE_OUT_COLOR_STEPS / FADE_OUT_STRIPS_SPLIT_CYCLES));
+    currFadingStrip = max(0, currFadingStrip - cycle * ((FADE_OUT_COLOR_STEPS + 1) / FADE_OUT_STRIPS_SPLIT_CYCLES));
 
-    // No need to fade strips ahead the current limit
-    if (currFadingStrip >= TITAN_256C_STRIPS_COUNT){
+    // No need to fade strips ahead the max strip limit
+    if (currFadingStrip > TITAN_256C_STRIPS_COUNT){
         return;
     }
 
-    u16 limit = max(0, currFadingStrip - (FADE_OUT_COLOR_STEPS / FADE_OUT_STRIPS_SPLIT_CYCLES) + 1);
+    u16 limit = max(0, currFadingStrip - ((FADE_OUT_COLOR_STEPS + 1) / FADE_OUT_STRIPS_SPLIT_CYCLES) + 1);
 
-    for (; currFadingStrip >= limit; --currFadingStrip) {
+    for (s16 stripN = currFadingStrip; stripN >= limit; --stripN) {
         // fade the palettes of stripN
-        u16* palsPtr = unpackedData + currFadingStrip * TITAN_256C_COLORS_PER_STRIP;
+        u16* palsPtr = unpackedData + stripN * TITAN_256C_COLORS_PER_STRIP;
         for (s16 i=TITAN_256C_COLORS_PER_STRIP; i > 0; --i) {
             u16 s = *palsPtr;
             if (s == 0) {
                 ++palsPtr;
                 continue;
             };
-            // VDP u16 color is represented as next:
-            // F  E  D  C  B  A  9  8  7  6  5  4  3  2  1  0
-            // -  -  -  -  B2 B1 B0 -  G2 G1 G0 -  R2 R1 R0 -
             u16 rs = s & VDPPALETTE_REDMASK;
             u16 gs = s & VDPPALETTE_GREENMASK;
             u16 bs = s & VDPPALETTE_BLUEMASK;
-            if (rs == 0x004) rs = 0; // this done due to missing step on last cycle value due to non exactly division
-            else if (rs != 0) rs -= 0x002;
-            if (gs == 0x040) gs = 0; // this done due to missing step on last cycle value due to non exactly division
-            else if (gs != 0) gs -= 0x020;
-            if (bs == 0x400) bs = 0; // this done due to missing step on last cycle value due to non exactly division
-            else if (bs != 0) bs -= 0x200;
+            if (rs != 0) rs -= 0x002;
+            if (gs != 0) gs -= 0x020;
+            if (bs != 0) bs -= 0x200;
             *palsPtr++ = rs | gs | bs;
+
+            // VDP u16 color is represented as next:
+            // F  E  D  C  B  A  9  8  7  6  5  4  3  2  1  0
+            // -  -  -  -  B2 B1 B0 -  G2 G1 G0 -  R2 R1 R0 -
+            // Fading to black in 8 steps is just decrementing a color by 2 until reaching 0 for each color component
+            // F  E  D  C  B  A  9  8  7  6  5  4  3  2  1  0
+            // -  -  -  -  0  1  0  -  0  1  0  -  0  1  0  -
+            // u16 s = *palsPtr;
+            // // zero? continue with next color
+            // if (s == 0)
+            //     ++palsPtr;
+            // else
+            //     *palsPtr++ = s - 0b0000001000100010; // decrement 2 in every component
         }
         // fade the gradient colors
-        // if (currFadingStrip >= 21 && currFadingStrip <= 25) {
+        // if (stripN >= 21 && stripN <= 25) {
         //     u16* rampBufPtr = gradColorsBuffer;
         //     for (u16 i=0; i < TITAN_CURR_GRADIENT_ELEMS; ++i) {
         //         *rampBufPtr++ = 0x0;

@@ -16,8 +16,8 @@ const ROMHeader rom_header = {
     "SEGA MEGA DRIVE ",
 #endif
     "(C)SGDK 2023    ",
-    "TITAN 256 COLORS FOREVER                        ",
-    "TITAN 256 COLORS FOREVER                        ",
+    "SAMPLE PROGRAM                                  ",
+    "SAMPLE PROGRAM                                  ",
     "GM 00000000-00",
     0x000,
     "JD              ",
