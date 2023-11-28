@@ -43,8 +43,7 @@ the second unwanted HInt invocation. Ugly hack but this is what I came up so far
 ![titan_dma_onetime.jpg](screenshots/titan_dma_onetime.jpg?raw=true "titan_dma_onetime.jpg")
 
 
-**B** shows two black lines over the text color ramp. Digging around what's the issue.  
-**C** still WIP. I'm timing some instructions and see where is the right place to put them.
+**B** and **C** show two black lines over the text color ramp. Digging around what's the issue.
 
 
 ### TODO:
