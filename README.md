@@ -48,7 +48,6 @@ the second unwanted HInt invocation. Ugly hack but this is what I came up so far
 
 
 ### TODO:
-- Fix approach C.
 - Change text ramp effect by using white color instead of transparent.
 - Fix black BG color lines over text in approaches B and C.
 - Add colorful border as original titan demo has. Likely using shade mode?

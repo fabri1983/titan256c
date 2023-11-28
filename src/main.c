@@ -21,7 +21,7 @@ static void loadTitan256cTileMap (VDPPlane plane) {
     VDP_setTileMapEx(plane, tilemap, baseTileAttribs, 0, 0, 0, 0, TITAN_256C_WIDTH/8, TITAN_256C_HEIGHT/8, DMA_QUEUE_COPY);
 }
 
-#define MAX_HINT_MODES 3
+#define HINT_MODES 3
 static u16 titan256cHIntMode;
 
 static void titan256c () {
@@ -102,7 +102,7 @@ static void titan256c () {
         }
         else if (animStatus == 1 && faceToBlackIsDone) {
             ++animStatus;
-            titan256cHIntMode = modu(titan256cHIntMode + 1, MAX_HINT_MODES); // set to move into next Titan256c HInt mode
+            titan256cHIntMode = modu(titan256cHIntMode + 1, HINT_MODES); // set to move into next Titan256c HInt mode
             break;
         }
     }
@@ -136,7 +136,7 @@ static void basicEngineConfig () {
 }
 
 static void initGameStatus () {
-    titan256cHIntMode = 0;
+    titan256cHIntMode = 0; // set initial color swap mode
 }
 
 int main (bool hard) {
@@ -148,7 +148,7 @@ int main (bool hard) {
     displayTeddyBearLogo();
     waitMillis(200);
 
-    VDP_resetScreen();
+    VDP_resetScreen(); // this reset scroll planes and other stuff used in logo effects
 
     basicEngineConfig();
     initGameStatus();

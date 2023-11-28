@@ -55,8 +55,8 @@ void updateCharsGradientColors () {
     s16 shift = divu(titanCharsCycleCnt, TITAN_CHARS_GRADIENT_SCROLL_FREQ); // advance ramp color every N frames
     u16* gradPtr = gradColorsBuffer;
     for (s16 i=0; i < TITAN_CURR_GRADIENT_ELEMS; ++i) {
-        u16 colorIdx = modu(abs(TITAN_CHARS_GRADIENT_MAX_COLORS + i - shift), TITAN_CHARS_GRADIENT_MAX_COLORS);
-        u16 c = titanCharsGradientColors[colorIdx];
+        u16 colorIdx = modu(TITAN_CHARS_GRADIENT_MAX_COLORS + i - shift, TITAN_CHARS_GRADIENT_MAX_COLORS);
+        u16 c = *(titanCharsGradientColors + colorIdx);
         *gradPtr++ = c;
     }
 
@@ -74,10 +74,11 @@ void NO_INLINE fadingStepToBlack (s16 currFadingStrip, u16 cycle) {
     if (cycle > 0 && currFadingStrip < (FADE_OUT_COLOR_STEPS / FADE_OUT_STRIPS_SPLIT_CYCLES)) {
         return;
     }
+
     currFadingStrip = max(0, currFadingStrip - cycle * (FADE_OUT_COLOR_STEPS / FADE_OUT_STRIPS_SPLIT_CYCLES));
 
     // No need to fade strips ahead the current limit
-    if (currFadingStrip > TITAN_256C_STRIPS_COUNT){
+    if (currFadingStrip >= TITAN_256C_STRIPS_COUNT){
         return;
     }
 
@@ -92,6 +93,9 @@ void NO_INLINE fadingStepToBlack (s16 currFadingStrip, u16 cycle) {
                 ++palsPtr;
                 continue;
             };
+            // VDP u16 color is represented as next:
+            // F  E  D  C  B  A  9  8  7  6  5  4  3  2  1  0
+            // -  -  -  -  B2 B1 B0 -  G2 G1 G0 -  R2 R1 R0 -
             u16 rs = s & VDPPALETTE_REDMASK;
             u16 gs = s & VDPPALETTE_GREENMASK;
             u16 bs = s & VDPPALETTE_BLUEMASK;
