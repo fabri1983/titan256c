@@ -4,6 +4,12 @@
 #include <types.h>
 #include <sys.h>
 
+#ifdef __GNUC__
+#define ASM_STATEMENT __asm__
+#elif defined(_MSC_VER)
+#define ASM_STATEMENT __asm
+#endif
+
 void vertIntOnTitan256cCallback_HIntEveryN ();
 
 void vertIntOnTitan256cCallback_HIntOneTime ();

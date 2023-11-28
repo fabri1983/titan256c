@@ -1,7 +1,6 @@
 #include <genesis.h>
 #include "utils.h"
 #include "segaLogo.h"
-#include "sgdkLogo.h"
 #include "teddyBearLogo.h"
 #include "titan256c.h"
 #include "hvInterrupts.h"
@@ -10,24 +9,19 @@ static u16 currTileIndex = TILE_USER_INDEX;
 
 static void loadTitan256cTileSet () {
     const TileSet* tileset = titanRGB.tileset;
-    VDP_loadTileSet(tileset, currTileIndex, DMA); // only DMA because total tileset size is bigger than DMA buffer if using DMA_QUEUE_COPY
-    
+    // only DMA because total tileset size is bigger than DMA buffer if using DMA_QUEUE_COPY
+    VDP_loadTileSet(tileset, currTileIndex, DMA);
 }
 
 static void loadTitan256cTileMap (VDPPlane plane) {
     u16 baseTileAttribs = TILE_ATTR_FULL(PAL0, 0, FALSE, FALSE, currTileIndex);
     currTileIndex += titanRGB.tileset->numTile;
     const TileMap* tilemap = titanRGB.tilemap;
-    VDP_setTileMapEx(plane, tilemap, baseTileAttribs, 0, 0, 0, 0, TITAN_256C_WIDTH/8, TITAN_256C_HEIGHT/8, DMA_QUEUE_COPY); // only DMA or DMA_QUEUE_COPY (if tilemap is compressed) to avoid glitches
+    // only DMA or DMA_QUEUE_COPY (if tilemap is compressed) to avoid glitches
+    VDP_setTileMapEx(plane, tilemap, baseTileAttribs, 0, 0, 0, 0, TITAN_256C_WIDTH/8, TITAN_256C_HEIGHT/8, DMA_QUEUE_COPY);
 }
 
-// static void setTitan256cFirstPaletteColor () {
-//     // copy every color at pos 1 to pos 0 on PAL0, so changing the BG color as the Titan 512 demo does (although this version is only every 8 scanlines)
-//     for (u16 i=0; i < TITAN_256C_STRIPS_COUNT * TITAN_256C_COLORS_PER_STRIP; i += TITAN_256C_COLORS_PER_STRIP) {
-//         palTitanRGB.data[i] = palTitanRGB.data[i + 1];
-//     }
-// }
-
+#define MAX_HINT_MODES 3
 static u16 titan256cHIntMode;
 
 static void titan256c () {
@@ -39,11 +33,7 @@ static void titan256c () {
 
     loadTitan256cTileSet();
     loadTitan256cTileMap(BG_B);
-    unpackPalettes(&palTitanRGB);
-
-    VDP_setEnable(TRUE);
-
-    SYS_doVBlankProcess(); // in case we need to flush DMA queue
+    unpackPalettes();
 
     SYS_disableInts();
         // Call the HInt every N scanlines. Uses CPU for palette swapping
@@ -66,6 +56,8 @@ static void titan256c () {
         }
         VDP_setHInterrupt(TRUE);
     SYS_enableInts();
+
+    VDP_setEnable(TRUE);
 
     u16 animStatus = 0;
     bool faceToBlackIsDone = FALSE;
@@ -110,7 +102,7 @@ static void titan256c () {
         }
         else if (animStatus == 1 && faceToBlackIsDone) {
             ++animStatus;
-            titan256cHIntMode = modu(titan256cHIntMode + 1, 3); // set to move into next Titan256c HInt mode
+            titan256cHIntMode = modu(titan256cHIntMode + 1, MAX_HINT_MODES); // set to move into next Titan256c HInt mode
             break;
         }
     }
@@ -126,7 +118,7 @@ static void titan256c () {
     PAL_setColor(0x0, 0x000); // Set BG color as Black
     SYS_doVBlankProcess();
 
-    freePalettes(&palTitanRGB);
+    freePalettes();
     MEM_pack();
     currTileIndex = TILE_USER_INDEX;
 }
@@ -153,16 +145,15 @@ int main (bool hard) {
 
     displaySegaLogo();
     waitMillis(200);
-    // displaySgdkLogo();
-    // waitMillis(200);
     displayTeddyBearLogo();
     waitMillis(200);
+
+    VDP_resetScreen();
 
     basicEngineConfig();
     initGameStatus();
 
-    for (;;) {
-        VDP_resetScreen();
+    for (;;) {        
         titan256c();
     }
 

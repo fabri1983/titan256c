@@ -7,21 +7,21 @@
 
 static u16* unpackedData;
 
-void unpackPalettes (const Palette32AllStrips* pals32) {
+void unpackPalettes () {
     unpackedData = (u16*) MEM_alloc(TITAN_256C_STRIPS_COUNT * TITAN_256C_COLORS_PER_STRIP * sizeof(u16));
-    if (pals32->compression != COMPRESSION_NONE) {
+    if (palTitanRGB.compression != COMPRESSION_NONE) {
         // No need to use FAR_SAFE() macro here because palette data is always stored near
-        unpack(pals32->compression, (u8*) pals32->data, (u8*) unpackedData);
+        unpack(palTitanRGB.compression, (u8*) palTitanRGB.data, (u8*) unpackedData);
     }
     else {
         // Copy the palette data. It is modified later on fading out effect. No FAR_SAFE() needed here, palette data is always at near region.
         const u16 size = (TITAN_256C_STRIPS_COUNT * TITAN_256C_COLORS_PER_STRIP) * 2;
-        memcpy((u8*) unpackedData, pals32->data, size);
+        memcpy((u8*) unpackedData, palTitanRGB.data, size);
     }
 }
 
-void freePalettes (const Palette32AllStrips* pals32) {
-    if (pals32->compression != COMPRESSION_NONE) {
+void freePalettes () {
+    if (palTitanRGB.compression != COMPRESSION_NONE) {
         MEM_free((void*) unpackedData);
         unpackedData = NULL;
     }

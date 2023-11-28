@@ -24,8 +24,8 @@ void updateCharsGradientColors ();
 #define FADE_OUT_STRIPS_SPLIT_CYCLES 3 // In how many parts do we split the strips visited for fading calculation to aliviate lenghty execution
 void fadingStepToBlack (s16 currFadingStrip, u16 cycle);
 
-void unpackPalettes (const Palette32AllStrips* pals32);
-void freePalettes (const Palette32AllStrips* pals32);
+void unpackPalettes ();
+void freePalettes ();
 u16* getUnpackedPtr ();
 
 void set2FirstStripsPals ();

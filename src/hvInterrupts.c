@@ -6,12 +6,6 @@
 #include "hvInterrupts.h"
 #include "titan256c.h"
 
-#ifdef __GNUC__
-#define ASM_STATEMENT __asm__
-#elif defined(_MSC_VER)
-#define ASM_STATEMENT __asm
-#endif
-
 // static u8 reg01; // Holds current VDP register 1 whole value (it holds other bits than VDP ON/OFF status)
 
 // static FORCE_INLINE void copyReg01 () {
@@ -49,20 +43,6 @@ static FORCE_INLINE void waitHCounter (u16 n) {
 }
 
 /**
- * Wait until VCounter 0xC00008 reaches nth scanline position
-*/
-static FORCE_INLINE void waitVCounter (u16 n) {
-    ASM_STATEMENT volatile (
-        " .LoopVC%=:"
-        "    cmpi.w  %[vcLimit], 0xC00008.l;"  // we only interested in comparing word since n won't be > 255 for our practical cases
-        "    blo     .LoopVC%=;"
-        :
-        : [vcLimit] "i" ((n << 8) | 0xFF)
-        : "cc" // Clobbers: condition codes
-    );
-}
-
-/**
  * Shannon Birt version. Loads HCounter into register for faster comparison.
 */
 static FORCE_INLINE void waitHCounter_ShannonBirt (u16 n) {
@@ -76,6 +56,7 @@ static FORCE_INLINE void waitHCounter_ShannonBirt (u16 n) {
     //     "    blo     .hcLimit%=;"
     //     : "+a" (regA), "+d" (regD)
     //     :
+    //     : "cc"                          // Clobbers: condition codes
     // );
     ASM_STATEMENT volatile (
         " move.l    #0xC00009, %%a0;"    // Load H Counter address into a0 register
@@ -85,7 +66,35 @@ static FORCE_INLINE void waitHCounter_ShannonBirt (u16 n) {
         "    blo     .hcLimit%=;"
         :
         : [hcLimit] "i" (n)
-        : "a0", "d1"                     // Clobbers: register d1, address register a0
+        : "a0", "d1", "cc"               // Clobbers: register d1, address register a0, condition codes
+    );
+}
+
+/**
+ * Wait until VCounter 0xC00008 reaches nth scanline position. Only valid with constants.
+*/
+static FORCE_INLINE void waitVCounter (u16 n) {
+    ASM_STATEMENT volatile (
+        " .LoopVC%=:"
+        "    CMPI.w  %[vcLimit], 0xC00008.l;"  // we only interested in comparing word since n won't be > 255 (then shifted right) for our practical cases
+        "    BLO     .LoopVC%=;"
+        :
+        : [vcLimit] "i" (n << 8) // (n << 8) | 0xFF
+        : "cc" // Clobbers: condition codes
+    );
+}
+
+/**
+ * Wait until VCounter 0xC00008 reaches nth scanline position.
+*/
+static FORCE_INLINE void waitVCounterReg (u16 n) {
+    ASM_STATEMENT volatile (
+        " .LoopVC%=:"
+        "    CMP.w   0xC00008.l, %0;"  // we only interested in comparing word since n won't be > 255 (then shifted right) for our practical cases
+        "    BHI     .LoopVC%=;"
+        :
+        : "r" (n << 8) // (n << 8) | 0xFF
+        : "cc" // Clobbers: condition codes
     );
 }
 
@@ -333,13 +342,13 @@ HINTERRUPT_CALLBACK horizIntOnTitan256cCallback_DMA_OneTime () {
 
     // Simulates waiting the first call to Simulates VDP_setHIntCounter(TITAN_256C_STRIP_HEIGHT - 1)
     waitVCounter(TITAN_256C_STRIP_HEIGHT - 1 - 1);
-    // at this point GET_VCOUNTER value is TITAN_256C_STRIP_HEIGHT-1
+    // at this point GET_VCOUNTER value is TITAN_256C_STRIP_HEIGHT - 1
+    u16 vcounter = TITAN_256C_STRIP_HEIGHT-1;
 
     for (;;) {
         // SCANLINE 1 starts right here
 
-        u16 vcounter = GET_VCOUNTER;
-        if (vcounter > (224 - TITAN_256C_STRIP_HEIGHT - 1)) { // NTSC: 224. PAL: 240.
+        if (vcounter > (224 - TITAN_256C_STRIP_HEIGHT - 1)) { // valid for NTSC and PAL since titan image size is fixed
             return;
         }
 
@@ -426,13 +435,8 @@ HINTERRUPT_CALLBACK horizIntOnTitan256cCallback_DMA_OneTime () {
         //palIdx = palIdx == 0 ? 32 : 0;
         //palIdx = (palIdx + 32) & 63; // (palIdx + 32) % 64 => x mod y = x & (y-1) when y is power of 2
 
-        // waitHCounter(160);
-        // while ( (*((vu16*)VDP_CTRL_PORT) & 4) == 0 ) {;} // Waits until HBlank flag becomes true
-        // SCANLINE 8 starts (few pixels ahead)
-
-        // waitHCounter(158);
-        // while ( (*((vu16*)VDP_CTRL_PORT) & 4) == 0 ) {;} // Waits until HBlank flag becomes true
-        // SCANLINE 9 starts (few pixels ahead) which is wrapped around to SCANLINE 1
+        vcounter += 8;
+        waitVCounterReg(vcounter);
     }
 }
 
