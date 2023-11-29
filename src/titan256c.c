@@ -121,7 +121,9 @@ void NO_INLINE fadingStepToBlack (u16 currFadingStrip, u16 cycle, u16 titan256cH
                 if (gs != 0) gs -= 0x020;
                 if (bs != 0) bs -= 0x200;
                 *palsPtr++ = rs | gs | bs;
-            } else {
+            }
+            // only for HInt mode 2 since we need want to finish on time
+            else {
                 *palsPtr++ = (s - 0b0000001000100010) & VDPPALETTE_COLORMASK; // decrement 2 in every component
             }
             // VDP u16 color is represented as next:
