@@ -1,10 +1,10 @@
 ## Megadrive Titan 256 Colors Forever
 
 
-This a personal project using [SGDK v1.9](https://github.com/Stephane-D/SGDK) (with latest changes). 
-It's an attempt to simulate the great Titan 512C Forever section from Titan Overdrive mega demo v1.1. 
-And learning the functioning of the megadrive and its architecture in the go.  
-This version displays up to **252 colors** _(272 colors when fading to black effect runs)_.  
+This is a personal project using [SGDK v1.9](https://github.com/Stephane-D/SGDK) (with latest changes) 
+as an attempt to simulate the great Titan 512C Forever section from Titan Overdrive mega demo v1.1, 
+and learning the functioning of the megadrive and its architecture in the go.  
+This version displays up to **252 colors**.  
 **Work In Progress. Only tested with Blastem.**
 
 
