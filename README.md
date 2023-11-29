@@ -14,9 +14,9 @@ For convenience test you can directly try the last compiled rom `titan256c_rom.b
 ### 3 Approaches:  
 **Pressing START cycles between them**  
 
-**A**. Writing 2 u32 vars (4 colors) by CPU to CRAM every scanline. That's done 7 times inside the duration of 7 scanlines. 
-Also and additional write to BG for the text color ramp effect, only done 3 times in the duration of 7 scanlines. 
-Finally in the 8th scanline it writes the last colors to complete the total of 32 colors palette swap.
+**A**. Interweaving writes of 2 u32 vars (palette colors) and 1 u16 var (BG color for ramp effect), and 4 u32 vars (palette colors), 
+by CPU to CRAM every scanline along the duration of 8 scanlines. 
+This approach has better ramp effect since the change in color happens every other scanline.
 
 
 **B**. DMA 32 colors (2 palettes) splitted in 3 chunks + 3 BG colors writes for the text color ramp effect. 
@@ -47,7 +47,7 @@ the second unwanted HInt invocation. Ugly hack but this is what I came up so far
 
 
 ### TODO:
-- Approch A likely has room to update text ramp color in every scanline.
+- Approches B and C likely have room to update text ramp color in every scanline.
 - Fix black BG color lines over text in approaches B and C.
 - Add DMA command buffering as Steph does. See dma.c.
 - Try to use titan256c_rgb.png as input (this need a fix in tiledpalettequant to accept an specific color as transparent).

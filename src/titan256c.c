@@ -64,18 +64,20 @@ static const u16 titanCharsGradientColors[TITAN_CHARS_GRADIENT_MAX_COLORS] = {
 
 static u16 gradColorsBuffer[TITAN_CURR_GRADIENT_ELEMS];
 
-static u16 titanCharsCycleCnt = 0;
+static u8 titanCharsCycleCnt = 0;
 
 void NO_INLINE updateCharsGradientColors () {
     // Strips [21,25] (0 based) renders the letters using transparent color, and we want to use a gradient scrolling over time.
     // So 5 strips. However each strip is 8 scanlines meaning we need to render every 4 scanlines inside the HInt.
 
-    u16 shift = divu(titanCharsCycleCnt, TITAN_CHARS_GRADIENT_SCROLL_FREQ); // advance ramp color every N frames
+    u16 colorIdx = divu(titanCharsCycleCnt, TITAN_CHARS_GRADIENT_SCROLL_FREQ); // advance ramp color every N frames
     u16* gradPtr = gradColorsBuffer;
-    for (u16 i=0; i < TITAN_CURR_GRADIENT_ELEMS; ++i) {
-        u16 colorIdx = modu(shift++, TITAN_CHARS_GRADIENT_MAX_COLORS); // modu is sign free
-        u16 c = *(titanCharsGradientColors + colorIdx);
-        *gradPtr++ = c;
+    for (u16 i=TITAN_CURR_GRADIENT_ELEMS/4; i > 0; --i) {
+        *gradPtr++ = *(titanCharsGradientColors + modu(colorIdx + 0, TITAN_CHARS_GRADIENT_MAX_COLORS));
+        *gradPtr++ = *(titanCharsGradientColors + modu(colorIdx + 1, TITAN_CHARS_GRADIENT_MAX_COLORS));
+        *gradPtr++ = *(titanCharsGradientColors + modu(colorIdx + 2, TITAN_CHARS_GRADIENT_MAX_COLORS));
+        *gradPtr++ = *(titanCharsGradientColors + modu(colorIdx + 3, TITAN_CHARS_GRADIENT_MAX_COLORS));
+        colorIdx += 4;
     }
 
     ++titanCharsCycleCnt;
@@ -87,7 +89,7 @@ FORCE_INLINE u16* getGradientColorsBuffer () {
     return (u16*) gradColorsBuffer;
 }
 
-void NO_INLINE fadingStepToBlack (u16 currFadingStrip, u16 cycle) {
+void NO_INLINE fadingStepToBlack (u16 currFadingStrip, u16 cycle, u16 titan256cHIntMode) {
     // No need to fade strip when currFadingStrip is inside the stepping
     if (cycle > 0 && currFadingStrip < ((FADE_OUT_COLOR_STEPS + 1) / FADE_OUT_STRIPS_SPLIT_CYCLES)) {
         return;
@@ -111,14 +113,17 @@ void NO_INLINE fadingStepToBlack (u16 currFadingStrip, u16 cycle) {
                 ++palsPtr;
                 continue;
             };
-            u16 rs = s & VDPPALETTE_REDMASK;
-            u16 gs = s & VDPPALETTE_GREENMASK;
-            u16 bs = s & VDPPALETTE_BLUEMASK;
-            if (rs != 0) rs -= 0x002;
-            if (gs != 0) gs -= 0x020;
-            if (bs != 0) bs -= 0x200;
-            *palsPtr++ = rs | gs | bs;
-
+            if (titan256cHIntMode != 2) {
+                u16 rs = s & VDPPALETTE_REDMASK;
+                u16 gs = s & VDPPALETTE_GREENMASK;
+                u16 bs = s & VDPPALETTE_BLUEMASK;
+                if (rs != 0) rs -= 0x002;
+                if (gs != 0) gs -= 0x020;
+                if (bs != 0) bs -= 0x200;
+                *palsPtr++ = rs | gs | bs;
+            } else {
+                *palsPtr++ = (s - 0b0000001000100010) & VDPPALETTE_COLORMASK; // decrement 2 in every component
+            }
             // VDP u16 color is represented as next:
             // F  E  D  C  B  A  9  8  7  6  5  4  3  2  1  0
             // -  -  -  -  B2 B1 B0 -  G2 G1 G0 -  R2 R1 R0 -

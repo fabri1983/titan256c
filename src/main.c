@@ -51,9 +51,9 @@ static void titan256c () {
 
     VDP_setEnable(TRUE);
 
-    u16 gameState = GAME_STATE_TITAN256C_SHOW;
+    u16 gameState = GAME_STATE_TITAN256C_FALLING;
     u16 fadingStripCnt = 0;
-    u16 prevFadingStrip = 255;
+    u16 prevFadingStrip = 0xFF;
     u16 fadingCycle = 0; // use to split the fading to black into N cycles, due to its lenghty execution
 
     while (gameState != GAME_STATE_TITAN256C_NEXT) {
@@ -62,24 +62,27 @@ static void titan256c () {
         set2FirstStripsPals();
 
         // Update ramp color effect for the titan text section
-        // updateCharsGradientColors(); // NOTE: called in the VInt callback
+        updateCharsGradientColors(); // update one of the halves
 
-        if (gameState == GAME_STATE_TITAN256C_SHOW) {
+        if (gameState == GAME_STATE_TITAN256C_FALLING) {
+            // if bounce effect finished then continue with next game state
+            gameState = GAME_STATE_TITAN256C_SHOW;
+        }
+        else if (gameState == GAME_STATE_TITAN256C_SHOW) {
             u16 joyState = JOY_readJoypad(JOY_1);
             if (joyState & BUTTON_START) {
                 gameState = GAME_STATE_TITAN256C_FADING_TO_BLACK;
             }
         }
-
         // update fading to black 2 palettes per strip
-        if (gameState == GAME_STATE_TITAN256C_FADING_TO_BLACK) {
+        else if (gameState == GAME_STATE_TITAN256C_FADING_TO_BLACK) {
             // advance 1 strip every N frames. This must be >= FADE_OUT_STRIPS_SPLIT_CYCLES used to execute the fading for current strip
             u16 currFadingStrip = divu(fadingStripCnt, 3); // Use divu() for N non power of 2
             // strip changed? let's do one fading step. fadingCycle > 0 means there are fading cycles to complete for current strip
             if (currFadingStrip != prevFadingStrip || fadingCycle > 0) {
                 prevFadingStrip = currFadingStrip;
                 // apply fade to black from currFadingStrip up to FADE_OUT_STEPS previous strips (limit is strip 0)
-                fadingStepToBlack(currFadingStrip, fadingCycle);
+                fadingStepToBlack(currFadingStrip, fadingCycle, titan256cHIntMode);
                 // inner cycles for strip go between 0 and N-1
                 ++fadingCycle;
                 if (fadingCycle == FADE_OUT_STRIPS_SPLIT_CYCLES) fadingCycle = 0;
