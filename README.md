@@ -48,5 +48,5 @@ the second unwanted HInt invocation. Ugly hack but this is what I came up so far
 
 ### TODO:
 - Fix black BG color lines over text in approaches B and C.
-- Add colorful border as original titan demo has. Likely using shadow mode?
 - Add DMA command buffering as Steph does. See dma.c.
+- Try to use titan256c_rgb.png as input (this need a fix in tiledpalettequant to accept an specific color as transparent).
