@@ -124,18 +124,20 @@ static u16 palIdx; // 3rd strip starts with palettes at [PAL0,PAL1]
 static u16* currGradPtr;
 
 void vertIntOnTitan256cCallback_HIntEveryN () {
+    VDP_setAutoInc(2); // Needed for DMA of colors in u32 type, and it seems is neeed for CPU too (had some black screen flickering if not set)
     titan256cPalsPtr = getUnpackedPtr() + 2 * TITAN_256C_COLORS_PER_STRIP;
     palIdx = 0;
     currGradPtr = getGradientColorsBuffer();
-    VDP_setAutoInc(2); // Needed for DMA of colors in u32 type, and it seems is neeed for CPU too (had some black screen flickering if not set)
+    updateCharsGradientColors();
 }
 
 void vertIntOnTitan256cCallback_HIntOneTime () {
+    VDP_setAutoInc(2); // Needed for DMA of colors in u32 type, and it seems is neeed for CPU too (had some black screen flickering if not set)
     titan256cPalsPtr = getUnpackedPtr() + 2 * TITAN_256C_COLORS_PER_STRIP;
     palIdx = 0;
     currGradPtr = getGradientColorsBuffer();
     VDP_setHIntCounter(0);
-    VDP_setAutoInc(2); // Needed for DMA of colors in u32 type, and it seems is neeed for CPU too (had some black screen flickering if not set)
+    updateCharsGradientColors();
 }
 
 HINTERRUPT_CALLBACK horizIntOnTitan256cCallback_CPU_EveryN () {

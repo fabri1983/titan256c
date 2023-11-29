@@ -62,7 +62,7 @@ static void titan256c () {
         set2FirstStripsPals();
 
         // Update ramp color effect for the titan text section
-        updateCharsGradientColors();
+        // updateCharsGradientColors(); // NOTE: called in the VInt callback
 
         if (gameState == GAME_STATE_TITAN256C_SHOW) {
             u16 joyState = JOY_readJoypad(JOY_1);

@@ -70,10 +70,10 @@ void NO_INLINE updateCharsGradientColors () {
     // Strips [21,25] (0 based) renders the letters using transparent color, and we want to use a gradient scrolling over time.
     // So 5 strips. However each strip is 8 scanlines meaning we need to render every 4 scanlines inside the HInt.
 
-    s16 shift = divu(titanCharsCycleCnt, TITAN_CHARS_GRADIENT_SCROLL_FREQ); // advance ramp color every N frames
+    u16 shift = divu(titanCharsCycleCnt, TITAN_CHARS_GRADIENT_SCROLL_FREQ); // advance ramp color every N frames
     u16* gradPtr = gradColorsBuffer;
-    for (s16 i=0; i < TITAN_CURR_GRADIENT_ELEMS; ++i) {
-        u16 colorIdx = modu(TITAN_CHARS_GRADIENT_MAX_COLORS + i + shift, TITAN_CHARS_GRADIENT_MAX_COLORS);
+    for (u16 i=0; i < TITAN_CURR_GRADIENT_ELEMS; ++i) {
+        u16 colorIdx = modu(shift++, TITAN_CHARS_GRADIENT_MAX_COLORS); // modu is sign free
         u16 c = *(titanCharsGradientColors + colorIdx);
         *gradPtr++ = c;
     }
