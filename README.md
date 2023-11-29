@@ -16,14 +16,14 @@ For convenience test you can directly try the last compiled rom `titan256c_rom.b
 
 **A**. Writing 2 u32 vars (4 colors) by CPU to CRAM every scanline. That's done 7 times inside the duration of 7 scanlines. 
 Also and additional write to BG for the text color ramp effect, only done 3 times in the duration of 7 scanlines. 
-And then in the 8th scanline I write the last colors to complete the total of 32 colors palette swap.
+Finally in the 8th scanline it writes the last colors to complete the total of 32 colors palette swap.
 
 
 **B**. DMA 32 colors (2 palettes) splitted in 3 chunks + 3 BG colors writes for the text color ramp effect. 
-That's done inside the duration of 8 scanlines.
+All done inside the duration of 8 scanlines.
 
 
-**C**. Same than B but calling only once the HInt setting `VDP_setHIntCounter(0)` (every scanline) and disabling it using 
+**C**. Same than B but calling only once the HInt with `VDP_setHIntCounter(0)` (every scanline) and disabling it using 
 `VDP_setHIntCounter(255)` at the first line of the HInt.  
 In this approach I manage to get only one invocation out of the two the HInt is being invoked, because changing the invocation 
 counter only takes effect in the next one. Here is where I use `if GET_VCOUNTER > 0 then exit from HInt` in order to dicard 
