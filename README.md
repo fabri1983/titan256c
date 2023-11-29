@@ -1,4 +1,4 @@
-## SEGA Megadrive Titan 256 Colors Forever
+## Megadrive Titan 256 Colors Forever
 
 
 This a personal project using [SGDK v1.9](https://github.com/Stephane-D/SGDK) (with latest changes). 
@@ -48,5 +48,5 @@ the second unwanted HInt invocation. Ugly hack but this is what I came up so far
 
 ### TODO:
 - Fix black BG color lines over text in approaches B and C.
-- Add colorful border as original titan demo has. Likely using shade mode?
+- Add colorful border as original titan demo has. Likely using shadow mode?
 - Add DMA command buffering as Steph does. See dma.c.
