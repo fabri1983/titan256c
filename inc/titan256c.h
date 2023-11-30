@@ -23,8 +23,8 @@
 u16* getGradientColorsBuffer ();
 void updateTextGradientColors (u16 fadeTextDiff);
 
-#define FADE_OUT_COLOR_STEPS 7 // Changing this value will affect assumptions made in fadingStepToBlack_() methods for fading color calculations
-#define FADE_OUT_STRIPS_SPLIT_CYCLES 3 // How many parts do we split the strips visited for fading calculation to aliviate lenghty execution
+#define FADE_OUT_COLOR_STEPS 8 // Changing this value will affect assumptions made in fadingStepToBlack_() methods for fading color calculations
+#define FADE_OUT_STRIPS_SPLIT_CYCLES 4 // How many parts do we split the strips visited for fading calculation to aliviate lenghty execution
 void fadingStepToBlack_pals (u16 currFadingStrip, u16 cycle, u16 titan256cHIntMode);
 u16 fadingStepToBlack_text (u16 currFadingStrip);
 

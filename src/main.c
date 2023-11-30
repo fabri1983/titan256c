@@ -53,7 +53,7 @@ static void titan256cDisplay () {
 
     u16 gameState = GAME_STATE_TITAN256C_FALLING;
     u16 fadingStripCnt = 0;
-    u16 prevFadingStrip = 0xFF;
+    u16 prevFadingStrip = 0;
     u16 fadingCycle = 0; // use to split the fading to black into N cycles, due to its lenghty execution
     u16 fadeTextDiff = 0;
 
@@ -65,32 +65,40 @@ static void titan256cDisplay () {
         // Update ramp color effect for the titan text section
         updateTextGradientColors(fadeTextDiff);
 
-        if (gameState == GAME_STATE_TITAN256C_FALLING) {
-            // if bounce effect finished then continue with next game state
-            gameState = GAME_STATE_TITAN256C_SHOW;
-        }
-        else if (gameState == GAME_STATE_TITAN256C_SHOW) {
-            u16 joyState = JOY_readJoypad(JOY_1);
-            if (joyState & BUTTON_START) {
-                gameState = GAME_STATE_TITAN256C_FADING_TO_BLACK;
+        switch (gameState) {
+            case GAME_STATE_TITAN256C_FALLING: {
+                // if bounce effect finished then continue with next game state
+                gameState = GAME_STATE_TITAN256C_SHOW;
+                break;
             }
-        }
-        // update fading to black 2 palettes per strip
-        else if (gameState == GAME_STATE_TITAN256C_FADING_TO_BLACK) {
-            // advance 1 strip every N frames. This must be >= FADE_OUT_STRIPS_SPLIT_CYCLES used to execute the fading for current strip
-            u16 currFadingStrip = divu(fadingStripCnt++, 3); // Use divu() for N non power of 2
-            // strip changed? let's do one fading step. fadingCycle > 0 means there are fading cycles to complete for current strip
-            if (currFadingStrip != prevFadingStrip || fadingCycle > 0) {
-                // apply fade to black from currFadingStrip up to FADE_OUT_STEPS previous strips
-                fadingStepToBlack_pals(currFadingStrip, fadingCycle, titan256cHIntMode);
-                fadeTextDiff = fadingStepToBlack_text(currFadingStrip);
-                prevFadingStrip = currFadingStrip;
-                ++fadingCycle;
-                if (fadingCycle == FADE_OUT_STRIPS_SPLIT_CYCLES) fadingCycle = 0;
+            case GAME_STATE_TITAN256C_SHOW: {
+                u16 joyState = JOY_readJoypad(JOY_1);
+                if (joyState & BUTTON_START) {
+                    gameState = GAME_STATE_TITAN256C_FADING_TO_BLACK;
+                }
+                break;
             }
-            // already passed last strip? then fading is finished
-            if (currFadingStrip == (TITAN_256C_STRIPS_COUNT + FADE_OUT_COLOR_STEPS)) {
-                gameState = GAME_STATE_TITAN256C_NEXT;
+            // update fading to black 2 palettes per strip
+            case GAME_STATE_TITAN256C_FADING_TO_BLACK: {
+                // advance 1 strip every N frames. This must be >= FADE_OUT_STRIPS_SPLIT_CYCLES used to execute the fading for current strip
+                u16 currFadingStrip = fadingStripCnt++ / 4; // Use divu() for N non power of 2
+                // already passed last strip? then fading is finished
+                if (currFadingStrip == (TITAN_256C_STRIPS_COUNT + FADE_OUT_COLOR_STEPS)) {
+                    gameState = GAME_STATE_TITAN256C_NEXT;
+                    break;
+                }
+                // strip changed? let's do one fading step. fadingCycle > 0 means there are fading cycles to complete for current strip
+                if (fadingCycle < FADE_OUT_STRIPS_SPLIT_CYCLES) {
+                    // apply fade to black from currFadingStrip up to FADE_OUT_STEPS previous strips
+                    fadingStepToBlack_pals(currFadingStrip, fadingCycle, titan256cHIntMode);
+                    fadeTextDiff = fadingStepToBlack_text(currFadingStrip);
+                    ++fadingCycle;
+                }
+                if (currFadingStrip != prevFadingStrip) {
+                    prevFadingStrip = currFadingStrip;
+                    fadingCycle = 0;
+                }
+                break;
             }
         }
 
