@@ -72,12 +72,9 @@ void NO_INLINE updateTextGradientColors (u16 fadeTextDiff) {
 
     u16 colorIdx = divu(titanCharsCycleCnt, TITAN_CHARS_GRADIENT_SCROLL_FREQ); // advance ramp color every N frames
     u16* rampBufPtr = gradColorsBuffer;
-    for (u16 i=TITAN_CURR_GRADIENT_ELEMS/4; i > 0; --i) {
-        *rampBufPtr++ = *(titanCharsGradientColors + modu(colorIdx + 0, TITAN_CHARS_GRADIENT_MAX_COLORS)) - fadeTextDiff;
-        *rampBufPtr++ = *(titanCharsGradientColors + modu(colorIdx + 1, TITAN_CHARS_GRADIENT_MAX_COLORS)) - fadeTextDiff;
-        *rampBufPtr++ = *(titanCharsGradientColors + modu(colorIdx + 2, TITAN_CHARS_GRADIENT_MAX_COLORS)) - fadeTextDiff;
-        *rampBufPtr++ = *(titanCharsGradientColors + modu(colorIdx + 3, TITAN_CHARS_GRADIENT_MAX_COLORS)) - fadeTextDiff;
-        colorIdx += 4;
+    for (u16 i=TITAN_CURR_GRADIENT_ELEMS; i > 0; --i) {
+        *rampBufPtr++ = *(titanCharsGradientColors + modu(colorIdx, TITAN_CHARS_GRADIENT_MAX_COLORS)) - fadeTextDiff;
+        ++colorIdx;
     }
 
     ++titanCharsCycleCnt;
@@ -128,7 +125,7 @@ void NO_INLINE fadingStepToBlack_pals (u16 currFadingStrip, u16 cycle, u16 titan
             }
         }
         // Only HInt mode 2 has issues to finish on time and makes appear glitches during the fade out.
-        // So here I directly decrement 2 in every color component. Is much faster, creates wrong colors, but completes on time.
+        // So here I directly decrement 1 unit in every color component. Is much faster, creates wrong colors, but completes on time.
         else {
             for (s16 i=TITAN_256C_COLORS_PER_STRIP; i > 0; --i) {
                 u16 s = *palsPtr;
@@ -140,7 +137,7 @@ void NO_INLINE fadingStepToBlack_pals (u16 currFadingStrip, u16 cycle, u16 titan
         // VDP u16 color is represented as next:
         // F  E  D  C  B  A  9  8  7  6  5  4  3  2  1  0
         // -  -  -  -  B2 B1 B0 -  G2 G1 G0 -  R2 R1 R0 -
-        // Fading to black in 8 steps is just decrementing a color by 2 until reaching 0 for each color component
+        // Fading to black in 8 steps is just decrementing a color by 1 unit until reaching 0 for each color component
         // F  E  D  C  B  A  9  8  7  6  5  4  3  2  1  0
         // -  -  -  -  0  1  0  -  0  1  0  -  0  1  0  -
         // u16 s = *palsPtr;
@@ -148,7 +145,9 @@ void NO_INLINE fadingStepToBlack_pals (u16 currFadingStrip, u16 cycle, u16 titan
         // if (s == 0)
         //     ++palsPtr;
         // else
-        //     *palsPtr++ = s - 0x222; // decrement 2 in every component
+        //     *palsPtr++ = s - 0x222; // decrement 1 unit in every component
+        // u16 a = 0 - 0b0010; -> 0xFFFE
+        // s16 b = 0 - 0b0010; -> 0xFFFFFFFE
     }
 }
 
@@ -160,7 +159,7 @@ u16 NO_INLINE fadingStepToBlack_text (u16 currFadingStrip) {
     else return 0;
 }
 
-// void NO_INLINE fadingStepToBlack (const u16 currFadingStrip) {
+// void NO_INLINE fadingStepToBlack_pals (u16 currFadingStrip, u16 cycle, u16 titan256cHIntMode) {
 //     for (s16 stripN=currFadingStrip; stripN >= max(currFadingStrip - FADE_OUT_STEPS, 0); --stripN) {
 //         // fade the palettes of stripN
 //         u16* palsPtr = unpackedData + stripN * TITAN_256C_COLORS_PER_STRIP;

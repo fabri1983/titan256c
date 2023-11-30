@@ -89,7 +89,7 @@ static void titan256cDisplay () {
                 if (fadingCycle == FADE_OUT_STRIPS_SPLIT_CYCLES) fadingCycle = 0;
             }
             // already passed last strip? then fading is finished
-            if (currFadingStrip == (TITAN_256C_STRIPS_COUNT + FADE_OUT_COLOR_STEPS - 1)) {
+            if (currFadingStrip == (TITAN_256C_STRIPS_COUNT + FADE_OUT_COLOR_STEPS)) {
                 gameState = GAME_STATE_TITAN256C_NEXT;
             }
         }
@@ -145,6 +145,7 @@ int main (bool hard) {
     for (;;) {        
         titan256cDisplay();
         titan256cHIntMode = modu(titan256cHIntMode + 1, HINT_MODES); // set to move into next Titan256c HInt mode
+        VDP_resetScreen(); // clean all VRAM content
     }
 
     return 0;
