@@ -87,19 +87,16 @@ FORCE_INLINE u16* getGradientColorsBuffer () {
 }
 
 void NO_INLINE fadingStepToBlack_pals (u16 currFadingStrip, u16 cycle, u16 titan256cHIntMode) {
-    // No need to fade strip when currFadingStrip is inside the stepping
-    if (cycle > 0 && currFadingStrip < ((FADE_OUT_COLOR_STEPS + 0) / FADE_OUT_STRIPS_SPLIT_CYCLES)) {
+    // No need to fade this strip when it is one of the top strips and we already applied the fade
+    if (currFadingStrip < (FADE_OUT_COLOR_STEPS / FADE_OUT_STRIPS_SPLIT_CYCLES) && cycle > 0) {
         return;
     }
 
-    currFadingStrip = max(0, currFadingStrip - cycle * ((FADE_OUT_COLOR_STEPS + 0) / FADE_OUT_STRIPS_SPLIT_CYCLES));
-
-    // No need to fade strips ahead the max strip limit
-    if (currFadingStrip > TITAN_256C_STRIPS_COUNT){
-        return;
-    }
-
-    u16 limit = max(0, currFadingStrip - ((FADE_OUT_COLOR_STEPS + 0) / FADE_OUT_STRIPS_SPLIT_CYCLES) + 1);
+    // depending on the split cycle we update the starting strip 
+    currFadingStrip = max(0, currFadingStrip - cycle * (FADE_OUT_COLOR_STEPS / FADE_OUT_STRIPS_SPLIT_CYCLES));
+    u16 limit = max(0, currFadingStrip - (FADE_OUT_COLOR_STEPS / FADE_OUT_STRIPS_SPLIT_CYCLES) + 1);
+    // No need to fade strips ahead the max strip limit, but we still have to fade previous FADE_OUT_COLOR_STEPS strips
+    currFadingStrip = min(currFadingStrip, TITAN_256C_STRIPS_COUNT - 1);
 
     for (s16 stripN = currFadingStrip; stripN >= limit; --stripN) {
         // fade the palettes of stripN

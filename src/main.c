@@ -145,7 +145,6 @@ int main (bool hard) {
     for (;;) {        
         titan256cDisplay();
         titan256cHIntMode = modu(titan256cHIntMode + 1, HINT_MODES); // set to move into next Titan256c HInt mode
-        VDP_resetScreen(); // clean all VRAM content
     }
 
     return 0;
