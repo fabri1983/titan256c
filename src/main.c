@@ -54,7 +54,7 @@ static void titan256cDisplay () {
     u16 gameState = GAME_STATE_TITAN256C_FALLING;
     u16 fadingStripCnt = 0;
     u16 prevFadingStrip = 0;
-    u16 fadingCycle = 0; // use to split the fading to black into N cycles, due to its lenghty execution
+    u16 fadingCycleCurrStrip = 0; // use to split the fading to black into N cycles, due to its lenghty execution
     u16 fadeTextDiff = 0;
 
     while (gameState != GAME_STATE_TITAN256C_NEXT) {
@@ -87,16 +87,15 @@ static void titan256cDisplay () {
                     gameState = GAME_STATE_TITAN256C_NEXT;
                     break;
                 }
-                // strip changed? let's do one fading step. fadingCycle > 0 means there are fading cycles to complete for current strip
-                if (fadingCycle < FADE_OUT_STRIPS_SPLIT_CYCLES) {
+                fadeTextDiff = fadingStepToBlack_text(currFadingStrip);
+                if (fadingCycleCurrStrip < FADE_OUT_STRIPS_SPLIT_CYCLES) {
                     // apply fade to black from currFadingStrip up to FADE_OUT_STEPS previous strips
-                    fadingStepToBlack_pals(currFadingStrip, fadingCycle, titan256cHIntMode);
-                    fadeTextDiff = fadingStepToBlack_text(currFadingStrip);
-                    ++fadingCycle;
+                    fadingStepToBlack_pals(currFadingStrip, fadingCycleCurrStrip, titan256cHIntMode);
+                    ++fadingCycleCurrStrip;
                 }
                 if (currFadingStrip != prevFadingStrip) {
                     prevFadingStrip = currFadingStrip;
-                    fadingCycle = 0;
+                    fadingCycleCurrStrip = 0;
                 }
                 break;
             }

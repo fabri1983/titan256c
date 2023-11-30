@@ -73,7 +73,11 @@ void NO_INLINE updateTextGradientColors (u16 fadeTextDiff) {
     u16 colorIdx = divu(titanCharsCycleCnt, TITAN_CHARS_GRADIENT_SCROLL_FREQ); // advance ramp color every N frames
     u16* rampBufPtr = gradColorsBuffer;
     for (u16 i=TITAN_CURR_GRADIENT_ELEMS; i > 0; --i) {
-        *rampBufPtr++ = *(titanCharsGradientColors + modu(colorIdx, TITAN_CHARS_GRADIENT_MAX_COLORS)) - fadeTextDiff;
+        u16 d = *(titanCharsGradientColors + modu(colorIdx, TITAN_CHARS_GRADIENT_MAX_COLORS)) - fadeTextDiff;
+        if (d & 0b0000000010000) d &= ~0b0000000011110; // red overflows? then zero it
+        if (d & 0b0000100000000) d &= ~0b0000111100000; // green overflows? then zero it
+        if (d & 0b1000000000000) d &= ~0b1111000000000; // blue overflows? then zero it
+        *rampBufPtr++ = d;
         ++colorIdx;
     }
 
@@ -147,8 +151,8 @@ void NO_INLINE fadingStepToBlack_pals (u16 currFadingStrip, u16 cycle, u16 titan
 
 u16 NO_INLINE fadingStepToBlack_text (u16 currFadingStrip) {
     if (currFadingStrip >= TITAN_256C_TEXT_STARTING_STRIP) {
-        currFadingStrip = min(TITAN_256C_TEXT_STARTING_STRIP + FADE_OUT_COLOR_STEPS, currFadingStrip);
-        return 0x222 * (TITAN_256C_TEXT_STARTING_STRIP + 1 - currFadingStrip);
+        u16 factor = currFadingStrip - TITAN_256C_TEXT_STARTING_STRIP + 1;
+        return min(0xEEE, 0x222 * factor);
     }
     else return 0;
 }
