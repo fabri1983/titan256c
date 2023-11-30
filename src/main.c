@@ -15,7 +15,7 @@ static u16 titan256cHIntMode;
 
 static u16 currTileIndex;
 
-static void titan256c () {
+static void titan256cDisplay () {
 
     PAL_setColors(0, palette_black, 64, DMA); // palette_black is an array of 64
     SYS_doVBlankProcess();
@@ -55,6 +55,7 @@ static void titan256c () {
     u16 fadingStripCnt = 0;
     u16 prevFadingStrip = 0xFF;
     u16 fadingCycle = 0; // use to split the fading to black into N cycles, due to its lenghty execution
+    u16 fadeTextDiff = 0;
 
     while (gameState != GAME_STATE_TITAN256C_NEXT) {
 
@@ -62,7 +63,7 @@ static void titan256c () {
         set2FirstStripsPals();
 
         // Update ramp color effect for the titan text section
-        updateCharsGradientColors();
+        updateTextGradientColors(fadeTextDiff);
 
         if (gameState == GAME_STATE_TITAN256C_FALLING) {
             // if bounce effect finished then continue with next game state
@@ -82,7 +83,7 @@ static void titan256c () {
             if (currFadingStrip != prevFadingStrip || fadingCycle > 0) {
                 // apply fade to black from currFadingStrip up to FADE_OUT_STEPS previous strips
                 fadingStepToBlack_pals(currFadingStrip, fadingCycle, titan256cHIntMode);
-                fadingStepToBlack_text(currFadingStrip);
+                fadeTextDiff = fadingStepToBlack_text(currFadingStrip);
                 prevFadingStrip = currFadingStrip;
                 ++fadingCycle;
                 if (fadingCycle == FADE_OUT_STRIPS_SPLIT_CYCLES) fadingCycle = 0;
@@ -103,8 +104,7 @@ static void titan256c () {
     SYS_enableInts();
 
     VDP_clearPlane(BG_B, TRUE);
-    VDP_clearPlane(BG_A, TRUE);
-    PAL_setColor(0x0, 0x000); // Set BG color as Black
+    PAL_setColor(0, 0x000); // Set BG color as Black
     SYS_doVBlankProcess();
 
     freePalettes();
@@ -143,7 +143,7 @@ int main (bool hard) {
     initGameStatus();
 
     for (;;) {        
-        titan256c();
+        titan256cDisplay();
         titan256cHIntMode = modu(titan256cHIntMode + 1, HINT_MODES); // set to move into next Titan256c HInt mode
     }
 

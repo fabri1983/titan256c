@@ -66,17 +66,17 @@ static u16 gradColorsBuffer[TITAN_CURR_GRADIENT_ELEMS];
 
 static u8 titanCharsCycleCnt = 0;
 
-void NO_INLINE updateCharsGradientColors () {
+void NO_INLINE updateTextGradientColors (u16 fadeTextDiff) {
     // Strips [21,25] (0 based) renders the letters using transparent color, and we want to use a gradient scrolling over time.
     // So 5 strips. However each strip is 8 scanlines meaning we need to render every 4 scanlines inside the HInt.
 
     u16 colorIdx = divu(titanCharsCycleCnt, TITAN_CHARS_GRADIENT_SCROLL_FREQ); // advance ramp color every N frames
     u16* rampBufPtr = gradColorsBuffer;
     for (u16 i=TITAN_CURR_GRADIENT_ELEMS/4; i > 0; --i) {
-        *rampBufPtr++ = *(titanCharsGradientColors + modu(colorIdx + 0, TITAN_CHARS_GRADIENT_MAX_COLORS));
-        *rampBufPtr++ = *(titanCharsGradientColors + modu(colorIdx + 1, TITAN_CHARS_GRADIENT_MAX_COLORS));
-        *rampBufPtr++ = *(titanCharsGradientColors + modu(colorIdx + 2, TITAN_CHARS_GRADIENT_MAX_COLORS));
-        *rampBufPtr++ = *(titanCharsGradientColors + modu(colorIdx + 3, TITAN_CHARS_GRADIENT_MAX_COLORS));
+        *rampBufPtr++ = *(titanCharsGradientColors + modu(colorIdx + 0, TITAN_CHARS_GRADIENT_MAX_COLORS)) - fadeTextDiff;
+        *rampBufPtr++ = *(titanCharsGradientColors + modu(colorIdx + 1, TITAN_CHARS_GRADIENT_MAX_COLORS)) - fadeTextDiff;
+        *rampBufPtr++ = *(titanCharsGradientColors + modu(colorIdx + 2, TITAN_CHARS_GRADIENT_MAX_COLORS)) - fadeTextDiff;
+        *rampBufPtr++ = *(titanCharsGradientColors + modu(colorIdx + 3, TITAN_CHARS_GRADIENT_MAX_COLORS)) - fadeTextDiff;
         colorIdx += 4;
     }
 
@@ -152,16 +152,12 @@ void NO_INLINE fadingStepToBlack_pals (u16 currFadingStrip, u16 cycle, u16 titan
     }
 }
 
-void NO_INLINE fadingStepToBlack_text (u16 currFadingStrip) {
+u16 NO_INLINE fadingStepToBlack_text (u16 currFadingStrip) {
     if (currFadingStrip >= TITAN_256C_TEXT_STARTING_STRIP) {
-        u16* rampBufPtr = gradColorsBuffer;
         currFadingStrip = min(TITAN_256C_TEXT_STARTING_STRIP + FADE_OUT_COLOR_STEPS, currFadingStrip);
-        //u16 d = 0x222 * (TITAN_256C_TEXT_STARTING_STRIP + 1 - currFadingStrip);
-        for (u16 i=TITAN_CURR_GRADIENT_ELEMS; i > 0; --i) {
-            //*rampBufPtr++ -= d;
-            *rampBufPtr++ = 0;
-        }
+        return 0x222 * (TITAN_256C_TEXT_STARTING_STRIP + 1 - currFadingStrip);
     }
+    else return 0;
 }
 
 // void NO_INLINE fadingStepToBlack (const u16 currFadingStrip) {

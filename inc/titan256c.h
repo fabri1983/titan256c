@@ -21,12 +21,12 @@
 #define TITAN_CURR_GRADIENT_ELEMS 16
 
 u16* getGradientColorsBuffer ();
-void updateCharsGradientColors ();
+void updateTextGradientColors (u16 fadeTextDiff);
 
 #define FADE_OUT_COLOR_STEPS 8 // Only use multiple of 2. Changing this value will affect assumptions made in fadingStepToBlack() for fading color calculations
 #define FADE_OUT_STRIPS_SPLIT_CYCLES 3 // How many parts do we split the strips visited for fading calculation to aliviate lenghty execution
 void fadingStepToBlack_pals (u16 currFadingStrip, u16 cycle, u16 titan256cHIntMode);
-void fadingStepToBlack_text (u16 currFadingStrip);
+u16 fadingStepToBlack_text (u16 currFadingStrip);
 
 void loadTitan256cTileSet (u16 currTileIndex);
 u16 loadTitan256cTileMap (VDPPlane plane, u16 currTileIndex);
