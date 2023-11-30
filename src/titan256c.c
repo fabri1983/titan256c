@@ -113,11 +113,21 @@ void NO_INLINE fadingStepToBlack_pals (u16 currFadingStrip, u16 cycle, u16 titan
         // HInt modes 0 and 1 have no issue in finish on time
         if (titan256cHIntMode != 2) {
             for (s16 i=TITAN_256C_COLORS_PER_STRIP; i > 0; --i) {
-                u16 d = *palsPtr - 0x222; // decrement 2 units in every component
-                // next condition handles corner case when fade out steps and split cycles are odd numbers
-                // if (cycle == (FADE_OUT_STRIPS_SPLIT_CYCLES - 1) && stripN == limit && (FADE_OUT_COLOR_STEPS % FADE_OUT_STRIPS_SPLIT_CYCLES) > 0)
-                //     d -= 0x222;
-                if (d & 0b0000000010000) d &= ~0b0000000011111; // red overflows? then zero it
+                // IMPL A: DIDN'T WORK
+                // u16 d = *palsPtr - 0x222; // decrement 1 unit in every component
+                // switch (d & 0b1000100010000) {
+                //     case 0b0000000010000: *palsPtr++ = d &= ~0b0000000011110; break; // red overflows? then zero it
+                //     case 0b0000100010000: *palsPtr++ = d &= ~0b0000111111110; break; // red and green overflow? then zero them
+                //     case 0b0000100000000: *palsPtr++ = d &= ~0b0000111100000; break; // green overflows? then zero it
+                //     case 0b1000000010000: *palsPtr++ = d &= ~0b1111000011110; break; // red and blue overflow? then zero them
+                //     case 0b1000000000000: *palsPtr++ = d &= ~0b1111000000000; break; // blue overflows? then zero it
+                //     case 0b1000100000000: *palsPtr++ = d &= ~0b1111111100000; break; // green and blue overflow? then zero them
+                //     case 0b1000100010000: *palsPtr++ = 0; break; // all colors overflows? then zero all
+                //     default: ++palsPtr; // no overflow in any color
+                // }
+                // IMPL B:
+                u16 d = *palsPtr - 0x222; // decrement 1 unit in every component
+                if (d & 0b0000000010000) d &= ~0b0000000011110; // red overflows? then zero it
                 if (d & 0b0000100000000) d &= ~0b0000111100000; // green overflows? then zero it
                 if (d & 0b1000000000000) d &= ~0b1111000000000; // blue overflows? then zero it
                 *palsPtr++ = d;
