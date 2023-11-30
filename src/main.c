@@ -62,7 +62,7 @@ static void titan256c () {
         set2FirstStripsPals();
 
         // Update ramp color effect for the titan text section
-        updateCharsGradientColors(); // update one of the halves
+        updateCharsGradientColors();
 
         if (gameState == GAME_STATE_TITAN256C_FALLING) {
             // if bounce effect finished then continue with next game state
@@ -77,17 +77,16 @@ static void titan256c () {
         // update fading to black 2 palettes per strip
         else if (gameState == GAME_STATE_TITAN256C_FADING_TO_BLACK) {
             // advance 1 strip every N frames. This must be >= FADE_OUT_STRIPS_SPLIT_CYCLES used to execute the fading for current strip
-            u16 currFadingStrip = divu(fadingStripCnt, 3); // Use divu() for N non power of 2
+            u16 currFadingStrip = divu(fadingStripCnt++, 3); // Use divu() for N non power of 2
             // strip changed? let's do one fading step. fadingCycle > 0 means there are fading cycles to complete for current strip
             if (currFadingStrip != prevFadingStrip || fadingCycle > 0) {
+                // apply fade to black from currFadingStrip up to FADE_OUT_STEPS previous strips
+                fadingStepToBlack_pals(currFadingStrip, fadingCycle, titan256cHIntMode);
+                fadingStepToBlack_text(currFadingStrip);
                 prevFadingStrip = currFadingStrip;
-                // apply fade to black from currFadingStrip up to FADE_OUT_STEPS previous strips (limit is strip 0)
-                fadingStepToBlack(currFadingStrip, fadingCycle, titan256cHIntMode);
-                // inner cycles for strip go between 0 and N-1
                 ++fadingCycle;
                 if (fadingCycle == FADE_OUT_STRIPS_SPLIT_CYCLES) fadingCycle = 0;
             }
-            ++fadingStripCnt;
             // already passed last strip? then fading is finished
             if (currFadingStrip == (TITAN_256C_STRIPS_COUNT + FADE_OUT_COLOR_STEPS - 1)) {
                 gameState = GAME_STATE_TITAN256C_NEXT;

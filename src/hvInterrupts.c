@@ -142,7 +142,8 @@ HINTERRUPT_CALLBACK horizIntOnTitan256cCallback_CPU_EveryN () {
 
     u16 vcounter = GET_VCOUNTER;
     // At strip 21 (0 based) titan chars appears. Chars color will be updated every 2 scanlines inside HInt.
-    bool setPalBGGradientForChars = vcounter >= 21*TITAN_256C_STRIP_HEIGHT && vcounter <= 25*TITAN_256C_STRIP_HEIGHT;
+    bool setPalBGGradientForChars = vcounter >= TITAN_256C_TEXT_STARTING_STRIP*TITAN_256C_STRIP_HEIGHT 
+        && vcounter <= 25*TITAN_256C_TEXT_ENDING_STRIP;
 
     /*
         u32 cmd1st = VDP_WRITE_CRAM_ADDR((u32)(palIdx * 2));
@@ -267,7 +268,8 @@ HINTERRUPT_CALLBACK horizIntOnTitan256cCallback_DMA_EveryN () {
 
     // At strip 21 (0 based) titan chars appears. Chars color will be updated every 4 scanlines inside HInt.
     u16 vcounter = GET_VCOUNTER;
-    bool setPalBGGradientForChars = vcounter >= 21*TITAN_256C_STRIP_HEIGHT && vcounter <= 25*TITAN_256C_STRIP_HEIGHT;
+    bool setPalBGGradientForChars = vcounter >= TITAN_256C_TEXT_STARTING_STRIP*TITAN_256C_STRIP_HEIGHT 
+        && vcounter <= TITAN_256C_TEXT_ENDING_STRIP*TITAN_256C_STRIP_HEIGHT;
 
     /*
         u32 palCmdForDMA_A = VDP_DMA_CRAM_ADDR((u32)palIdx * 2);
@@ -361,7 +363,8 @@ HINTERRUPT_CALLBACK horizIntOnTitan256cCallback_DMA_OneTime () {
         }
 
         // At strip 21 (0 based) titan chars appears. Chars color will be updated every 4 scanlines inside HInt.
-        bool setPalBGGradientForChars = vcounter >= 21*TITAN_256C_STRIP_HEIGHT && vcounter <= 25*TITAN_256C_STRIP_HEIGHT;
+        bool setPalBGGradientForChars = vcounter >= TITAN_256C_TEXT_STARTING_STRIP*TITAN_256C_STRIP_HEIGHT 
+            && vcounter <= TITAN_256C_TEXT_ENDING_STRIP*TITAN_256C_STRIP_HEIGHT;
 
         /*
             u32 palCmdForDMA_A = VDP_DMA_CRAM_ADDR((u32)palIdx * 2);

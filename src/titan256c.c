@@ -71,12 +71,12 @@ void NO_INLINE updateCharsGradientColors () {
     // So 5 strips. However each strip is 8 scanlines meaning we need to render every 4 scanlines inside the HInt.
 
     u16 colorIdx = divu(titanCharsCycleCnt, TITAN_CHARS_GRADIENT_SCROLL_FREQ); // advance ramp color every N frames
-    u16* gradPtr = gradColorsBuffer;
+    u16* rampBufPtr = gradColorsBuffer;
     for (u16 i=TITAN_CURR_GRADIENT_ELEMS/4; i > 0; --i) {
-        *gradPtr++ = *(titanCharsGradientColors + modu(colorIdx + 0, TITAN_CHARS_GRADIENT_MAX_COLORS));
-        *gradPtr++ = *(titanCharsGradientColors + modu(colorIdx + 1, TITAN_CHARS_GRADIENT_MAX_COLORS));
-        *gradPtr++ = *(titanCharsGradientColors + modu(colorIdx + 2, TITAN_CHARS_GRADIENT_MAX_COLORS));
-        *gradPtr++ = *(titanCharsGradientColors + modu(colorIdx + 3, TITAN_CHARS_GRADIENT_MAX_COLORS));
+        *rampBufPtr++ = *(titanCharsGradientColors + modu(colorIdx + 0, TITAN_CHARS_GRADIENT_MAX_COLORS));
+        *rampBufPtr++ = *(titanCharsGradientColors + modu(colorIdx + 1, TITAN_CHARS_GRADIENT_MAX_COLORS));
+        *rampBufPtr++ = *(titanCharsGradientColors + modu(colorIdx + 2, TITAN_CHARS_GRADIENT_MAX_COLORS));
+        *rampBufPtr++ = *(titanCharsGradientColors + modu(colorIdx + 3, TITAN_CHARS_GRADIENT_MAX_COLORS));
         colorIdx += 4;
     }
 
@@ -89,63 +89,78 @@ FORCE_INLINE u16* getGradientColorsBuffer () {
     return (u16*) gradColorsBuffer;
 }
 
-void NO_INLINE fadingStepToBlack (u16 currFadingStrip, u16 cycle, u16 titan256cHIntMode) {
+void NO_INLINE fadingStepToBlack_pals (u16 currFadingStrip, u16 cycle, u16 titan256cHIntMode) {
     // No need to fade strip when currFadingStrip is inside the stepping
-    if (cycle > 0 && currFadingStrip < ((FADE_OUT_COLOR_STEPS + 1) / FADE_OUT_STRIPS_SPLIT_CYCLES)) {
+    if (cycle > 0 && currFadingStrip < ((FADE_OUT_COLOR_STEPS + 0) / FADE_OUT_STRIPS_SPLIT_CYCLES)) {
         return;
     }
 
-    currFadingStrip = max(0, currFadingStrip - cycle * ((FADE_OUT_COLOR_STEPS + 1) / FADE_OUT_STRIPS_SPLIT_CYCLES));
+    currFadingStrip = max(0, currFadingStrip - cycle * ((FADE_OUT_COLOR_STEPS + 0) / FADE_OUT_STRIPS_SPLIT_CYCLES));
 
     // No need to fade strips ahead the max strip limit
     if (currFadingStrip > TITAN_256C_STRIPS_COUNT){
         return;
     }
 
-    u16 limit = max(0, currFadingStrip - ((FADE_OUT_COLOR_STEPS + 1) / FADE_OUT_STRIPS_SPLIT_CYCLES) + 1);
+    u16 limit = max(0, currFadingStrip - ((FADE_OUT_COLOR_STEPS + 0) / FADE_OUT_STRIPS_SPLIT_CYCLES) + 1);
 
     for (s16 stripN = currFadingStrip; stripN >= limit; --stripN) {
         // fade the palettes of stripN
         u16* palsPtr = unpackedData + stripN * TITAN_256C_COLORS_PER_STRIP;
-        for (s16 i=TITAN_256C_COLORS_PER_STRIP; i > 0; --i) {
-            u16 s = *palsPtr;
-            if (s == 0) {
-                ++palsPtr;
-                continue;
-            };
-            if (titan256cHIntMode != 2) {
-                u16 rs = s & VDPPALETTE_REDMASK;
-                u16 gs = s & VDPPALETTE_GREENMASK;
-                u16 bs = s & VDPPALETTE_BLUEMASK;
-                if (rs != 0) rs -= 0x002;
-                if (gs != 0) gs -= 0x020;
-                if (bs != 0) bs -= 0x200;
-                *palsPtr++ = rs | gs | bs;
+
+        // HInt modes 0 and 1 have no issue in finish on time
+        if (titan256cHIntMode != 2) {
+            for (s16 i=TITAN_256C_COLORS_PER_STRIP; i > 0; --i) {
+                u16 s = *palsPtr;
+                if (s == 0) ++palsPtr;
+                else {
+                    u16 rs = s & VDPPALETTE_REDMASK;
+                    u16 gs = s & VDPPALETTE_GREENMASK;
+                    u16 bs = s & VDPPALETTE_BLUEMASK;
+                    if (rs <= 0x004) rs = 0;
+                    else rs -= 0x002;
+                    if (gs <= 0x040) gs = 0;
+                    else gs -= 0x020;
+                    if (bs <= 0x400) bs = 0;
+                    else bs -= 0x200;
+                    *palsPtr++ = rs | gs | bs;
+                }
             }
-            // only for HInt mode 2 since we need want to finish on time
-            else {
-                *palsPtr++ = (s - 0b0000001000100010) & VDPPALETTE_COLORMASK; // decrement 2 in every component
-            }
-            // VDP u16 color is represented as next:
-            // F  E  D  C  B  A  9  8  7  6  5  4  3  2  1  0
-            // -  -  -  -  B2 B1 B0 -  G2 G1 G0 -  R2 R1 R0 -
-            // Fading to black in 8 steps is just decrementing a color by 2 until reaching 0 for each color component
-            // F  E  D  C  B  A  9  8  7  6  5  4  3  2  1  0
-            // -  -  -  -  0  1  0  -  0  1  0  -  0  1  0  -
-            // u16 s = *palsPtr;
-            // // zero? continue with next color
-            // if (s == 0)
-            //     ++palsPtr;
-            // else
-            //     *palsPtr++ = s - 0b0000001000100010; // decrement 2 in every component
         }
-        // fade the gradient colors
-        // if (stripN >= 21 && stripN <= 25) {
-        //     u16* rampBufPtr = gradColorsBuffer;
-        //     for (u16 i=0; i < TITAN_CURR_GRADIENT_ELEMS; ++i) {
-        //         *rampBufPtr++ = 0x0;
-        //     }
-        // }
+        // Only HInt mode 2 has issues to finish on time and makes appear glitches during the fade out.
+        // So here I directly decrement 2 in every color component. Is much faster, creates wrong colors, but completes on time.
+        else {
+            for (s16 i=TITAN_256C_COLORS_PER_STRIP; i > 0; --i) {
+                u16 s = *palsPtr;
+                if (s == 0) ++palsPtr;
+                else *palsPtr++ = (s - 0x222);
+            }
+        }
+        
+        // VDP u16 color is represented as next:
+        // F  E  D  C  B  A  9  8  7  6  5  4  3  2  1  0
+        // -  -  -  -  B2 B1 B0 -  G2 G1 G0 -  R2 R1 R0 -
+        // Fading to black in 8 steps is just decrementing a color by 2 until reaching 0 for each color component
+        // F  E  D  C  B  A  9  8  7  6  5  4  3  2  1  0
+        // -  -  -  -  0  1  0  -  0  1  0  -  0  1  0  -
+        // u16 s = *palsPtr;
+        // // zero? continue with next color
+        // if (s == 0)
+        //     ++palsPtr;
+        // else
+        //     *palsPtr++ = s - 0x222; // decrement 2 in every component
+    }
+}
+
+void NO_INLINE fadingStepToBlack_text (u16 currFadingStrip) {
+    if (currFadingStrip >= TITAN_256C_TEXT_STARTING_STRIP) {
+        u16* rampBufPtr = gradColorsBuffer;
+        currFadingStrip = min(TITAN_256C_TEXT_STARTING_STRIP + FADE_OUT_COLOR_STEPS, currFadingStrip);
+        //u16 d = 0x222 * (TITAN_256C_TEXT_STARTING_STRIP + 1 - currFadingStrip);
+        for (u16 i=TITAN_CURR_GRADIENT_ELEMS; i > 0; --i) {
+            //*rampBufPtr++ -= d;
+            *rampBufPtr++ = 0;
+        }
     }
 }
 

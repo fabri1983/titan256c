@@ -11,7 +11,10 @@
 #define TITAN_256C_HEIGHT 224 // In pixels
 #define TITAN_256C_STRIP_HEIGHT 8
 #define TITAN_256C_COLORS_PER_STRIP 32
+// in case you were to split any calculation over the colors of strip by an odd divisor
 #define TITAN_256C_COLORS_PER_STRIP_REMINDER(n) (TITAN_256C_COLORS_PER_STRIP - n*(TITAN_256C_COLORS_PER_STRIP/n))
+#define TITAN_256C_TEXT_STARTING_STRIP 21
+#define TITAN_256C_TEXT_ENDING_STRIP 25
 
 #define TITAN_CHARS_GRADIENT_SCROLL_FREQ 4
 #define TITAN_CHARS_GRADIENT_MAX_COLORS 42
@@ -22,7 +25,8 @@ void updateCharsGradientColors ();
 
 #define FADE_OUT_COLOR_STEPS 8 // Only use multiple of 2. Changing this value will affect assumptions made in fadingStepToBlack() for fading color calculations
 #define FADE_OUT_STRIPS_SPLIT_CYCLES 3 // How many parts do we split the strips visited for fading calculation to aliviate lenghty execution
-void fadingStepToBlack (u16 currFadingStrip, u16 cycle, u16 titan256cHIntMode);
+void fadingStepToBlack_pals (u16 currFadingStrip, u16 cycle, u16 titan256cHIntMode);
+void fadingStepToBlack_text (u16 currFadingStrip);
 
 void loadTitan256cTileSet (u16 currTileIndex);
 u16 loadTitan256cTileMap (VDPPlane plane, u16 currTileIndex);
