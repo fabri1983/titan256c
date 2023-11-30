@@ -113,7 +113,6 @@ static void titan256cDisplay () {
 }
 
 static void basicEngineConfig () {
-    // setup screen and tiles dimensions
     VDP_setScreenWidth320(); // enable H40 mode (only for NTSC?): 320x224
     if (IS_PAL_SYSTEM) {
         VDP_setScreenHeight240(); // Only for PAL

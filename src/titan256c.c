@@ -102,23 +102,26 @@ void NO_INLINE fadingStepToBlack_pals (u16 currFadingStrip, u16 cycle, u16 titan
         // fade the palettes of stripN
         u16* palsPtr = unpackedData + stripN * TITAN_256C_COLORS_PER_STRIP;
 
+        // VDP u16 color is represented as next:
+        // F  E  D  C  B  A  9  8  7  6  5  4  3  2  1  0
+        // -  -  -  -  B2 B1 B0 -  G2 G1 G0 -  R2 R1 R0 -
+        // Fading to black in 7 steps is just decrementing a color by 1 unit until reaching 0 for each color component
+        // F  E  D  C  B  A  9  8  7  6  5  4  3  2  1  0
+        // -  -  -  -  0  1  0  -  0  1  0  -  0  1  0  -
+        // Which is the same than substracting 0x222
+
         // HInt modes 0 and 1 have no issue in finish on time
         if (titan256cHIntMode != 2) {
             for (s16 i=TITAN_256C_COLORS_PER_STRIP; i > 0; --i) {
                 u16 s = *palsPtr;
-                if (s == 0) ++palsPtr;
-                else {
-                    u16 rs = s & VDPPALETTE_REDMASK;
-                    u16 gs = s & VDPPALETTE_GREENMASK;
-                    u16 bs = s & VDPPALETTE_BLUEMASK;
-                    if (rs <= 0x004) rs = 0;
-                    else rs -= 0x002;
-                    if (gs <= 0x040) gs = 0;
-                    else gs -= 0x020;
-                    if (bs <= 0x400) bs = 0;
-                    else bs -= 0x200;
-                    *palsPtr++ = rs | gs | bs;
-                }
+                u16 d = s - 0x222;
+                // next condition handles corner case when fade out steps and split cycles are odd numbers
+                if (cycle == (FADE_OUT_STRIPS_SPLIT_CYCLES - 1) && stripN == limit && (FADE_OUT_COLOR_STEPS % FADE_OUT_STRIPS_SPLIT_CYCLES) > 0)
+                    d -= 0x222; // decrement 2 units in every component
+                if (d & 0b0000000010000) d &= ~0b0000000011111; // red overflows? then zero it
+                if (d & 0b0000100000000) d &= ~0b0000111100000; // green overflows? then zero it
+                if (d & 0b1000000000000) d &= ~0b1111000000000; // blue overflows? then zero it
+                *palsPtr++ = d;
             }
         }
         // Only HInt mode 2 has issues to finish on time and makes appear glitches during the fade out.
@@ -130,21 +133,6 @@ void NO_INLINE fadingStepToBlack_pals (u16 currFadingStrip, u16 cycle, u16 titan
                 else *palsPtr++ = (s - 0x222);
             }
         }
-        
-        // VDP u16 color is represented as next:
-        // F  E  D  C  B  A  9  8  7  6  5  4  3  2  1  0
-        // -  -  -  -  B2 B1 B0 -  G2 G1 G0 -  R2 R1 R0 -
-        // Fading to black in 8 steps is just decrementing a color by 1 unit until reaching 0 for each color component
-        // F  E  D  C  B  A  9  8  7  6  5  4  3  2  1  0
-        // -  -  -  -  0  1  0  -  0  1  0  -  0  1  0  -
-        // u16 s = *palsPtr;
-        // // zero? continue with next color
-        // if (s == 0)
-        //     ++palsPtr;
-        // else
-        //     *palsPtr++ = s - 0x222; // decrement 1 unit in every component
-        // u16 a = 0 - 0b0010; -> 0xFFFE
-        // s16 b = 0 - 0b0010; -> 0xFFFFFFFE
     }
 }
 
