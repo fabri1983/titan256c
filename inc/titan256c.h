@@ -18,10 +18,10 @@
 
 #define TITAN_CHARS_GRADIENT_SCROLL_FREQ 4
 #define TITAN_CHARS_GRADIENT_MAX_COLORS 42
-#define TITAN_CURR_GRADIENT_ELEMS 16
+#define TITAN_CHARS_CURR_GRADIENT_ELEMS 16
 
 u16* getGradientColorsBuffer ();
-void updateTextGradientColors (u16 fadeTextDiff);
+void updateTextGradientColors (u16 fadeTextDiff, u16 currFadingStrip);
 
 #define FADE_OUT_COLOR_STEPS 8 // Changing this value will affect assumptions made in fadingStepToBlack_() methods for fading color calculations
 #define FADE_OUT_STRIPS_SPLIT_CYCLES 4 // How many parts do we split the strips visited for fading calculation to aliviate lenghty execution

@@ -55,23 +55,25 @@ static void titan256cDisplay () {
     u16 fadingStripCnt = 0;
     u16 prevFadingStrip = 0;
     u16 fadingCycleCurrStrip = 0; // use to split the fading to black into N cycles, due to its lenghty execution
-    u16 fadeTextDiff = 0;
 
     while (gameState != GAME_STATE_TITAN256C_NEXT) {
 
         // Load 1st and 2nd strip's palette
         set2FirstStripsPals();
 
-        // Update ramp color effect for the titan text section
-        updateTextGradientColors(fadeTextDiff);
-
         switch (gameState) {
             case GAME_STATE_TITAN256C_FALLING: {
+                // Update ramp color effect for the titan text section
+                updateTextGradientColors(0, 0);
+
                 // if bounce effect finished then continue with next game state
                 gameState = GAME_STATE_TITAN256C_SHOW;
                 break;
             }
             case GAME_STATE_TITAN256C_SHOW: {
+                // Update ramp color effect for the titan text section
+                updateTextGradientColors(0, 0);
+
                 u16 joyState = JOY_readJoypad(JOY_1);
                 if (joyState & BUTTON_START) {
                     gameState = GAME_STATE_TITAN256C_FADING_TO_BLACK;
@@ -87,12 +89,17 @@ static void titan256cDisplay () {
                     gameState = GAME_STATE_TITAN256C_NEXT;
                     break;
                 }
-                fadeTextDiff = fadingStepToBlack_text(currFadingStrip);
+                
+                // Update ramp color effect for the titan text section
+                u16 fadeTextDiff = fadingStepToBlack_text(currFadingStrip);
+                updateTextGradientColors(fadeTextDiff, currFadingStrip);
+
                 if (fadingCycleCurrStrip < FADE_OUT_STRIPS_SPLIT_CYCLES) {
                     // apply fade to black from currFadingStrip up to FADE_OUT_STEPS previous strips
                     fadingStepToBlack_pals(currFadingStrip, fadingCycleCurrStrip, titan256cHIntMode);
                     ++fadingCycleCurrStrip;
                 }
+
                 if (currFadingStrip != prevFadingStrip) {
                     prevFadingStrip = currFadingStrip;
                     fadingCycleCurrStrip = 0;

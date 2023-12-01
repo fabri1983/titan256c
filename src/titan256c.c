@@ -62,21 +62,28 @@ static const u16 titanCharsGradientColors[TITAN_CHARS_GRADIENT_MAX_COLORS] = {
     0xEE0, 0xEC0, 0xEA0, 0xE80, 0xE60, 0xE40, 0xE20
 };
 
-static u16 gradColorsBuffer[TITAN_CURR_GRADIENT_ELEMS];
+static u16 gradColorsBuffer[TITAN_CHARS_CURR_GRADIENT_ELEMS];
 
 static u8 titanCharsCycleCnt = 0;
 
-void NO_INLINE updateTextGradientColors (u16 fadeTextDiff) {
+void NO_INLINE updateTextGradientColors (u16 fadeTextDiff, u16 currFadingStrip) {
     // Strips [21,25] (0 based) renders the letters using transparent color, and we want to use a gradient scrolling over time.
     // So 5 strips. However each strip is 8 scanlines meaning we need to render every 4 scanlines inside the HInt.
 
+    u16 innerStripDiff = 0;
+    if (currFadingStrip > TITAN_256C_TEXT_STARTING_STRIP) {
+        innerStripDiff = 4 * (currFadingStrip - TITAN_256C_TEXT_STARTING_STRIP); // (ramp colors shown per strip) * (delta between 21 and current strip)
+    }
     u16 colorIdx = divu(titanCharsCycleCnt, TITAN_CHARS_GRADIENT_SCROLL_FREQ); // advance ramp color every N frames
     u16* rampBufPtr = gradColorsBuffer;
-    for (u16 i=TITAN_CURR_GRADIENT_ELEMS; i > 0; --i) {
-        u16 d = *(titanCharsGradientColors + modu(colorIdx, TITAN_CHARS_GRADIENT_MAX_COLORS)) - fadeTextDiff;
-        if (d & 0b0000000010000) d &= ~0b0000000011110; // red overflows? then zero it
-        if (d & 0b0000100000000) d &= ~0b0000111100000; // green overflows? then zero it
-        if (d & 0b1000000000000) d &= ~0b1111000000000; // blue overflows? then zero it
+    for (u16 i=TITAN_CHARS_CURR_GRADIENT_ELEMS; i > 0; --i) {
+        u16 d = *(titanCharsGradientColors + modu(colorIdx, TITAN_CHARS_GRADIENT_MAX_COLORS));
+        if (i > (TITAN_CHARS_CURR_GRADIENT_ELEMS - innerStripDiff)) {
+            d -= fadeTextDiff;
+            if (d & 0b0000000010000) d &= ~0b0000000011110; // red overflows? then zero it
+            if (d & 0b0000100000000) d &= ~0b0000111100000; // green overflows? then zero it
+            if (d & 0b1000000000000) d &= ~0b1111000000000; // blue overflows? then zero it
+        }
         *rampBufPtr++ = d;
         ++colorIdx;
     }
@@ -96,7 +103,7 @@ void NO_INLINE fadingStepToBlack_pals (u16 currFadingStrip, u16 cycle, u16 titan
         return;
     }
 
-    // depending on the split cycle we update the starting strip 
+    // depending on the split cycle value we update the starting strip 
     currFadingStrip = max(0, currFadingStrip - cycle * (FADE_OUT_COLOR_STEPS / FADE_OUT_STRIPS_SPLIT_CYCLES));
     u16 limit = max(0, currFadingStrip - (FADE_OUT_COLOR_STEPS / FADE_OUT_STRIPS_SPLIT_CYCLES) + 1);
     // No need to fade strips ahead the max strip limit, but we still have to fade previous FADE_OUT_COLOR_STEPS strips
@@ -150,7 +157,7 @@ void NO_INLINE fadingStepToBlack_pals (u16 currFadingStrip, u16 cycle, u16 titan
 }
 
 u16 NO_INLINE fadingStepToBlack_text (u16 currFadingStrip) {
-    if (currFadingStrip >= TITAN_256C_TEXT_STARTING_STRIP) {
+    if (currFadingStrip > TITAN_256C_TEXT_STARTING_STRIP) {
         u16 factor = currFadingStrip - TITAN_256C_TEXT_STARTING_STRIP + 1;
         return min(0xEEE, 0x222 * factor);
     }
