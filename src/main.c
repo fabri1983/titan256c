@@ -64,7 +64,7 @@ static void titan256cDisplay () {
         switch (gameState) {
             case GAME_STATE_TITAN256C_FALLING: {
                 // Update ramp color effect for the titan text section
-                updateTextGradientColors(0, 0);
+                updateTextGradientColors(0);
 
                 // if bounce effect finished then continue with next game state
                 gameState = GAME_STATE_TITAN256C_SHOW;
@@ -72,7 +72,7 @@ static void titan256cDisplay () {
             }
             case GAME_STATE_TITAN256C_SHOW: {
                 // Update ramp color effect for the titan text section
-                updateTextGradientColors(0, 0);
+                updateTextGradientColors(0);
 
                 u16 joyState = JOY_readJoypad(JOY_1);
                 if (joyState & BUTTON_START) {
@@ -91,8 +91,7 @@ static void titan256cDisplay () {
                 }
                 
                 // Update ramp color effect for the titan text section
-                u16 fadeTextDiff = fadingStepToBlack_text(currFadingStrip);
-                updateTextGradientColors(fadeTextDiff, currFadingStrip);
+                updateTextGradientColors(currFadingStrip);
 
                 if (fadingCycleCurrStrip < FADE_OUT_STRIPS_SPLIT_CYCLES) {
                     // apply fade to black from currFadingStrip up to FADE_OUT_STEPS previous strips
