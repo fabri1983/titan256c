@@ -75,7 +75,7 @@ void NO_INLINE updateTextGradientColors (u16 currFadingStrip) {
         // (ramp colors shown per strip) + (ramp colors shown per strip) * (delta between current strip and 21)
         innerStripLimit = 4 + 4 * (currFadingStrip - TITAN_256C_TEXT_STARTING_STRIP);
         u16 factor = currFadingStrip - TITAN_256C_TEXT_STARTING_STRIP + 1;
-        fadeTextAmount = min(0xEEE, 0x222 * factor);
+        fadeTextAmount = 0x222 * factor;
     }
 
     u16 colorIdx = divu(titanCharsCycleCnt, TITAN_CHARS_GRADIENT_SCROLL_FREQ); // advance ramp color every N frames
@@ -83,10 +83,10 @@ void NO_INLINE updateTextGradientColors (u16 currFadingStrip) {
     for (u16 i=0; i < TITAN_CHARS_CURR_GRADIENT_ELEMS; ++i) {
         u16 d = *(titanCharsGradientColors + modu(colorIdx++, TITAN_CHARS_GRADIENT_MAX_COLORS));
         if (i < innerStripLimit) {
-            d -= fadeTextAmount;
+            d -= min(0xEEE, fadeTextAmount);
             // diminish the fade out amount by 0x222 every 4 colors
-            // if (i > 0 && (i % 4) == 0)
-            //     fadeTextAmount -= 0x222;
+            if (i > 0 && (i % 4) == 0)
+                fadeTextAmount -= 0x222;
         }
         if (d & 0b0000000010000) d &= ~0b0000000011110; // red overflows? then zero it
         if (d & 0b0000100000000) d &= ~0b0000111100000; // green overflows? then zero it
