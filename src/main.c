@@ -8,11 +8,6 @@
 #define HINT_MODES 3
 static u16 titan256cHIntMode;
 
-#define GAME_STATE_TITAN256C_FALLING 0
-#define GAME_STATE_TITAN256C_SHOW 1
-#define GAME_STATE_TITAN256C_FADING_TO_BLACK 2
-#define GAME_STATE_TITAN256C_NEXT 3
-
 static u16 currTileIndex;
 
 static void titan256cDisplay () {
@@ -51,60 +46,48 @@ static void titan256cDisplay () {
 
     VDP_setEnable(TRUE);
 
-    u16 gameState = GAME_STATE_TITAN256C_FALLING;
     u16 fadingStripCnt = 0;
     u16 prevFadingStrip = 0;
     u16 fadingCycleCurrStrip = 0; // use to split the fading to black into N cycles, due to its lenghty execution
 
-    while (gameState != GAME_STATE_TITAN256C_NEXT) {
+    // Titan display
+    for (;;) {
+        // Load 1st and 2nd strip's palette
+        set2StripsPals(0);
+
+        // Update ramp color effect for the titan text section
+        updateTextGradientColors(0);
+
+        SYS_doVBlankProcess();
+
+        u16 joyState = JOY_readJoypad(JOY_1);
+        if (joyState & BUTTON_START) break;
+    }
+
+    // Fade to black effect
+    for (;;) {
+        // advance 1 strip every N frames. This must be >= FADE_OUT_STRIPS_SPLIT_CYCLES used to execute the fading for current strip
+        u16 currFadingStrip = fadingStripCnt++ / 4; // Use divu() for N non power of 2
+        // already passed last strip? then fading is finished
+        if (currFadingStrip == (TITAN_256C_STRIPS_COUNT + FADE_OUT_COLOR_STEPS)) {
+            break;
+        }
 
         // Load 1st and 2nd strip's palette
-        set2FirstStripsPals();
+        set2StripsPals(0);
 
-        switch (gameState) {
-            case GAME_STATE_TITAN256C_FALLING: {
-                // Update ramp color effect for the titan text section
-                updateTextGradientColors(0);
+        // Update ramp color effect for the titan text section
+        updateTextGradientColors(currFadingStrip);
 
-                // if bounce effect finished then continue with next game state
-                gameState = GAME_STATE_TITAN256C_SHOW;
-                break;
-            }
-            case GAME_STATE_TITAN256C_SHOW: {
-                // Update ramp color effect for the titan text section
-                updateTextGradientColors(0);
+        if (fadingCycleCurrStrip < FADE_OUT_STRIPS_SPLIT_CYCLES) {
+            // apply fade to black from currFadingStrip up to FADE_OUT_STEPS previous strips
+            fadingStepToBlack_pals(currFadingStrip, fadingCycleCurrStrip, titan256cHIntMode);
+            ++fadingCycleCurrStrip;
+        }
 
-                u16 joyState = JOY_readJoypad(JOY_1);
-                if (joyState & BUTTON_START) {
-                    gameState = GAME_STATE_TITAN256C_FADING_TO_BLACK;
-                }
-                break;
-            }
-            // update fading to black 2 palettes per strip
-            case GAME_STATE_TITAN256C_FADING_TO_BLACK: {
-                // advance 1 strip every N frames. This must be >= FADE_OUT_STRIPS_SPLIT_CYCLES used to execute the fading for current strip
-                u16 currFadingStrip = fadingStripCnt++ / 4; // Use divu() for N non power of 2
-                // already passed last strip? then fading is finished
-                if (currFadingStrip == (TITAN_256C_STRIPS_COUNT + FADE_OUT_COLOR_STEPS)) {
-                    gameState = GAME_STATE_TITAN256C_NEXT;
-                    break;
-                }
-                
-                // Update ramp color effect for the titan text section
-                updateTextGradientColors(currFadingStrip);
-
-                if (fadingCycleCurrStrip < FADE_OUT_STRIPS_SPLIT_CYCLES) {
-                    // apply fade to black from currFadingStrip up to FADE_OUT_STEPS previous strips
-                    fadingStepToBlack_pals(currFadingStrip, fadingCycleCurrStrip, titan256cHIntMode);
-                    ++fadingCycleCurrStrip;
-                }
-
-                if (currFadingStrip != prevFadingStrip) {
-                    prevFadingStrip = currFadingStrip;
-                    fadingCycleCurrStrip = 0;
-                }
-                break;
-            }
+        if (currFadingStrip != prevFadingStrip) {
+            prevFadingStrip = currFadingStrip;
+            fadingCycleCurrStrip = 0;
         }
 
         SYS_doVBlankProcess();
@@ -148,8 +131,6 @@ int main (bool hard) {
     waitMillis(200);
     displayTeddyBearLogo();
     waitMillis(200);
-
-    VDP_resetScreen(); // this reset scroll planes and other stuff used in logo effects
 
     basicEngineConfig();
     initGameStatus();

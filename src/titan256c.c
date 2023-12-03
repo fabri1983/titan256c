@@ -11,14 +11,22 @@ void loadTitan256cTileSet (u16 currTileIndex) {
     VDP_loadTileSet(tileset, currTileIndex, DMA);
 }
 
-static u16 yTilePos = 0; // use for the falling and bounce effect
+static u16 startingGradientScanline = 0;
+
+FORCE_INLINE void setStartingGradientScanline (u16 value) {
+    startingGradientScanline = value;
+}
+
+FORCE_INLINE u16 getStartingGradientScanline () {
+    return startingGradientScanline;
+}
 
 u16 loadTitan256cTileMap (VDPPlane plane, u16 currTileIndex) {
     u16 baseTileAttribs = TILE_ATTR_FULL(PAL0, 0, FALSE, FALSE, currTileIndex);
     currTileIndex += titanRGB.tileset->numTile;
     const TileMap* tilemap = titanRGB.tilemap;
     // only DMA or DMA_QUEUE_COPY (if tilemap is compressed) to avoid glitches
-    VDP_setTileMapEx(plane, tilemap, baseTileAttribs, 0, 0, 0, yTilePos, TITAN_256C_WIDTH/8, (TITAN_256C_HEIGHT/8) - yTilePos, DMA_QUEUE_COPY);
+    VDP_setTileMapEx(plane, tilemap, baseTileAttribs, 0, 0, 0, 0, TITAN_256C_WIDTH/8, (TITAN_256C_HEIGHT/8), DMA_QUEUE_COPY);
     return currTileIndex;
 }
 
@@ -48,8 +56,8 @@ FORCE_INLINE u16* getUnpackedPtr () {
     return unpackedData;
 }
 
-FORCE_INLINE void set2FirstStripsPals () {
-    PAL_setColors(0, unpackedData, TITAN_256C_COLORS_PER_STRIP * 2, DMA_QUEUE);
+FORCE_INLINE void set2StripsPals (u16 fromStrip) {
+    PAL_setColors(32 * (fromStrip % 2), unpackedData + 32 * fromStrip, TITAN_256C_COLORS_PER_STRIP * 2, DMA_QUEUE);
 }
 
 // rmap color effect in VDP format: BGR
@@ -84,8 +92,8 @@ void NO_INLINE updateTextGradientColors (u16 currFadingStrip) {
         u16 d = *(titanCharsGradientColors + modu(colorIdx++, TITAN_CHARS_GRADIENT_MAX_COLORS));
         if (i < innerStripLimit) {
             d -= min(0xEEE, fadeTextAmount);
-            // diminish the fade out amount by 0x222 every 4 colors
-            if (i > 0 && (i % 4) == 0)
+            // diminish the fade out weight every 4 colors
+            if ((i % 4) == 0)
                 fadeTextAmount -= 0x222;
         }
         if (d & 0b0000000010000) d &= ~0b0000000011110; // red overflows? then zero it

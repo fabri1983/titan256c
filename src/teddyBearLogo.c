@@ -45,7 +45,6 @@ void displayTeddyBearLogo ()
 
     // Setup VDP
     VDP_setPlaneSize(64, 32, TRUE);
-    VDP_setScrollingMode(HSCROLL_TILE, VSCROLL_COLUMN);
     PAL_setPalette(PAL0, palette_black, CPU);
 
     // Fill top plane with solid black tiles (tile index 1 seems to be a SGDK system tile)
@@ -128,4 +127,6 @@ void displayTeddyBearLogo ()
 
     // restore SGDK's default palete for text
     VDP_setTextPalette(PAL0);
+
+    VDP_clearPlane(BG_A, TRUE);
 }
