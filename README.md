@@ -4,7 +4,9 @@
 This is a personal project using [SGDK v1.9](https://github.com/Stephane-D/SGDK) (with latest changes) 
 as an attempt to simulate the great Titan 512C Forever section from Titan Overdrive mega demo v1.1, 
 and learning the functioning of the megadrive and its architecture in the go.  
-This version displays up to **252 colors**.  
+This version displays up to **252 colors**.
+
+
 **Work In Progress. Only tested with Blastem.**
 
 
