@@ -17,7 +17,7 @@ For convenience test you can directly try the last compiled rom `titan256c_rom.b
 **(pgit addressing START cycles between them)**  
 
 **A**. Interweaving writes beetwen
-- 2 u32 vars (4 colors form palette) and 1 u16 var (BG color for text ramp effect)
+- 2 u32 vars (4 colors form palette) and 1 u16 var (BG color for text ramp effect)  
 and
 - 4 u32 vars (2 colors form palette)
 by CPU to CRAM every scanline along the duration of 8 scanlines, setting so 2 palettes (32 colors) and 4 bg colors (ramp effect).  
