@@ -14,10 +14,13 @@ For convenience test you can directly try the last compiled rom `titan256c_rom.b
 
 
 ### 3 Approaches:  
-**Pressing START cycles between them**  
+**(pgit addressing START cycles between them)**  
 
-**A**. Interweaving writes of 2 u32 vars (palette colors) and 1 u16 var (BG color for ramp effect), and 4 u32 vars (palette colors), 
-by CPU to CRAM every scanline along the duration of 8 scanlines. 
+**A**. Interweaving writes beetwen
+- 2 u32 vars (4 colors form palette) and 1 u16 var (BG color for text ramp effect)
+and
+- 4 u32 vars (2 colors form palette)
+by CPU to CRAM every scanline along the duration of 8 scanlines, setting so 2 palettes (32 colors) and 4 bg colors (ramp effect).  
 This approach has better ramp effect since the change in color happens every other scanline.
 
 
@@ -33,15 +36,15 @@ the second unwanted HInt invocation. Ugly hack but this is what I came up so far
 
 
 
-**A**
+**A**:  
 ![titan_cpu.jpg](screenshots/titan_cpu.jpg?raw=true "titan_cpu.jpg")
 
 
-**B**
+**B**:  
 ![titan_dma.jpg](screenshots/titan_dma.jpg?raw=true "titan_dma.jpg")
 
 
-**C**
+**C**:  
 ![titan_dma_onetime.jpg](screenshots/titan_dma_onetime.jpg?raw=true "titan_dma_onetime.jpg")
 
 
