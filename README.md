@@ -49,6 +49,8 @@ the second unwanted HInt invocation. Ugly hack but this is what I came up so far
 
 
 ### TODO:
+- Fix fall and bounce effect wrong set of palettes.
+- Fix correct location for color ramp color effect on text while falling and bouncing.
 - Approches B and C likely have room to update text ramp color in every scanline.
 - Fix black BG color lines over text in approaches B and C.
 - Add DMA command buffering as Steph does. See dma.c.
