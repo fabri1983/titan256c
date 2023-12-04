@@ -46,6 +46,36 @@ static void titan256cDisplay () {
 
     VDP_setEnable(TRUE);
 
+    u16 yPos = TITAN_256C_HEIGHT - 1;
+    s16 velocity = 0;
+
+    // Fall and bounce effect
+    for (;;) {
+        // update bouncing effect every 4 frames
+        if ((vtimer % 4) == 0) {
+            velocity -= 1;
+        }
+        if ((yPos + velocity) <= 0) {
+            yPos = 0;
+            velocity = -(velocity * 6) / 10; // decay in velocity as it bounces off the ground
+        }
+        else yPos += velocity;
+
+        setYPosFalling(yPos);
+        VDP_setVerticalScrollVSync(BG_B, yPos);
+
+        // Load 2 strip palettes 
+        load2StripsPals(yPos / TITAN_256C_STRIP_HEIGHT);
+
+        // Update ramp color effect for the titan text section
+        updateTextGradientColors(0);
+
+        SYS_doVBlankProcess();
+
+        // if bounce effect finished then continue with next game state
+        if (yPos == 0 && velocity == 0) break;
+    }
+
     u16 fadingStripCnt = 0;
     u16 prevFadingStrip = 0;
     u16 fadingCycleCurrStrip = 0; // use to split the fading to black into N cycles, due to its lenghty execution
@@ -53,7 +83,7 @@ static void titan256cDisplay () {
     // Titan display
     for (;;) {
         // Load 1st and 2nd strip's palette
-        set2StripsPals(0);
+        load2StripsPals(0);
 
         // Update ramp color effect for the titan text section
         updateTextGradientColors(0);
@@ -74,7 +104,7 @@ static void titan256cDisplay () {
         }
 
         // Load 1st and 2nd strip's palette
-        set2StripsPals(0);
+        load2StripsPals(0);
 
         // Update ramp color effect for the titan text section
         updateTextGradientColors(currFadingStrip);

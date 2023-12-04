@@ -11,14 +11,14 @@ void loadTitan256cTileSet (u16 currTileIndex) {
     VDP_loadTileSet(tileset, currTileIndex, DMA);
 }
 
-static u16 startingGradientScanline = 0;
+static u16 yPosFalling = 0;
 
-FORCE_INLINE void setStartingGradientScanline (u16 value) {
-    startingGradientScanline = value;
+FORCE_INLINE void setYPosFalling (u16 value) {
+    yPosFalling = value;
 }
 
-FORCE_INLINE u16 getStartingGradientScanline () {
-    return startingGradientScanline;
+FORCE_INLINE u16 getYPosFalling () {
+    return yPosFalling;
 }
 
 u16 loadTitan256cTileMap (VDPPlane plane, u16 currTileIndex) {
@@ -56,8 +56,16 @@ FORCE_INLINE u16* getUnpackedPtr () {
     return unpackedData;
 }
 
-FORCE_INLINE void set2StripsPals (u16 fromStrip) {
-    PAL_setColors(32 * (fromStrip % 2), unpackedData + 32 * fromStrip, TITAN_256C_COLORS_PER_STRIP * 2, DMA_QUEUE);
+FORCE_INLINE void load2StripsPals (u16 stripN) {
+    if (stripN == TITAN_256C_HEIGHT/TITAN_256C_STRIP_HEIGHT - 1)
+        --stripN;
+
+    if ((stripN % 2) == 0) {
+        PAL_setColors(0, unpackedData + TITAN_256C_COLORS_PER_STRIP * stripN, TITAN_256C_COLORS_PER_STRIP * 2, DMA_QUEUE);
+    } else {
+        PAL_setColors(0, unpackedData + TITAN_256C_COLORS_PER_STRIP * (stripN + 1), TITAN_256C_COLORS_PER_STRIP, DMA_QUEUE);
+        PAL_setColors(TITAN_256C_COLORS_PER_STRIP, unpackedData + TITAN_256C_COLORS_PER_STRIP * stripN, TITAN_256C_COLORS_PER_STRIP, DMA_QUEUE);
+    }
 }
 
 // rmap color effect in VDP format: BGR

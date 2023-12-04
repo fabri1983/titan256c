@@ -27,8 +27,8 @@ void updateTextGradientColors (u16 currFadingStrip);
 #define FADE_OUT_STRIPS_SPLIT_CYCLES 4 // How many parts do we split the strips visited for fading calculation to aliviate lenghty execution
 void fadingStepToBlack_pals (u16 currFadingStrip, u16 cycle, u16 titan256cHIntMode);
 
-void setStartingGradientScanline (u16 value);
-u16 getStartingGradientScanline ();
+void setYPosFalling (u16 value);
+u16 getYPosFalling ();
 
 void loadTitan256cTileSet (u16 currTileIndex);
 u16 loadTitan256cTileMap (VDPPlane plane, u16 currTileIndex);
@@ -36,6 +36,7 @@ void unpackPalettes ();
 void freePalettes ();
 u16* getUnpackedPtr ();
 
-void set2StripsPals (u16 fromStrip);
+/// Loads the palettes belonging to strip stripN and stripN + 1.
+void load2StripsPals (u16 stripN);
 
 #endif
