@@ -1,12 +1,6 @@
 #include "genesis.h"
 
-#ifdef __GNUC__
-#define EXTERNALLY_VISIBLE_DEF __attribute__((externally_visible))
-#elif defined(_MSC_VER)
-#define EXTERNALLY_VISIBLE_DEF __declspec(dllexport)
-#endif
-
-EXTERNALLY_VISIBLE_DEF
+__attribute__((externally_visible))
 const ROMHeader rom_header = {
 #if (ENABLE_BANK_SWITCH != 0)
     "SEGA SSF        ",

@@ -125,23 +125,26 @@ static u16* currGradPtr;
 static u16 applyBlackPalPos = TITAN_256C_HEIGHT - 1;
 static u16 vcounterManual;
 
-void vertIntOnTitan256cCallback_HIntEveryN () {
+void blackCurrentGradientPtr () {
+    currGradPtr = (u16*) palette_black;
+}
+
+static FORCE_INLINE void varsSetup () {
     VDP_setAutoInc(2); // Needed for DMA of colors in u32 type, and it seems is neeed for CPU too (had some black screen flickering if not set)
     u16 stripN = min(TITAN_256C_HEIGHT/TITAN_256C_STRIP_HEIGHT - 1, getYPosFalling() / TITAN_256C_STRIP_HEIGHT + 2);
     titan256cPalsPtr = getUnpackedPtr() + stripN * TITAN_256C_COLORS_PER_STRIP;
     applyBlackPalPos = (TITAN_256C_HEIGHT - 1) - getYPosFalling();
     palIdx = ((getYPosFalling() / TITAN_256C_STRIP_HEIGHT) % 2) == 0 ? 0 : 32;
     currGradPtr = getGradientColorsBuffer();
+}
+
+void vertIntOnTitan256cCallback_HIntEveryN () {
+    varsSetup();
     vcounterManual = TITAN_256C_STRIP_HEIGHT - 1;
 }
 
 void vertIntOnTitan256cCallback_HIntOneTime () {
-    VDP_setAutoInc(2); // Needed for DMA of colors in u32 type, and it seems is neeed for CPU too (had some black screen flickering if not set)
-    u16 stripN = min(TITAN_256C_HEIGHT/TITAN_256C_STRIP_HEIGHT - 1, getYPosFalling() / TITAN_256C_STRIP_HEIGHT + 2);
-    titan256cPalsPtr = getUnpackedPtr() + stripN * TITAN_256C_COLORS_PER_STRIP;
-    applyBlackPalPos = (TITAN_256C_HEIGHT - 1) - getYPosFalling();
-    palIdx = ((getYPosFalling() / TITAN_256C_STRIP_HEIGHT) % 2) == 0 ? 0 : 32;
-    currGradPtr = getGradientColorsBuffer();
+    varsSetup();
     VDP_setHIntCounter(0);
 }
 
@@ -150,10 +153,10 @@ HINTERRUPT_CALLBACK horizIntOnTitan256cCallback_CPU_EveryN () {
     bool setGradColorForText = vcounterManual >= TITAN_256C_TEXT_STARTING_STRIP * TITAN_256C_STRIP_HEIGHT 
         && vcounterManual <= TITAN_256C_TEXT_ENDING_STRIP * TITAN_256C_TEXT_ENDING_STRIP;
 
-    if (vcounterManual >= applyBlackPalPos)
-        titan256cPalsPtr = (u16*)palette_black;
-
-    vcounterManual += TITAN_256C_STRIP_HEIGHT;
+    if (vcounterManual >= applyBlackPalPos) {
+        titan256cPalsPtr = (u16*) palette_black;
+        setGradColorForText = FALSE;
+    }
 
     /*
         u32 cmd1st = VDP_WRITE_CRAM_ADDR((u32)(palIdx * 2));
@@ -267,6 +270,7 @@ HINTERRUPT_CALLBACK horizIntOnTitan256cCallback_CPU_EveryN () {
         *((vu16*) VDP_DATA_PORT) = bgColor;
     turnOnVDP(116);
 
+    vcounterManual += TITAN_256C_STRIP_HEIGHT;
     currGradPtr += 4 * setGradColorForText; // advance 3 colors if condition is met
     titan256cPalsPtr += 32; // advance to next strip's palette
     palIdx ^= 32; // cycles between 0 and 32
@@ -279,10 +283,10 @@ HINTERRUPT_CALLBACK horizIntOnTitan256cCallback_DMA_EveryN () {
     bool setGradColorForText = vcounterManual >= TITAN_256C_TEXT_STARTING_STRIP * TITAN_256C_STRIP_HEIGHT 
         && vcounterManual <= TITAN_256C_TEXT_ENDING_STRIP * TITAN_256C_TEXT_ENDING_STRIP;
 
-    if (vcounterManual >= applyBlackPalPos)
-        titan256cPalsPtr = (u16*)palette_black;
-
-    vcounterManual += TITAN_256C_STRIP_HEIGHT;
+    if (vcounterManual >= applyBlackPalPos) {
+        titan256cPalsPtr = (u16*) palette_black;
+        setGradColorForText = FALSE;
+    }
 
     /*
         u32 palCmdForDMA_A = VDP_DMA_CRAM_ADDR((u32)palIdx * 2);
@@ -343,6 +347,7 @@ HINTERRUPT_CALLBACK horizIntOnTitan256cCallback_DMA_EveryN () {
     *((vu32*) VDP_CTRL_PORT) = palCmdForDMA; // trigger DMA transfer
     turnOnVDP(116);
 
+    vcounterManual += TITAN_256C_STRIP_HEIGHT;
     currGradPtr += 3 * setGradColorForText; // advance 3 colors if condition is met
     //titan256cPalsPtr += TITAN_256C_COLORS_PER_STRIP; // advance to next strip's palettes (if pointer wasn't incremented previously)
     palIdx ^= 32; // cycles between 0 and 32
@@ -378,8 +383,10 @@ HINTERRUPT_CALLBACK horizIntOnTitan256cCallback_DMA_OneTime () {
         bool setGradColorForText = vcounter >= TITAN_256C_TEXT_STARTING_STRIP * TITAN_256C_STRIP_HEIGHT 
             && vcounter <= TITAN_256C_TEXT_ENDING_STRIP * TITAN_256C_STRIP_HEIGHT;
 
-        if (vcounter >= applyBlackPalPos)
-            titan256cPalsPtr = (u16*)palette_black;
+        if (vcounter >= applyBlackPalPos) {
+            titan256cPalsPtr = (u16*) palette_black;
+            setGradColorForText = FALSE;
+        }
 
         /*
             u32 palCmdForDMA_A = VDP_DMA_CRAM_ADDR((u32)palIdx * 2);

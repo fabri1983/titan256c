@@ -21,6 +21,7 @@
 #define TITAN_CHARS_CURR_GRADIENT_ELEMS 16
 
 u16* getGradientColorsBuffer ();
+/// Use 0 if no fading required
 void updateTextGradientColors (u16 currFadingStrip);
 
 #define FADE_OUT_COLOR_STEPS 8 // Changing this value will affect assumptions made in fadingStepToBlack_pals() method for fading color calculations

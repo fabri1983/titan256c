@@ -46,6 +46,8 @@ static void titan256cDisplay () {
 
     VDP_setEnable(TRUE);
 
+    blackCurrentGradientPtr();
+
     u16 yPos = TITAN_256C_HEIGHT - 1;
     s16 velocity = 0;
 
