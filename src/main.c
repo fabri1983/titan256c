@@ -67,7 +67,7 @@ static void titan256cDisplay () {
         VDP_setVerticalScrollVSync(BG_B, yPos);
 
         // Load 2 strip palettes 
-        load2StripsPals(yPos / TITAN_256C_STRIP_HEIGHT);
+        load2Pals(yPos / TITAN_256C_STRIP_HEIGHT);
 
         // Update ramp color effect for the titan text section
         updateTextGradientColors(0);
@@ -85,7 +85,7 @@ static void titan256cDisplay () {
     // Titan display
     for (;;) {
         // Load 1st and 2nd strip's palette
-        load2StripsPals(0);
+        load2Pals(0);
 
         // Update ramp color effect for the titan text section
         updateTextGradientColors(0);
@@ -106,7 +106,7 @@ static void titan256cDisplay () {
         }
 
         // Load 1st and 2nd strip's palette
-        load2StripsPals(0);
+        load2Pals(0);
 
         // Update ramp color effect for the titan text section
         updateTextGradientColors(currFadingStrip);

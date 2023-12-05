@@ -56,15 +56,15 @@ FORCE_INLINE u16* getUnpackedPtr () {
     return unpackedData;
 }
 
-FORCE_INLINE void load2StripsPals (u16 stripN) {
-    if (stripN == TITAN_256C_HEIGHT/TITAN_256C_STRIP_HEIGHT - 1)
-        --stripN;
+FORCE_INLINE void load2Pals (u16 firstStrip) {
+    if (firstStrip == TITAN_256C_HEIGHT/TITAN_256C_STRIP_HEIGHT - 1)
+        --firstStrip;
 
-    if ((stripN % 2) == 0) {
-        PAL_setColors(0, unpackedData + TITAN_256C_COLORS_PER_STRIP * stripN, TITAN_256C_COLORS_PER_STRIP * 2, DMA_QUEUE);
+    if ((firstStrip % 2) == 0) {
+        PAL_setColors(0, unpackedData + TITAN_256C_COLORS_PER_STRIP * firstStrip, TITAN_256C_COLORS_PER_STRIP * 2, DMA_QUEUE);
     } else {
-        PAL_setColors(0, unpackedData + TITAN_256C_COLORS_PER_STRIP * (stripN + 1), TITAN_256C_COLORS_PER_STRIP, DMA_QUEUE);
-        PAL_setColors(TITAN_256C_COLORS_PER_STRIP, unpackedData + TITAN_256C_COLORS_PER_STRIP * stripN, TITAN_256C_COLORS_PER_STRIP, DMA_QUEUE);
+        PAL_setColors(0, unpackedData + TITAN_256C_COLORS_PER_STRIP * (firstStrip + 1), TITAN_256C_COLORS_PER_STRIP, DMA_QUEUE);
+        PAL_setColors(TITAN_256C_COLORS_PER_STRIP, unpackedData + TITAN_256C_COLORS_PER_STRIP * firstStrip, TITAN_256C_COLORS_PER_STRIP, DMA_QUEUE);
     }
 }
 

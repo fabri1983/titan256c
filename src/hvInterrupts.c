@@ -134,7 +134,7 @@ static FORCE_INLINE void varsSetup () {
     u16 stripN = min(TITAN_256C_HEIGHT/TITAN_256C_STRIP_HEIGHT - 1, getYPosFalling() / TITAN_256C_STRIP_HEIGHT + 2);
     titan256cPalsPtr = getUnpackedPtr() + stripN * TITAN_256C_COLORS_PER_STRIP;
     applyBlackPalPos = (TITAN_256C_HEIGHT - 1) - getYPosFalling();
-    palIdx = ((getYPosFalling() / TITAN_256C_STRIP_HEIGHT) % 2) == 0 ? 0 : 32;
+    palIdx = ((getYPosFalling() / TITAN_256C_STRIP_HEIGHT) % 2) == 0 ? 0 : TITAN_256C_COLORS_PER_STRIP;
     currGradPtr = getGradientColorsBuffer();
 }
 
@@ -153,6 +153,7 @@ HINTERRUPT_CALLBACK horizIntOnTitan256cCallback_CPU_EveryN () {
     bool setGradColorForText = vcounterManual >= TITAN_256C_TEXT_STARTING_STRIP * TITAN_256C_STRIP_HEIGHT 
         && vcounterManual <= TITAN_256C_TEXT_ENDING_STRIP * TITAN_256C_TEXT_ENDING_STRIP;
 
+    // First time HInt callback is called vcounterManual = TITAN_256C_STRIP_HEIGHT - 1
     if (vcounterManual >= applyBlackPalPos) {
         titan256cPalsPtr = (u16*) palette_black;
         setGradColorForText = FALSE;
@@ -272,8 +273,8 @@ HINTERRUPT_CALLBACK horizIntOnTitan256cCallback_CPU_EveryN () {
 
     vcounterManual += TITAN_256C_STRIP_HEIGHT;
     currGradPtr += 4 * setGradColorForText; // advance 3 colors if condition is met
-    titan256cPalsPtr += 32; // advance to next strip's palette
-    palIdx ^= 32; // cycles between 0 and 32
+    titan256cPalsPtr += TITAN_256C_COLORS_PER_STRIP; // advance to next strip's palette
+    palIdx ^= TITAN_256C_COLORS_PER_STRIP; // cycles between 0 and 32
     //palIdx = palIdx == 0 ? 32 : 0;
     //palIdx = (palIdx + 32) & 63; // (palIdx + 32) % 64 => x mod y = x & (y-1) when y is power of 2
 }
@@ -283,6 +284,7 @@ HINTERRUPT_CALLBACK horizIntOnTitan256cCallback_DMA_EveryN () {
     bool setGradColorForText = vcounterManual >= TITAN_256C_TEXT_STARTING_STRIP * TITAN_256C_STRIP_HEIGHT 
         && vcounterManual <= TITAN_256C_TEXT_ENDING_STRIP * TITAN_256C_TEXT_ENDING_STRIP;
 
+    // First time HInt callback is called vcounterManual = TITAN_256C_STRIP_HEIGHT - 1
     if (vcounterManual >= applyBlackPalPos) {
         titan256cPalsPtr = (u16*) palette_black;
         setGradColorForText = FALSE;
@@ -350,7 +352,7 @@ HINTERRUPT_CALLBACK horizIntOnTitan256cCallback_DMA_EveryN () {
     vcounterManual += TITAN_256C_STRIP_HEIGHT;
     currGradPtr += 3 * setGradColorForText; // advance 3 colors if condition is met
     //titan256cPalsPtr += TITAN_256C_COLORS_PER_STRIP; // advance to next strip's palettes (if pointer wasn't incremented previously)
-    palIdx ^= 32; // cycles between 0 and 32
+    palIdx ^= TITAN_256C_COLORS_PER_STRIP; // cycles between 0 and 32
     //palIdx = palIdx == 0 ? 32 : 0;
     //palIdx = (palIdx + 32) & 63; // (palIdx + 32) % 64 => x mod y = x & (y-1) when y is power of 2
 }
@@ -464,7 +466,7 @@ HINTERRUPT_CALLBACK horizIntOnTitan256cCallback_DMA_OneTime () {
 
         currGradPtr += 3 * setGradColorForText; // advance 3 colors if condition is met
         //titan256cPalsPtr += TITAN_256C_COLORS_PER_STRIP; // advance to next strip's palettes (if pointer wasn't incremented previously)
-        palIdx ^= 32; // cycles between 0 and 32
+        palIdx ^= TITAN_256C_COLORS_PER_STRIP; // cycles between 0 and 32
         //palIdx = palIdx == 0 ? 32 : 0;
         //palIdx = (palIdx + 32) & 63; // (palIdx + 32) % 64 => x mod y = x & (y-1) when y is power of 2
 

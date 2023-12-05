@@ -37,7 +37,7 @@ void unpackPalettes ();
 void freePalettes ();
 u16* getUnpackedPtr ();
 
-/// Loads the palettes belonging to strip stripN and stripN + 1.
-void load2StripsPals (u16 stripN);
+/// Loads the palettes belonging to strip firstStrip and firstStrip + 1.
+void load2Pals (u16 firstStrip);
 
 #endif
