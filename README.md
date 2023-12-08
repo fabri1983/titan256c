@@ -52,4 +52,4 @@ the second unwanted HInt invocation. Ugly hack but this is what I came up so far
 - Approches B and C likely have room to update text ramp color in every scanline.
 - Fix black BG color lines over text in approaches B and C.
 - Add DMA command buffering as Steph does. See dma.c.
-- Try to use titan256c_rgb.png as input (this need a fix in tiledpalettequant to accept an specific color as transparent) and do the color ramp effect over the white color.
+- Try to use titan256c_rgb.png as input and do the color ramp effect over the white color.

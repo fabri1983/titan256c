@@ -95,15 +95,14 @@ void NO_INLINE updateTextGradientColors (u16 currFadingStrip) {
     }
 
     u16* rampBufPtr = gradColorsBuffer;
-    u16 colorIdx = divu(titanCharsCycleCnt, TITAN_CHARS_GRADIENT_SCROLL_FREQ); // advance ramp color every N frames
+    u16 colorIdx = titanCharsCycleCnt / TITAN_CHARS_GRADIENT_SCROLL_FREQ; // advance ramp color every N frames (use divu for divisor non power of 2)
 
     for (u16 i=0; i < TITAN_CHARS_CURR_GRADIENT_ELEMS; ++i) {
         u16 d = *(titanCharsGradientColors + modu(colorIdx++, TITAN_CHARS_GRADIENT_MAX_COLORS));
         if (i < innerStripLimit) {
             d -= min(0xEEE, fadeTextAmount);
-            // diminish the fade out weight every 4 colors
-            if ((i % 4) == 0)
-                fadeTextAmount -= 0x222;
+            // diminish the fade out weight every 4 colors (ramp colors shown per strip)
+            if ((i % 4) == 0) fadeTextAmount -= 0x222;
         }
         if (d & 0b0000000010000) d &= ~0b0000000011110; // red overflows? then zero it
         if (d & 0b0000100000000) d &= ~0b0000111100000; // green overflows? then zero it
