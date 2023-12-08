@@ -69,13 +69,17 @@ FORCE_INLINE void load2Pals (u16 firstStrip) {
 }
 
 // rmap color effect in VDP format: BGR
-static const u16 titanCharsGradientColors[TITAN_CHARS_GRADIENT_MAX_COLORS] = {
+static const u16 titanCharsGradientColors[TITAN_CHARS_GRADIENT_MAX_COLORS + TITAN_CHARS_CURR_GRADIENT_ELEMS] = {
     0xE00, 0xE02, 0xE04, 0xE06, 0xE08, 0xE0A, 0xE0C,
     0xE0E, 0xC0E, 0xA0E, 0x80E, 0x60E, 0x40E, 0x20E, 
     0x00E, 0x02E, 0x04E, 0x06E, 0x08E, 0x0AE, 0x0CE, 
     0x0EE, 0x0EC, 0x0EA, 0x0E8, 0x0E6, 0x0E4, 0x0E2,
     0x0E0, 0x2E0, 0x4E0, 0x6E0, 0x8E0, 0xAE0, 0xCE0, 
-    0xEE0, 0xEC0, 0xEA0, 0xE80, 0xE60, 0xE40, 0xE20
+    0xEE0, 0xEC0, 0xEA0, 0xE80, 0xE60, 0xE40, 0xE20,
+    // next TITAN_CHARS_CURR_GRADIENT_ELEMS colors are repeated from the start of the array to help cycling the ramp colors without using mod operand
+    0xE00, 0xE02, 0xE04, 0xE06, 0xE08, 0xE0A, 0xE0C,
+    0xE0E, 0xC0E, 0xA0E, 0x80E, 0x60E, 0x40E, 0x20E, 
+    0x00E, 0x02E
 };
 
 static u16 gradColorsBuffer[TITAN_CHARS_CURR_GRADIENT_ELEMS];
@@ -96,9 +100,10 @@ void NO_INLINE updateTextGradientColors (u16 currFadingStrip) {
 
     u16* rampBufPtr = gradColorsBuffer;
     u16 colorIdx = titanCharsCycleCnt / TITAN_CHARS_GRADIENT_SCROLL_FREQ; // advance ramp color every N frames (use divu for divisor non power of 2)
+    if (colorIdx > TITAN_CHARS_GRADIENT_MAX_COLORS) colorIdx = 0;
 
     for (u16 i=0; i < TITAN_CHARS_CURR_GRADIENT_ELEMS; ++i) {
-        u16 d = *(titanCharsGradientColors + modu(colorIdx++, TITAN_CHARS_GRADIENT_MAX_COLORS));
+        u16 d = *(titanCharsGradientColors + colorIdx++);
         if (i < innerStripLimit) {
             d -= min(0xEEE, fadeTextAmount);
             // diminish the fade out weight every 4 colors (ramp colors shown per strip)
