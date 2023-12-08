@@ -109,10 +109,23 @@ void NO_INLINE updateTextGradientColors (u16 currFadingStrip) {
             // diminish the fade out weight every 4 colors (ramp colors shown per strip)
             if ((i % 4) == 0) fadeTextAmount -= 0x222;
         }
-        if (d & 0b0000000010000) d &= ~0b0000000011110; // red overflows? then zero it
-        if (d & 0b0000100000000) d &= ~0b0000111100000; // green overflows? then zero it
-        if (d & 0b1000000000000) d &= ~0b1111000000000; // blue overflows? then zero it
+        // IMPL A:
+        switch (d & 0b1000100010000) {
+               case 0b0000000010000: d &= ~0b0000000011110; break; // red overflows? then zero it
+               case 0b0000100010000: d &= ~0b0000111111110; break; // red and green overflow? then zero them
+               case 0b0000100000000: d &= ~0b0000111100000; break; // green overflows? then zero it
+               case 0b1000000010000: d &= ~0b1111000011110; break; // red and blue overflow? then zero them
+               case 0b1000000000000: d &= ~0b1111000000000; break; // blue overflows? then zero it
+               case 0b1000100000000: d &= ~0b1111111100000; break; // green and blue overflow? then zero them
+               case 0b1000100010000: d = 0; break; // all colors overflow, then zero them
+               default: break;
+        }
         *rampBufPtr++ = d;
+        // IMPL B:
+        // if (d & 0b0000000010000) d &= ~0b0000000011110; // red overflows? then zero it
+        // if (d & 0b0000100000000) d &= ~0b0000111100000; // green overflows? then zero it
+        // if (d & 0b1000000000000) d &= ~0b1111000000000; // blue overflows? then zero it
+        //*rampBufPtr++ = d;
     }
 
     ++titanCharsCycleCnt;
