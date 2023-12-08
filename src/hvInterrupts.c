@@ -131,7 +131,7 @@ void blackCurrentGradientPtr () {
 
 static FORCE_INLINE void varsSetup () {
     // Needed for DMA of colors in u32 type, and it seems is neeed for CPU too (had some black screen flickering if not set)
-	*((u16*) VDP_CTRL_PORT) = 0x8F00 | 2; // instead of VDP_setAutoInc(2) due to additionals read and write from/to internal regValues[]
+	*((vu16*) VDP_CTRL_PORT) = 0x8F00 | 2; // instead of VDP_setAutoInc(2) due to additionals read and write from/to internal regValues[]
     u16 stripN = min(TITAN_256C_HEIGHT/TITAN_256C_STRIP_HEIGHT - 1, getYPosFalling() / TITAN_256C_STRIP_HEIGHT + 2);
     titan256cPalsPtr = getUnpackedPtr() + stripN * TITAN_256C_COLORS_PER_STRIP;
     applyBlackPalPos = (TITAN_256C_HEIGHT - 1) - getYPosFalling();
