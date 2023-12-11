@@ -152,7 +152,7 @@ static void basicEngineConfig () {
 }
 
 static void initGameStatus () {
-    titan256cHIntMode = 0; // set initial color swap mode
+    titan256cHIntMode = 0; // set initial color swap strategy
 }
 
 int main (bool hard) {

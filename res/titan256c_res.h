@@ -9,6 +9,13 @@ typedef struct
 
 typedef struct
 {
+	TileSet *tileset1;
+	TileSet *tileset2;
+	TileMap *tilemap;
+} ImageNoPalsTilesetSplit2;
+
+typedef struct
+{
 	u16 compression;
 	u16* data;
 } Palette32AllStrips;
