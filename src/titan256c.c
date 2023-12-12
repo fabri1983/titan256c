@@ -11,7 +11,7 @@ void loadTitan256cTileSet (u16 currTileIndex) {
     VDP_loadTileSet(tileset, currTileIndex, DMA);
 }
 
-static u16 yPosFalling = 0;
+u16 yPosFalling = 0;
 
 FORCE_INLINE void setYPosFalling (u16 value) {
     yPosFalling = value;
@@ -30,7 +30,7 @@ u16 loadTitan256cTileMap (VDPPlane plane, u16 currTileIndex) {
     return currTileIndex;
 }
 
-static u16* unpackedData;
+u16* unpackedData;
 
 void unpackPalettes () {
     unpackedData = (u16*) MEM_alloc(TITAN_256C_STRIPS_COUNT * TITAN_256C_COLORS_PER_STRIP * sizeof(u16));
@@ -82,11 +82,17 @@ static const u16 titanCharsGradientColors[TITAN_CHARS_GRADIENT_MAX_COLORS + TITA
     0x00E, 0x02E
 };
 
-static u16 gradColorsBuffer[TITAN_CHARS_CURR_GRADIENT_ELEMS];
+u16 gradColorsBuffer[TITAN_CHARS_CURR_GRADIENT_ELEMS];
 
 static u8 titanCharsCycleCnt = 0;
 
-void NO_INLINE updateTextGradientColors (u16 currFadingStrip) {
+static u16 currFadingStrip = 0;
+
+void setCurrentFadingStripForText (u16 currFadingStrip_) {
+    currFadingStrip = currFadingStrip_;
+}
+
+void NO_INLINE updateTextGradientColors () {
     // Strips [21,25] (0 based) renders the letters using transparent color, and we want to use a gradient scrolling over time. So 5 strips.
 
     u16 innerStripLimit = 0;

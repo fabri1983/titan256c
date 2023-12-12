@@ -141,7 +141,7 @@ static INTERRUPT_ATTRIBUTE HIntLogoHandler ()
     );
 }
 
-static inline u16 attr (u16 pal)
+static FORCE_INLINE u16 attr (u16 pal)
 {
     return TILE_ATTR(pal, 0, FALSE, FALSE);
 }

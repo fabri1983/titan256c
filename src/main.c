@@ -69,8 +69,8 @@ static void titan256cDisplay () {
         // Load 2 strip palettes 
         load2Pals(yPos / TITAN_256C_STRIP_HEIGHT);
 
-        // Update ramp color effect for the titan text section
-        updateTextGradientColors(0);
+        // disable the ramp color effect on titan text
+        setCurrentFadingStripForText(0);
 
         SYS_doVBlankProcess();
 
@@ -87,8 +87,8 @@ static void titan256cDisplay () {
         // Load 1st and 2nd strip's palette
         load2Pals(0);
 
-        // Update ramp color effect for the titan text section
-        updateTextGradientColors(0);
+        // disable the ramp color effect on titan text
+        setCurrentFadingStripForText(0);
 
         SYS_doVBlankProcess();
 
@@ -108,8 +108,8 @@ static void titan256cDisplay () {
         // Load 1st and 2nd strip's palette
         load2Pals(0);
 
-        // Update ramp color effect for the titan text section
-        updateTextGradientColors(currFadingStrip);
+        // enable the ramp color effect on titan text calculated on VInt
+        setCurrentFadingStripForText(currFadingStrip);
 
         if (fadingCycleCurrStrip < FADE_OUT_STRIPS_SPLIT_CYCLES) {
             // apply fade to black from currFadingStrip up to FADE_OUT_STEPS previous strips

@@ -23,20 +23,6 @@
 
 #define MAX_FRAMES_EFFECT 100
 
-// *****************************************************************************
-//
-//  Global variables
-//
-// *****************************************************************************
-
-static u16 tileIndexNext = TILE_USER_INDEX;
-
-// *****************************************************************************
-//
-//  Main
-//
-// *****************************************************************************
-
 void displayTeddyBearLogo ()
 {
     //
@@ -57,6 +43,7 @@ void displayTeddyBearLogo ()
     // Init Sprites engine with default values (CAUTION: 420 reserved tiles in VRAM)
     SPR_init();
 
+    u16 tileIndexNext = TILE_USER_INDEX;
     u16 teddyBearAnimTileAttribsBase = TILE_ATTR_FULL(PAL3, 0, FALSE, FALSE, tileIndexNext);
     u16 sprX = (screenWidth - sprDefTeddyBearAnim.w) / 2;
     u16 sprY = (screenHeight - sprDefTeddyBearAnim.h) / 2;
