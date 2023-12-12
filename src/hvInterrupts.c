@@ -305,12 +305,13 @@ HINTERRUPT_CALLBACK horizIntOnTitan256cCallback_DMA_EveryN () {
 
     u32 palCmdForDMA;
     u32 fromAddrForDMA;    
-    u16 bgColor1=0, bgColor2=0, bgColor3=0;
+    u16 bgColor1=0, bgColor2=0, bgColor3=0, bgColor4=0;
 
     if (setGradColorForText) {
         bgColor1 = *(currGradPtr + 0);
         bgColor2 = *(currGradPtr + 1);
         bgColor3 = *(currGradPtr + 2);
+        bgColor4 = *(currGradPtr + 3);
     }
 
     // Value under current conditions is always 116
@@ -361,6 +362,12 @@ HINTERRUPT_CALLBACK horizIntOnTitan256cCallback_DMA_EveryN () {
     palIdx ^= TITAN_256C_COLORS_PER_STRIP; // cycles between 0 and 32
     //palIdx = palIdx == 0 ? 32 : 0;
     //palIdx = (palIdx + 32) & 63; // (palIdx + 32) % 64 => x mod y = x & (y-1) when y is power of 2
+    
+    waitHCounter(154);
+        // set GB color before setup DMA
+        *((vu32*) VDP_CTRL_PORT) = 0xC0000000; // VDP_WRITE_CRAM_ADDR(0): write to CRAM color index 0 multiplied by 2
+        *((vu16*) VDP_DATA_PORT) = bgColor4;
+
     if (vcounterManual >= applyBlackPalPos)
         titan256cPalsPtr = (u16*) palette_black;
 }
@@ -406,12 +413,13 @@ HINTERRUPT_CALLBACK horizIntOnTitan256cCallback_DMA_OneTime () {
 
         u32 palCmdForDMA;
         u32 fromAddrForDMA;    
-        u16 bgColor1=0, bgColor2=0, bgColor3=0;
+        u16 bgColor1=0, bgColor2=0, bgColor3=0, bgColor4=0;
 
         if (setGradColorForText) {
             bgColor1 = *(currGradPtr + 0);
             bgColor2 = *(currGradPtr + 1);
             bgColor3 = *(currGradPtr + 2);
+            bgColor4 = *(currGradPtr + 3);
         }
 
         fromAddrForDMA = (u32) titan256cPalsPtr >> 1;
@@ -476,6 +484,11 @@ HINTERRUPT_CALLBACK horizIntOnTitan256cCallback_DMA_OneTime () {
         palIdx ^= TITAN_256C_COLORS_PER_STRIP; // cycles between 0 and 32
         //palIdx = palIdx == 0 ? 32 : 0;
         //palIdx = (palIdx + 32) & 63; // (palIdx + 32) % 64 => x mod y = x & (y-1) when y is power of 2
+
+        waitHCounter(154);
+            // set GB color before setup DMA
+            *((vu32*) VDP_CTRL_PORT) = 0xC0000000; // VDP_WRITE_CRAM_ADDR(0): write to CRAM color index 0 multiplied by 2
+            *((vu16*) VDP_DATA_PORT) = bgColor4;
 
         if (vcounter >= applyBlackPalPos)
             titan256cPalsPtr = (u16*) palette_black;
