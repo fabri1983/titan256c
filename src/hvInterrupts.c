@@ -122,8 +122,10 @@ void NO_INLINE setupDMAForPals (u16 len, u32 fromAddr) {
 u16* titan256cPalsPtr; // 1st and 2nd strip's palette are loaded at the beginning of the display loop, so this ptr starts at 3rd strip
 u16 palIdx; // 3rd strip starts with palettes at [PAL0,PAL1]
 u16* currGradPtr;
-u16 applyBlackPalPos = TITAN_256C_HEIGHT - 1;
+u16 applyBlackPalPosY = TITAN_256C_HEIGHT - 1;
 u16 vcounterManual;
+u16 textRampEffectLimitTop;
+u16 textRampEffectLimitBottom;
 
 void blackCurrentGradientPtr () {
     currGradPtr = (u16*) palette_black;
@@ -132,17 +134,21 @@ void blackCurrentGradientPtr () {
 FORCE_INLINE void varsSetup () {
     // Needed for DMA of colors in u32 type, and it seems is neeed for CPU too (had some black screen flickering if not set)
 	*((vu16*) VDP_CTRL_PORT) = 0x8F00 | 2; // instead of VDP_setAutoInc(2) due to additionals read and write from/to internal regValues[]
-    u16 stripN = min(TITAN_256C_HEIGHT/TITAN_256C_STRIP_HEIGHT - 1, getYPosFalling() / TITAN_256C_STRIP_HEIGHT + 2);
+    u16 posYFalling = getYPosFalling();
+    u16 stripN = min(TITAN_256C_HEIGHT/TITAN_256C_STRIP_HEIGHT - 1, posYFalling / TITAN_256C_STRIP_HEIGHT + 2);
     titan256cPalsPtr = getUnpackedPtr() + stripN * TITAN_256C_COLORS_PER_STRIP;
-    applyBlackPalPos = (TITAN_256C_HEIGHT - 1) - getYPosFalling();
-    palIdx = ((getYPosFalling() / TITAN_256C_STRIP_HEIGHT) % 2) == 0 ? 0 : TITAN_256C_COLORS_PER_STRIP;
+    applyBlackPalPosY = (TITAN_256C_HEIGHT - 1) - posYFalling;
+    palIdx = ((posYFalling / TITAN_256C_STRIP_HEIGHT) % 2) == 0 ? 0 : TITAN_256C_COLORS_PER_STRIP;
     currGradPtr = getGradientColorsBuffer();
+    // next operations underflow, and since target type is u16 then ending with bigger numbers. No problem because condition in HInt() still works.
+    textRampEffectLimitTop = TITAN_256C_TEXT_STARTING_STRIP * TITAN_256C_STRIP_HEIGHT - posYFalling;
+    textRampEffectLimitBottom = TITAN_256C_TEXT_ENDING_STRIP * TITAN_256C_STRIP_HEIGHT - posYFalling;
 }
 
 void vertIntOnTitan256cCallback_HIntEveryN () {
     varsSetup();
     vcounterManual = TITAN_256C_STRIP_HEIGHT - 1;
-    if (vcounterManual >= applyBlackPalPos)
+    if (vcounterManual >= applyBlackPalPosY)
         titan256cPalsPtr = (u16*) palette_black;
     updateTextGradientColors();
 }
@@ -150,16 +156,16 @@ void vertIntOnTitan256cCallback_HIntEveryN () {
 void vertIntOnTitan256cCallback_HIntOneTime () {
     VDP_setHIntCounter(0);
     varsSetup();
-    if ((TITAN_256C_STRIP_HEIGHT - 1) >= applyBlackPalPos)
+    if ((TITAN_256C_STRIP_HEIGHT - 1) >= applyBlackPalPosY)
         titan256cPalsPtr = (u16*) palette_black;
     updateTextGradientColors();
 }
 
 HINTERRUPT_CALLBACK horizIntOnTitan256cCallback_CPU_EveryN () {
 
-    bool setGradColorForText = vcounterManual >= TITAN_256C_TEXT_STARTING_STRIP * TITAN_256C_STRIP_HEIGHT 
-        && vcounterManual <= TITAN_256C_TEXT_ENDING_STRIP * TITAN_256C_TEXT_ENDING_STRIP 
-        && vcounterManual < applyBlackPalPos;
+    bool setGradColorForText = vcounterManual >= textRampEffectLimitTop && vcounterManual <= textRampEffectLimitBottom 
+        && vcounterManual < applyBlackPalPosY;
+    // bool setGradColorForText = vcounterManual >= textRampEffectLimitTop && vcounterManual < applyBlackPalPosY;
 
     /*
         u32 cmd1st = VDP_WRITE_CRAM_ADDR((u32)(palIdx * 2));
@@ -281,7 +287,7 @@ HINTERRUPT_CALLBACK horizIntOnTitan256cCallback_CPU_EveryN () {
         *((vu16*) VDP_DATA_PORT) = bgColor4;
     turnOnVDP(116);
 
-    if (vcounterManual >= applyBlackPalPos)
+    if (vcounterManual >= applyBlackPalPosY)
         titan256cPalsPtr = (u16*) palette_black;
     else 
         titan256cPalsPtr += TITAN_256C_COLORS_PER_STRIP; // advance to next strip's palette
@@ -289,9 +295,9 @@ HINTERRUPT_CALLBACK horizIntOnTitan256cCallback_CPU_EveryN () {
 
 HINTERRUPT_CALLBACK horizIntOnTitan256cCallback_DMA_EveryN () {
 
-    bool setGradColorForText = vcounterManual >= TITAN_256C_TEXT_STARTING_STRIP * TITAN_256C_STRIP_HEIGHT 
-        && vcounterManual <= TITAN_256C_TEXT_ENDING_STRIP * TITAN_256C_TEXT_ENDING_STRIP 
-        && vcounterManual < applyBlackPalPos;
+    bool setGradColorForText = vcounterManual >= textRampEffectLimitTop && vcounterManual <= textRampEffectLimitBottom 
+        && vcounterManual < applyBlackPalPosY;
+    //bool setGradColorForText = vcounterManual >= textRampEffectLimitTop && vcounterManual < applyBlackPalPosY;
 
     /*
         u32 palCmdForDMA_A = VDP_DMA_CRAM_ADDR((u32)palIdx * 2);
@@ -368,7 +374,7 @@ HINTERRUPT_CALLBACK horizIntOnTitan256cCallback_DMA_EveryN () {
         *((vu32*) VDP_CTRL_PORT) = 0xC0000000; // VDP_WRITE_CRAM_ADDR(0): write to CRAM color index 0 multiplied by 2
         *((vu16*) VDP_DATA_PORT) = bgColor4;
 
-    if (vcounterManual >= applyBlackPalPos)
+    if (vcounterManual >= applyBlackPalPosY)
         titan256cPalsPtr = (u16*) palette_black;
 }
 
@@ -397,9 +403,9 @@ HINTERRUPT_CALLBACK horizIntOnTitan256cCallback_DMA_OneTime () {
             return;
         }
 
-        bool setGradColorForText = vcounter >= TITAN_256C_TEXT_STARTING_STRIP * TITAN_256C_STRIP_HEIGHT 
-            && vcounter <= TITAN_256C_TEXT_ENDING_STRIP * TITAN_256C_STRIP_HEIGHT 
-            && vcounterManual < applyBlackPalPos;
+        bool setGradColorForText = vcounter >= textRampEffectLimitTop && vcounter <= textRampEffectLimitBottom 
+            && vcounter < applyBlackPalPosY;
+        //bool setGradColorForText = vcounter >= textRampEffectLimitTop && vcounter < applyBlackPalPosY;
 
         /*
             u32 palCmdForDMA_A = VDP_DMA_CRAM_ADDR((u32)palIdx * 2);
@@ -490,64 +496,10 @@ HINTERRUPT_CALLBACK horizIntOnTitan256cCallback_DMA_OneTime () {
             *((vu32*) VDP_CTRL_PORT) = 0xC0000000; // VDP_WRITE_CRAM_ADDR(0): write to CRAM color index 0 multiplied by 2
             *((vu16*) VDP_DATA_PORT) = bgColor4;
 
-        if (vcounter >= applyBlackPalPos)
+        if (vcounter >= applyBlackPalPosY)
             titan256cPalsPtr = (u16*) palette_black;
 
         vcounter += TITAN_256C_STRIP_HEIGHT;
         waitVCounterReg(vcounter);
     }
 }
-
-// void horizIntOnMainMenuCallback_ASM () {
-//     u16 vcounter = GET_VCOUNTER;
-//     u16 bgColorScanRange = (HELLO_TEXT_MAX_Y * 8 + 8); // adding +8 due to tile's height
-//     u16 bgGradientColor = 0x666;//gradientColorsA[vcounter >> BG_GRADIENT_SHIFT_A];
-//     u16 helloTextColor = 0xFFF;//textHello.color;
-
-//     /* https://github.com/0xAX/linux-insides/blob/master/Theory/linux-theory-3.md
-//     __asm__ [volatile] [goto] (AssemblerTemplate
-//                         [ : OutputOperands ]
-//                         [ : InputOperands  ]
-//                         [ : Clobbers       ]
-//                         [ : GotoLabels     ]);*/
-
-    // VDP_setReg(u16 reg, u16 value)
-    //     "move.w  %0, %%d0\n"  // put value into register d0
-    //     "move.w  %1, %%d1\n"  // put reg into register d1
-    //     "move.w  %%d1, %2\n"  // put register d1 content into VDP_CTRL_PORT
-    //     "move.l  %3, %%a0\n"  // put VDP_DATA_PORT into register a0
-    //     "move.w  %%d0, (%2, %%a0)\n" // put register d0 (value) content into a0 (VDP_CTRL_PORT)
-    //     :
-    //     : "g" (value), "g" (reg), "g" (VDP_DATA_PORT), "g" (VDP_CTRL_PORT)
-    //     : "d0", "d1", "a0"
-
-//     ASM_STATEMENT volatile (
-//         " .loopWaitHBlank:"
-//         "    move.w  %sr, %d0;"         // Move the contents of the SR register into d0
-//         "    btst    #4, %d0;"          // Test the 4th bit of the SR register (horizontal blank flag)
-//         "    beq     .loopWaitHBlank;"  // If the flag is not set then loop back
-//         " .updBgGradientColor:"
-//         "    moveq   #0, %%d0;"         // Set color index to update to 0
-//         "    move.b  %(0), %0;"         // Load new color value for index 15 into register
-//         "    move.w  %%d0, %%a0;"       // Move color index into address register
-//         "    move.b  %0, (%%a0);"       // Store new color value at palette index
-//         " .cmpVCounter:"                // Compare V Counter value to know current vertical scanline
-//         "    move.w  %(1), %0;"         // Move V Counter value into register
-//         "    cmpi.w  %(2), %0;"         // Compare counter value with bgScanRange
-//         "    bhi.b   .updTextColor;"    // If V Counter is greater than bgScanRange, branch to .updAllTextColor label
-//         " .updHelloTextColor:"
-//         "    moveq   #15, %%d0;"        // Set color index to update to 15
-//         "    move.b  %(3), %0;"         // Load new color value for index 15 into register
-//         "    bra.b   .storeTextColor;"  // Jump to .storeTextColor
-//         " .updAllTextColor:"
-//         "    moveq   #15, %%d0;"        // Set color index to update to 15
-//         "    move.b  %(4), %0;"         // Load new color value for index 15 into register
-//         "    bra.b   .storeTextColor;"  // Jump to .storeTextColor
-//         " .storeTextColor:"
-//         "    move.w  %%d0, %%a0;"       // Move color index into address register
-//         "    move.b  %0, (%%a0);"       // Store new color value at palette index
-//         :                               // Output: none
-//         : "0" (bgGradientColor), "1" (vcounter), "2" (bgColorScanRange), "3" (helloTextColor), "4" (ALL_TEXT_COLOR)   // Input operands
-//         : "%d0", "%a0", "cc"            // Clobbers: register d0, address register a0, condition codes
-//     );
-// }

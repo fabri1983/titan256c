@@ -66,7 +66,7 @@ static void titan256cDisplay () {
         setYPosFalling(yPos);
         VDP_setVerticalScrollVSync(BG_B, yPos);
 
-        // Load 2 strip palettes 
+        // Load 2 strip palettes depending on the Y position (in strips) of the image
         load2Pals(yPos / TITAN_256C_STRIP_HEIGHT);
 
         // disable the ramp color effect on titan text
