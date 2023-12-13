@@ -33,9 +33,9 @@ FORCE_INLINE void turnOnVDP (u8 reg01) {
 */
 FORCE_INLINE void waitHCounter (u16 n) {
     ASM_STATEMENT volatile (
-        " .LoopHC%=:"
-        "    cmpi.b  %[hcLimit], 0xC00009.l;"  // we only interested in comparing byte since n won't be > 160 for our practical cases
-        "    blo     .LoopHC%=;"
+        ".LoopHC%=:\n"
+        "\t  cmpi.b  %[hcLimit], 0xC00009.l;\n"  // we only interested in comparing byte since n won't be > 160 for our practical cases
+        "\t  blo     .LoopHC%=;"
         :
         : [hcLimit] "i" (n)
         : "cc" // Clobbers: condition codes
@@ -49,24 +49,24 @@ FORCE_INLINE void waitHCounter_ShannonBirt (u16 n) {
     // vu32* regA=0; // placeholder used to indicate the use of an A register
     // vu16* regD=0; // placeholder used to indicate the use of a D register
     // ASM_STATEMENT volatile (
-    //     " move.l    #0xC00009, %0;"     // Load H Counter address into an A register
-    //     " move.w    #158, %1;"          // Load 158 into a D register
-    //     " .hcLimit%=:" 
-    //     "    cmp.b   (%0), %1;"         // Compares H Counter with 158. '()' specifies memory indirection or dereferencing
-    //     "    blo     .hcLimit%=;"
+    //     "move.l    #0xC00009, %0;\n"      // Load H Counter address into an A register
+    //     "move.w    #158, %1;\n"           // Load 158 into a D register
+    //     ".hcLimit%=:" 
+    //     "    cmp.b   (%0), %1;\n"         // Compares H Counter with 158. '()' specifies memory indirection or dereferencing
+    //     "    blo     .hcLimit%=;\n"
     //     : "+a" (regA), "+d" (regD)
     //     :
-    //     : "cc"                          // Clobbers: condition codes
+    //     : "cc"                            // Clobbers: condition codes
     // );
     ASM_STATEMENT volatile (
-        " move.l    #0xC00009, %%a0;"    // Load H Counter address into a0 register
-        " move.w    %[hcLimit], %%d1;"   // Load hcLimit into d1 register
-        " .hcLimit%=:" 
-        "    cmp.b   (%%a0), %%d1;"      // Compares H Counter with hcLimit. '()' specifies memory indirection or dereferencing
-        "    blo     .hcLimit%=;"
+        "move.l    #0xC00009, %%a0;\n"    // Load H Counter address into a0 register
+        "move.w    %[hcLimit], %%d1;\n"   // Load hcLimit into d1 register
+        ".hcLimit%=:" 
+        "\t  cmp.b   (%%a0), %%d1;\n"     // Compares H Counter with hcLimit. '()' specifies memory indirection or dereferencing
+        "\t  blo     .hcLimit%=;"
         :
         : [hcLimit] "i" (n)
-        : "a0", "d1", "cc"               // Clobbers: register d1, address register a0, condition codes
+        : "a0", "d1", "cc"                // Clobbers: register d1, address register a0, condition codes
     );
 }
 
@@ -75,9 +75,9 @@ FORCE_INLINE void waitHCounter_ShannonBirt (u16 n) {
 */
 FORCE_INLINE void waitVCounter (u16 n) {
     ASM_STATEMENT volatile (
-        " .LoopVC%=:"
-        "    CMPI.w  %[vcLimit], 0xC00008.l;"  // we only interested in comparing word since n won't be > 255 (then shifted right) for our practical cases
-        "    BLO     .LoopVC%=;"
+        ".LoopVC%=:\n"
+        "\t  CMPI.w  %[vcLimit], 0xC00008.l;\n"  // we only interested in comparing word since n won't be > 255 (then shifted right) for our practical cases
+        "\t  BLO     .LoopVC%=;"
         :
         : [vcLimit] "i" (n << 8) // (n << 8) | 0xFF
         : "cc" // Clobbers: condition codes
@@ -89,9 +89,9 @@ FORCE_INLINE void waitVCounter (u16 n) {
 */
 FORCE_INLINE void waitVCounterReg (u16 n) {
     ASM_STATEMENT volatile (
-        " .LoopVC%=:"
-        "    CMP.w   0xC00008.l, %0;"  // we only interested in comparing word since n won't be > 255 (then shifted right) for our practical cases
-        "    BHI     .LoopVC%=;"
+        ".LoopVC%=:\n"
+        "\t  CMP.w   0xC00008.l, %0;\n"  // we only interested in comparing word since n won't be > 255 (then shifted right) for our practical cases
+        "\t  BHI     .LoopVC%=;"
         :
         : "r" (n << 8) // (n << 8) | 0xFF
         : "cc" // Clobbers: condition codes
@@ -142,7 +142,7 @@ FORCE_INLINE void varsSetup () {
     currGradPtr = getGradientColorsBuffer();
     // next operations underflow, and since target type is u16 then ending with bigger numbers. No problem because condition in HInt() still works.
     textRampEffectLimitTop = TITAN_256C_TEXT_STARTING_STRIP * TITAN_256C_STRIP_HEIGHT - posYFalling;
-    textRampEffectLimitBottom = TITAN_256C_TEXT_ENDING_STRIP * TITAN_256C_STRIP_HEIGHT - posYFalling;
+    textRampEffectLimitBottom = TITAN_256C_TEXT_ENDING_STRIP * TITAN_256C_STRIP_HEIGHT - posYFalling + 2;
 }
 
 void vertIntOnTitan256cCallback_HIntEveryN () {
@@ -163,9 +163,7 @@ void vertIntOnTitan256cCallback_HIntOneTime () {
 
 HINTERRUPT_CALLBACK horizIntOnTitan256cCallback_CPU_EveryN () {
 
-    bool setGradColorForText = vcounterManual >= textRampEffectLimitTop && vcounterManual <= textRampEffectLimitBottom 
-        && vcounterManual < applyBlackPalPosY;
-    // bool setGradColorForText = vcounterManual >= textRampEffectLimitTop && vcounterManual < applyBlackPalPosY;
+    bool setGradColorForText = vcounterManual >= textRampEffectLimitTop && vcounterManual <= textRampEffectLimitBottom;
 
     /*
         u32 cmd1st = VDP_WRITE_CRAM_ADDR((u32)(palIdx * 2));
@@ -295,9 +293,7 @@ HINTERRUPT_CALLBACK horizIntOnTitan256cCallback_CPU_EveryN () {
 
 HINTERRUPT_CALLBACK horizIntOnTitan256cCallback_DMA_EveryN () {
 
-    bool setGradColorForText = vcounterManual >= textRampEffectLimitTop && vcounterManual <= textRampEffectLimitBottom 
-        && vcounterManual < applyBlackPalPosY;
-    //bool setGradColorForText = vcounterManual >= textRampEffectLimitTop && vcounterManual < applyBlackPalPosY;
+    bool setGradColorForText = vcounterManual >= textRampEffectLimitTop && vcounterManual <= textRampEffectLimitBottom;
 
     /*
         u32 palCmdForDMA_A = VDP_DMA_CRAM_ADDR((u32)palIdx * 2);
@@ -403,9 +399,7 @@ HINTERRUPT_CALLBACK horizIntOnTitan256cCallback_DMA_OneTime () {
             return;
         }
 
-        bool setGradColorForText = vcounter >= textRampEffectLimitTop && vcounter <= textRampEffectLimitBottom 
-            && vcounter < applyBlackPalPosY;
-        //bool setGradColorForText = vcounter >= textRampEffectLimitTop && vcounter < applyBlackPalPosY;
+        bool setGradColorForText = vcounter >= textRampEffectLimitTop && vcounter <= textRampEffectLimitBottom;
 
         /*
             u32 palCmdForDMA_A = VDP_DMA_CRAM_ADDR((u32)palIdx * 2);

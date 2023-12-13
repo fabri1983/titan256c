@@ -13,6 +13,8 @@ static u16 currTileIndex;
 static void titan256cDisplay () {
 
     PAL_setColors(0, palette_black, 64, DMA); // palette_black is an array of 64
+    blackCurrentGradientPtr();
+
     SYS_doVBlankProcess();
 
     VDP_setEnable(FALSE);
@@ -46,10 +48,11 @@ static void titan256cDisplay () {
 
     VDP_setEnable(TRUE);
 
-    blackCurrentGradientPtr();
-
     u16 yPos = TITAN_256C_HEIGHT - 1;
     s16 velocity = 0;
+
+    // disable the fading effect on titan text
+    setCurrentFadingStripForText(0);
 
     // Fall and bounce effect
     for (;;) {
@@ -69,9 +72,6 @@ static void titan256cDisplay () {
         // Load 2 strip palettes depending on the Y position (in strips) of the image
         load2Pals(yPos / TITAN_256C_STRIP_HEIGHT);
 
-        // disable the ramp color effect on titan text
-        setCurrentFadingStripForText(0);
-
         SYS_doVBlankProcess();
 
         // if bounce effect finished then continue with next game state
@@ -86,9 +86,6 @@ static void titan256cDisplay () {
     for (;;) {
         // Load 1st and 2nd strip's palette
         load2Pals(0);
-
-        // disable the ramp color effect on titan text
-        setCurrentFadingStripForText(0);
 
         SYS_doVBlankProcess();
 
@@ -108,7 +105,7 @@ static void titan256cDisplay () {
         // Load 1st and 2nd strip's palette
         load2Pals(0);
 
-        // enable the ramp color effect on titan text calculated on VInt
+        // enable the fading effect on titan text calculated on VInt
         setCurrentFadingStripForText(currFadingStrip);
 
         if (fadingCycleCurrStrip < FADE_OUT_STRIPS_SPLIT_CYCLES) {
