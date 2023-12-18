@@ -268,4 +268,7 @@ void displaySgdkLogo ()
     VDP_setScrollingMode(HSCROLL_PLANE, VSCROLL_PLANE);
     VDP_setHorizontalScroll(BG_A, 0);
     VDP_setHorizontalScroll(BG_B, 0);
+
+    // restore SGDK's default palete for text
+    PAL_setPalette(PAL0, palette_grey, DMA);
 }

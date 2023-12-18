@@ -157,16 +157,17 @@ int main (bool hard) {
     if (!hard) SYS_hardReset();
 
     displaySegaLogo();
-    waitMillis(200);
+    waitMs_(200);
     displayTeddyBearLogo();
-    waitMillis(200);
+    waitMs_(200);
 
     basicEngineConfig();
     initGameStatus();
 
     for (;;) {        
         titan256cDisplay();
-        titan256cHIntMode = modu(titan256cHIntMode + 1, HINT_MODES); // set to move into next Titan256c HInt mode
+        // move into next Titan256c HInt mode
+        titan256cHIntMode = modu(titan256cHIntMode + 1, HINT_MODES);
     }
 
     return 0;

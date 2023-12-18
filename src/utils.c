@@ -1,6 +1,6 @@
 #include "utils.h"
 
-void waitMillis (u32 ms) {
+void waitMs_ (u32 ms) {
 	u32 tick = (ms * TICKPERSECOND) / 1000;
 	const u32 start = getTick();
     u32 max = start + tick;

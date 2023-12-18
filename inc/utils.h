@@ -11,7 +11,7 @@
 /// @brief Waits for a certain amount of millisecond (~3.33 ms based timer when wait is >= 100ms). 
 /// Lightweight implementation without calling SYS_doVBlankProcess().
 /// This method CAN NOT be called from V-Int callback or when V-Int is disabled.
-/// @param ms >= 100ms
-void waitMillis (u32 ms);
+/// @param ms >= 100ms, otherwise use waitMs() from timer.h
+void waitMs_ (u32 ms);
 
 #endif

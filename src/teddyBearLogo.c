@@ -1,7 +1,4 @@
 /**
- * Credits go to 
- * https://github.com/a-dietrich/SEGA-Genesis-Demos/tree/main/sega-logo
- * 
  * Teddy Bear animation author: fabri1983@gmail.com
  * https://github.com/fabri1983
 */
@@ -20,8 +17,6 @@
 #elif defined(_MSC_VER)
 #define ASM_STATEMENT __asm
 #endif
-
-#define MAX_FRAMES_EFFECT 100
 
 void displayTeddyBearLogo ()
 {
@@ -73,13 +68,13 @@ void displayTeddyBearLogo ()
     PAL_fadeIn(PAL3*16, PAL3*16 + 16, sprDefTeddyBearAnim.palette->data, 30, FALSE);
 
     // Leave some time the last animation frame in the screen
-    waitMillis(250);
+    waitMs_(250);
 
     //
     // Display loop for SGDK Teddy Bear animation
     //
 
-    // Start animation
+    // Start animation 0 (is the only one though)
     SPR_setAnim(teddyBearAnimSpr, 0);
 
     u8 frameCnt = 0;
@@ -92,17 +87,17 @@ void displayTeddyBearLogo ()
             break;
         }
 
-        // Is the last frame of the current animation? The sprite has only one animation 
+        // Is the last frame of the current animation? (The sprite has only one animation )
         if (frameCnt == teddyBearAnimSpr->animation->numFrame) {
             // Leave some time the last animation frame in the screen
-            waitMillis(500);
+            waitMs_(500);
             break;
         }
 
         SPR_update();
         SYS_doVBlankProcess();
 
-        // The sprite has only one animation so we are ok checking for the sprite's timer. Reaching 1 is the last animation frame.
+        // Reaching 1 is the last animation frame. The sprite has only one animation so we are ok checking for the sprite's timer.
         if (teddyBearAnimSpr->timer == 1)
             ++frameCnt;
     }
@@ -112,8 +107,10 @@ void displayTeddyBearLogo ()
 
     SPR_end();
 
+    SYS_doVBlankProcess();
+
     // restore SGDK's default palete for text
     VDP_setTextPalette(PAL0);
-
+    PAL_setPalette(PAL0, palette_grey, DMA);
     VDP_clearPlane(BG_A, TRUE);
 }
