@@ -1,3 +1,3 @@
 HEADER_APPENDER  headerCustomTypes  "typedef struct\n{\n\tTileSet *tileset;\n\tTileMap *tilemap;\n} ImageNoPals;\n\ntypedef struct\n{\n\tTileSet *tileset1;\n\tTileSet *tileset2;\n\tTileMap *tilemap;\n} ImageNoPalsTilesetSplit2;\n\ntypedef struct\n{\n\tu16 compression;\n\tu16* data;\n} Palette32AllStrips;\n"
-IMAGE_STRIPS_NO_PALS  titanRGB  "titan256c/titan_0_0_RGB.png"  28  1  FAST
+IMAGE_STRIPS_NO_PALS  titanRGB  "titan256c/titan_0_0_RGB.png"  28  1  FALSE  FAST
 PALETTE_32_COLORS_ALL_STRIPS  palTitanRGB  "titan256c/titan_0_0_RGB.png"  28  PAL0PAL1  TRUE  FAST
