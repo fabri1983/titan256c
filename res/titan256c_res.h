@@ -11,7 +11,8 @@ typedef struct
 {
 	TileSet *tileset1;
 	TileSet *tileset2;
-	TileMap *tilemap;
+	TileMap *tilemap1;
+	TileMap *tilemap2;
 } ImageNoPalsTilesetSplit2;
 
 typedef struct

@@ -166,6 +166,7 @@ HINTERRUPT_CALLBACK horizIntOnTitan256cCallback_CPU_EveryN () {
     bool setGradColorForText = vcounterManual >= textRampEffectLimitTop && vcounterManual <= textRampEffectLimitBottom;
 
     /*
+        Every command is CRAM address to start write 4 colors (2 times u32 bits)
         u32 cmd1st = VDP_WRITE_CRAM_ADDR((u32)(palIdx * 2));
         u32 cmd2nd = VDP_WRITE_CRAM_ADDR((u32)((palIdx + 4) * 2));
         u32 cmd3rd = VDP_WRITE_CRAM_ADDR((u32)((palIdx + 8) * 2));
@@ -275,7 +276,7 @@ HINTERRUPT_CALLBACK horizIntOnTitan256cCallback_CPU_EveryN () {
     *((vu32*) VDP_DATA_PORT) = colors2_B;
     turnOnVDP(116);
 
-    currGradPtr += 4 * setGradColorForText; // advance 3 colors if condition is met
+    currGradPtr += 4 * setGradColorForText; // advance 4 colors if condition is met
     vcounterManual += TITAN_256C_STRIP_HEIGHT;
     palIdx ^= TITAN_256C_COLORS_PER_STRIP; // cycles between 0 and 32
     //palIdx = palIdx == 0 ? 32 : 0;
@@ -297,6 +298,8 @@ HINTERRUPT_CALLBACK horizIntOnTitan256cCallback_DMA_EveryN () {
     bool setGradColorForText = vcounterManual >= textRampEffectLimitTop && vcounterManual <= textRampEffectLimitBottom;
 
     /*
+        With 3 DMA commands:
+        Every command is CRAM address to start DMA MOVIE_DATA_COLORS_PER_STRIP/3 colors
         u32 palCmdForDMA_A = VDP_DMA_CRAM_ADDR((u32)palIdx * 2);
         u32 palCmdForDMA_B = VDP_DMA_CRAM_ADDR(((u32)palIdx + TITAN_256C_COLORS_PER_STRIP/3) * 2);
         u32 palCmdForDMA_C = VDP_DMA_CRAM_ADDR(((u32)palIdx + 2*(TITAN_256C_COLORS_PER_STRIP/3)) * 2);
@@ -361,7 +364,7 @@ HINTERRUPT_CALLBACK horizIntOnTitan256cCallback_DMA_EveryN () {
     turnOnVDP(116);
 
     vcounterManual += TITAN_256C_STRIP_HEIGHT;
-    currGradPtr += 4 * setGradColorForText; // advance 3 colors if condition is met
+    currGradPtr += 4 * setGradColorForText; // advance 4 colors if condition is met
     //titan256cPalsPtr += TITAN_256C_COLORS_PER_STRIP; // advance to next strip's palettes (if pointer wasn't incremented previously)
     palIdx ^= TITAN_256C_COLORS_PER_STRIP; // cycles between 0 and 32
     //palIdx = palIdx == 0 ? 32 : 0;
@@ -405,6 +408,8 @@ HINTERRUPT_CALLBACK horizIntOnTitan256cCallback_DMA_OneTime () {
         bool setGradColorForText = vcounter >= textRampEffectLimitTop && vcounter <= textRampEffectLimitBottom;
 
         /*
+            With 3 DMA commands:
+            Every command is CRAM address to start DMA MOVIE_DATA_COLORS_PER_STRIP/3 colors
             u32 palCmdForDMA_A = VDP_DMA_CRAM_ADDR((u32)palIdx * 2);
             u32 palCmdForDMA_B = VDP_DMA_CRAM_ADDR(((u32)palIdx + TITAN_256C_COLORS_PER_STRIP/3) * 2);
             u32 palCmdForDMA_C = VDP_DMA_CRAM_ADDR(((u32)palIdx + 2*(TITAN_256C_COLORS_PER_STRIP/3)) * 2);
@@ -482,7 +487,7 @@ HINTERRUPT_CALLBACK horizIntOnTitan256cCallback_DMA_OneTime () {
         *((vu32*) VDP_CTRL_PORT) = palCmdForDMA; // trigger DMA transfer
         turnOnVDP(116);
 
-        currGradPtr += 4 * setGradColorForText; // advance 3 colors if condition is met
+        currGradPtr += 4 * setGradColorForText; // advance 4 colors if condition is met
         //titan256cPalsPtr += TITAN_256C_COLORS_PER_STRIP; // advance to next strip's palettes (if pointer wasn't incremented previously)
         palIdx ^= TITAN_256C_COLORS_PER_STRIP; // cycles between 0 and 32
         //palIdx = palIdx == 0 ? 32 : 0;
