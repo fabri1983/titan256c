@@ -76,7 +76,7 @@ FORCE_INLINE void waitHCounter_ShannonBirt (u16 n) {
 FORCE_INLINE void waitVCounter (u16 n) {
     ASM_STATEMENT volatile (
         ".LoopVC%=:\n"
-        "\t  CMPI.w  %[vcLimit], 0xC00008.l;\n"  // we only interested in comparing word since n won't be > 255 (then shifted right) for our practical cases
+        "\t  CMPI.w  %[vcLimit], 0xC00008.l;\n"
         "\t  BLO     .LoopVC%=;"
         :
         : [vcLimit] "i" (n << 8) // (n << 8) | 0xFF
@@ -90,7 +90,7 @@ FORCE_INLINE void waitVCounter (u16 n) {
 FORCE_INLINE void waitVCounterReg (u16 n) {
     ASM_STATEMENT volatile (
         ".LoopVC%=:\n"
-        "\t  CMP.w   0xC00008.l, %0;\n"  // we only interested in comparing word since n won't be > 255 (then shifted right) for our practical cases
+        "\t  CMP.w   0xC00008.l, %0;\n"
         "\t  BHI     .LoopVC%=;"
         :
         : "r" (n << 8) // (n << 8) | 0xFF

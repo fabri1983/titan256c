@@ -94,7 +94,6 @@ void setCurrentFadingStripForText (u16 currFadingStrip_) {
 
 void NO_INLINE updateTextGradientColors () {
     // Strips [21,25] (0 based) renders the letters using transparent color, and we want to use a gradient scrolling over time. So 5 strips.
-
     u16 innerStripLimit = 0;
     u16 fadeTextAmount = 0;
     if (currFadingStrip >= TITAN_256C_TEXT_STARTING_STRIP) {
