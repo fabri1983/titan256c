@@ -76,7 +76,7 @@ FORCE_INLINE void waitHCounter_ShannonBirt (u16 n) {
 FORCE_INLINE void waitVCounter (u16 n) {
     ASM_STATEMENT volatile (
         ".LoopVC%=:\n"
-        "\t  CMPI.w  %[vcLimit], 0xC00008.l;\n"
+        "\t  CMPI.w  %[vcLimit], 0xC00008.l;\n"  // this is vcLimit - (0xC00008) hence we use BLO to loop back
         "\t  BLO     .LoopVC%=;"
         :
         : [vcLimit] "i" (n << 8) // (n << 8) | 0xFF
@@ -90,7 +90,7 @@ FORCE_INLINE void waitVCounter (u16 n) {
 FORCE_INLINE void waitVCounterReg (u16 n) {
     ASM_STATEMENT volatile (
         ".LoopVC%=:\n"
-        "\t  CMP.w   0xC00008.l, %0;\n"
+        "\t  CMP.w   0xC00008.l, %0;\n"  // this is (0xC00008) - n hence we use BHI to loop back
         "\t  BHI     .LoopVC%=;"
         :
         : "r" (n << 8) // (n << 8) | 0xFF

@@ -34,22 +34,20 @@ u16* unpackedData;
 
 void unpackPalettes () {
     unpackedData = (u16*) MEM_alloc(TITAN_256C_STRIPS_COUNT * TITAN_256C_COLORS_PER_STRIP * sizeof(u16));
-    if (palTitanRGB.compression != COMPRESSION_NONE) {
-        // No need to use FAR_SAFE() macro here because palette data is always stored near
-        unpack(palTitanRGB.compression, (u8*) palTitanRGB.data, (u8*) unpackedData);
-    }
-    else {
-        // Copy the palette data. It is modified later on fading out effect. No FAR_SAFE() needed here, palette data is always at near region.
-        const u16 size = (TITAN_256C_STRIPS_COUNT * TITAN_256C_COLORS_PER_STRIP) * 2;
-        memcpy((u8*) unpackedData, palTitanRGB.data, size);
-    }
+    #if ALL_PALETTES_COMPRESSED
+    // No FAR_SAFE() macro needed here. Palette data is always stored at near region.
+    lz4w_unpack((u8*) palTitanRGB.data, (u8*) unpackedData);
+    #else
+    // Copy the palette data. It is modified later on fading out effect.
+    const u16 size = (TITAN_256C_STRIPS_COUNT * TITAN_256C_COLORS_PER_STRIP) * 2;
+    // No FAR_SAFE() macro needed here. Palette data is always stored at near region.
+    memcpy((u8*) unpackedData, palTitanRGB.data, size);
+    #endif
 }
 
 void freePalettes () {
-    if (palTitanRGB.compression != COMPRESSION_NONE) {
-        MEM_free((void*) unpackedData);
-        unpackedData = NULL;
-    }
+    MEM_free((void*) unpackedData);
+    unpackedData = NULL;
 }
 
 FORCE_INLINE u16* getUnpackedPtr () {
@@ -107,7 +105,7 @@ void NO_INLINE updateTextGradientColors () {
     u16 colorIdx = titanCharsCycleCnt / TITAN_CHARS_GRADIENT_SCROLL_FREQ; // advance ramp color every N frames (use divu for divisor non power of 2)
     if (colorIdx > TITAN_CHARS_GRADIENT_MAX_COLORS) colorIdx = 0;
 
-    for (u16 i=0; i < TITAN_CHARS_CURR_GRADIENT_ELEMS; ++i) {
+    for (u16 i=TITAN_CHARS_CURR_GRADIENT_ELEMS; i--;) {
         u16 d = *(titanCharsGradientColors + colorIdx++);
         if (i < innerStripLimit) {
             d -= min(0xEEE, fadeTextAmount);
@@ -168,7 +166,7 @@ void NO_INLINE fadingStepToBlack_pals (u16 currFadingStrip, u16 cycle, u16 titan
 
         // HInt modes 0 and 1 have no issue in finishing on time
         if (titan256cHIntMode != 2) {
-            for (u16 i=TITAN_256C_COLORS_PER_STRIP; i > 0; --i) {
+            for (u16 i=TITAN_256C_COLORS_PER_STRIP; i--;) {
                 // IMPL A:
                 u16 d = *palsPtr - 0x222; // decrement 1 unit in every component
                 switch (d & 0b1000100010000) {
@@ -193,7 +191,7 @@ void NO_INLINE fadingStepToBlack_pals (u16 currFadingStrip, u16 cycle, u16 titan
         // Only HInt mode 2 has issues to finish on time and makes appear glitches during the fade out.
         // So this version is speedier but reaches to color black faster.
         else {
-            for (u16 i=TITAN_256C_COLORS_PER_STRIP; i > 0; --i) {
+            for (u16 i=TITAN_256C_COLORS_PER_STRIP; i--;) {
                 u16 d = *palsPtr - 0x222; // decrement 1 unit in every component
                 if (d & 0b1000100010000) d = 0; // if only one color overflows then zero them all
                 *palsPtr++ = d;
