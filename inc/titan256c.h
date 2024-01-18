@@ -6,6 +6,24 @@
 #include <sprite_eng.h>
 #include "titan256c_res.h"
 
+#ifdef __GNUC__
+#define FORCE_INLINE            inline __attribute__ ((always_inline))
+#elif defined(_MSC_VER)
+#define FORCE_INLINE            inline __forceinline
+#endif
+
+#ifdef __GNUC__
+#define NO_INLINE               __attribute__ ((noinline))
+#elif defined(_MSC_VER)
+#define NO_INLINE               __declspec(noinline)
+#endif
+
+#ifdef __GNUC__
+#define ASM_STATEMENT __asm__
+#elif defined(_MSC_VER)
+#define ASM_STATEMENT __asm
+#endif
+
 #define TITAN_256C_STRIPS_COUNT 28
 #define TITAN_256C_WIDTH 320 // In pixels
 #define TITAN_256C_HEIGHT 224 // In pixels

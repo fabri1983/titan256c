@@ -6,18 +6,6 @@
 #include "teddyBearLogo.h"
 #include "utils.h"
 
-#ifdef __GNUC__
-#define INTERRUPT_ATTRIBUTE HINTERRUPT_CALLBACK
-#else
-#define INTERRUPT_ATTRIBUTE void
-#endif
-
-#ifdef __GNUC__
-#define ASM_STATEMENT __asm__
-#elif defined(_MSC_VER)
-#define ASM_STATEMENT __asm
-#endif
-
 void displayTeddyBearLogo ()
 {
     //

@@ -9,4 +9,4 @@ HEADER_APPENDER  headerCustomTypes6  "typedef struct\n{\n\tu16* data1;\n\tu16* d
 HEADER_APPENDER  headerCustomTypes7  "typedef struct\n{\n\tu16* data1;\n\tu16* data2;\n\tu16* data3;\n} Palette32AllStripsSplit3;\n"
 
 IMAGE_STRIPS_NO_PALS  titanRGB  "titan256c/titan_0_0_RGB.png"  28  1  -1  FALSE  FAST  NONE  ALL
-PALETTE_32_COLORS_ALL_STRIPS  palTitanRGB  "titan256c/titan_0_0_RGB.png"  28  1 PAL0PAL1  TRUE  FAST  NONE
+PALETTE_32_COLORS_ALL_STRIPS  palTitanRGB  "titan256c/titan_0_0_RGB.png"  28  1  PAL0PAL1  TRUE  FAST  NONE
