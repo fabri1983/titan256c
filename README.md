@@ -7,16 +7,16 @@ and learning the functioning of the megadrive and its architecture in the go.
 This version displays up to **252 colors**.
 
 
-**Work In Progress. Only tested with Blastem.**
+**Work In Progress. Only tested with Blastem and Nuked-MD.**
 
 
 For convenience test you can directly try the last compiled rom `titan256c_rom.bin`.
 
 
 ### 3 Approaches:  
-**(pgit addressing START cycles between them)**  
+**(pressing START cycles between them)**  
 
-**A**. Interweaving writes beetwen
+**A**. Interweaving writes beetwen:
 - 2 u32 vars (4 colors from palette) and 1 u16 var (BG color for text ramp effect)  
 and
 - 4 u32 vars (8 colors from palette)
