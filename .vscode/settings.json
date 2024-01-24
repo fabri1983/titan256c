@@ -15,7 +15,9 @@
     "sprite_eng.h": "c",
     "titan256c.h": "c",
     "titan256c_res.h": "c",
-    "logo_res.h": "c"
+    "logo_res.h": "c",
+    "teddybearlogo.h": "c",
+    "kosinski.h": "c"
 },
 "C_Cpp.errorSquiggles": "enabled",
 "[m68k]": {

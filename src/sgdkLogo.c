@@ -104,7 +104,7 @@ static INTERRUPT_ATTRIBUTE HIntLogoHandler ()
     if (y >= 32)
     {
         // Prime control and data ports
-        ASM_STATEMENT volatile (
+        ASM_STATEMENT __volatile__ (
             "   lea     0xC00004,%0;"      // Load the Effective Address of the memory location 0xC00004 (the VDP_CTRL_PORT) into the %0 register
             "   move.w  #0x8F04,(%0);"     // Set auto-increment to 4. '()' specifies memory indirection or dereferencing.
             "   move.l  #0x401E0010,(%0);" // Set VSRAM address (two-tile column 7)
@@ -117,7 +117,7 @@ static INTERRUPT_ATTRIBUTE HIntLogoHandler ()
 
     // Change vscroll values if inside the logo
     s16 *addr = vScrollBuffer+(y<<3);
-    ASM_STATEMENT volatile (
+    ASM_STATEMENT __volatile__ (
         "   lea     0xC00000,%1;"  // Load the Effective Address of the memory location 0xC00000 (the VDP_DATA_PORT) into the %1 register
         "   move.l  (%0)+,(%1);"
         "   move.l  (%0)+,(%1);"

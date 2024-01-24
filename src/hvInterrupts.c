@@ -32,10 +32,10 @@ FORCE_INLINE void turnOnVDP (u8 reg01) {
  * Wait until HCounter 0xC00009 reaches nth position (in fact (n*2)th pixel since the VDP counts by 2)
 */
 FORCE_INLINE void waitHCounter (u16 n) {
-    ASM_STATEMENT volatile (
-        ".LoopHC%=:\n"
-        "\t  cmpi.b  %[hcLimit], 0xC00009.l;\n"  // we only interested in comparing byte since n won't be > 160 for our practical cases
-        "\t  blo     .LoopHC%=;"
+    ASM_STATEMENT __volatile__ (
+        ".LoopHC%=:\n\t"
+        "  cmpi.b  %[hcLimit], 0xC00009.l\n\t"  // we only interested in comparing byte since n won't be > 160 for our practical cases
+        "  blo     .LoopHC%=\n"
         :
         : [hcLimit] "i" (n)
         : "cc" // Clobbers: condition codes
@@ -48,22 +48,22 @@ FORCE_INLINE void waitHCounter (u16 n) {
 FORCE_INLINE void waitHCounter_ShannonBirt (u16 n) {
     // vu32* regA=0; // placeholder used to indicate the use of an A register
     // vu16* regD=0; // placeholder used to indicate the use of a D register
-    // ASM_STATEMENT volatile (
-    //     "move.l    #0xC00009, %0;\n"      // Load H Counter address into an A register
-    //     "move.w    #158, %1;\n"           // Load 158 into a D register
-    //     ".hcLimit%=:" 
-    //     "    cmp.b   (%0), %1;\n"         // Compares H Counter with 158. '()' specifies memory indirection or dereferencing
-    //     "    blo     .hcLimit%=;\n"
+    // ASM_STATEMENT __volatile__ (
+    //     "move.l    #0xC00009, %0\n\t"      // Load H Counter address into an A register
+    //     "move.w    #158, %1\n\t"           // Load 158 into a D register
+    //     ".hcLimit%=:\n\t" 
+    //     "  cmp.b   (%0), %1\n\t"           // Compares H Counter with 158. '()' specifies memory indirection or dereferencing
+    //     "  blo     .hcLimit%=\n\t"
     //     : "+a" (regA), "+d" (regD)
     //     :
-    //     : "cc"                            // Clobbers: condition codes
+    //     : "cc"                             // Clobbers: condition codes
     // );
-    ASM_STATEMENT volatile (
-        "move.l    #0xC00009, %%a0;\n"    // Load H Counter address into a0 register
-        "move.w    %[hcLimit], %%d1;\n"   // Load hcLimit into d1 register
-        ".hcLimit%=:" 
-        "\t  cmp.b   (%%a0), %%d1;\n"     // Compares H Counter with hcLimit. '()' specifies memory indirection or dereferencing
-        "\t  blo     .hcLimit%=;"
+    ASM_STATEMENT __volatile__ (
+        "move.l    #0xC00009, %%a0\n\t"    // Load H Counter address into a0 register
+        "move.w    %[hcLimit], %%d1\n\t"   // Load hcLimit into d1 register
+        ".hcLimit%=:\n" 
+        "  cmp.b   (%%a0), %%d1\n\t"     // Compares H Counter with hcLimit. '()' specifies memory indirection or dereferencing
+        "  blo     .hcLimit%=\n"
         :
         : [hcLimit] "i" (n)
         : "a0", "d1", "cc"                // Clobbers: register d1, address register a0, condition codes
@@ -74,10 +74,10 @@ FORCE_INLINE void waitHCounter_ShannonBirt (u16 n) {
  * Wait until VCounter 0xC00008 reaches nth scanline position. Only valid with constants.
 */
 FORCE_INLINE void waitVCounter (u16 n) {
-    ASM_STATEMENT volatile (
-        ".LoopVC%=:\n"
-        "\t  CMPI.w  %[vcLimit], 0xC00008.l;\n"  // this is vcLimit - (0xC00008) hence we use BLO to loop back
-        "\t  BLO     .LoopVC%=;"
+    ASM_STATEMENT __volatile__ (
+        ".LoopVC%=:\n\t"
+        "  CMPI.w  %[vcLimit], 0xC00008.l\n\t"  // this is vcLimit - (0xC00008) hence we use BLO to loop back
+        "  BLO     .LoopVC%=\n"
         :
         : [vcLimit] "i" (n << 8) // (n << 8) | 0xFF
         : "cc" // Clobbers: condition codes
@@ -88,10 +88,10 @@ FORCE_INLINE void waitVCounter (u16 n) {
  * Wait until VCounter 0xC00008 reaches nth scanline position.
 */
 FORCE_INLINE void waitVCounterReg (u16 n) {
-    ASM_STATEMENT volatile (
-        ".LoopVC%=:\n"
-        "\t  CMP.w   0xC00008.l, %0;\n"  // this is (0xC00008) - n hence we use BHI to loop back
-        "\t  BHI     .LoopVC%=;"
+    ASM_STATEMENT __volatile__ (
+        ".LoopVC%=:\n\t"
+        "  CMP.w   0xC00008.l, %0\n\t"  // this is (0xC00008) - n hence we use BHI to loop back
+        "  BHI     .LoopVC%=\n"
         :
         : "r" (n << 8) // (n << 8) | 0xFF
         : "cc" // Clobbers: condition codes

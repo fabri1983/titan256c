@@ -2,13 +2,50 @@
 #include <vdp_bg.h>
 #include <sprite_eng.h>
 #include <tools.h>
+#include <mapper.h>
 #include <memory.h>
 #include "titan256c.h"
+#include "decomp/unpack_custom.h"
+
+static TileSet* allocateTileSetInternal (VOID_OR_CHAR* adr) {
+    TileSet *result = (TileSet*) adr;
+    if (result != NULL) {
+        result->compression = COMPRESSION_NONE;
+        result->tiles = (u32*) (adr + sizeof(TileSet));
+    }
+    return result;
+}
+
+static TileSet* unpackTileSet_custom(const TileSet* src, TileSet *dest) {
+    TileSet *result;
+    if (dest) result = dest;
+    else result = allocateTileSetInternal(MEM_alloc(src->numTile * 32 + sizeof(TileSet)));
+
+    if (result != NULL) {
+        result->numTile = src->numTile;
+        result->compression = COMPRESSION_NONE;
+        if (src->compression != COMPRESSION_NONE) {
+            unpack_custom(src->compression, (u8*) FAR_SAFE(src->tiles, src->numTile * 32), (u8*) result->tiles);
+        }
+        else if (src->tiles != result->tiles) {
+            const u16 size = src->numTile * 32;
+            memcpy((u8*) result->tiles, FAR_SAFE(src->tiles, size), size);
+        }
+    }
+
+    return result;
+}
 
 void loadTitan256cTileSet (u16 currTileIndex) {
-    const TileSet* tileset = titanRGB.tileset;
-    // only DMA because total tileset size is bigger than defualt DMA buffer when using DMA_QUEUE_COPY
-    VDP_loadTileSet(tileset, currTileIndex, DMA);
+    TileSet* tileset = titanRGB.tileset;
+    if (tileset->compression != COMPRESSION_NONE) {
+        TileSet *unpacked = unpackTileSet_custom(tileset, NULL);
+        VDP_loadTileData(unpacked->tiles, currTileIndex, unpacked->numTile, DMA);
+        // be careful, we are releasing buffer here so DMA_QUEUE transfer isn't safe here, use DMA_QUEUE_COPY instead for safe operation
+        MEM_free(unpacked);
+    }
+    else
+        VDP_loadTileData(FAR_SAFE(tileset->tiles, tileset->numTile * 32), currTileIndex, tileset->numTile, DMA);
 }
 
 u16 yPosFalling = 0;

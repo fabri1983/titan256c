@@ -1,3 +1,5 @@
+HEADER_APPENDER_COMPRESSION_CUSTOM  compressionCustomHeader1
+
 HEADER_APPENDER  headerCustomTypes2  "typedef struct\n{\n\tTileSet *tileset;\n\tTileMap *tilemap;\n} ImageNoPals;\n"
 HEADER_APPENDER  headerCustomTypes5  "typedef struct\n{\n\tu16* data;\n} Palette32AllStrips;\n"
 
