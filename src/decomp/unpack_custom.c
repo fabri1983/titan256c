@@ -11,9 +11,11 @@
 void unpack_custom (u16 compression, u8* src, u8* dest) {
     switch(compression) {
         case COMPRESSION_APLIB:
-            aplib_unpack(src, dest); break;
+            aplib_unpack(src, dest);
+            break;
         case COMPRESSION_LZ4W:
-            lz4w_unpack(src, dest); break;
+            lz4w_unpack(src, dest);
+            break;
         case KOSINSKI:
             // KLog_U1("src       ", src);
             // KLog_U1("dest befr ", dest);
@@ -38,6 +40,6 @@ void unpack_custom (u16 compression, u8* src, u8* dest) {
             SNKDec(src, dest);
             break;
         default:
-            return;
+            break;
     }
 }

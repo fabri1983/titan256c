@@ -15,14 +15,14 @@
 
 typedef struct
 {
-    TileSet *tileset;
-    TileMap *tilemap;
-} ImageNoPals;
+    u16* data;
+} Palette32AllStrips;
 
 typedef struct
 {
-    u16* data;
-} Palette32AllStrips;
+    TileSet *tileset;
+    TileMap *tilemap;
+} ImageNoPals;
 
 extern const ImageNoPals titanRGB;
 extern const Palette32AllStrips palTitanRGB;
