@@ -156,10 +156,10 @@ int main (bool hard) {
 
     if (!hard) SYS_hardReset();
 
-    // displaySegaLogo();
-    // waitMs_(200);
-    // displayTeddyBearLogo();
-    // waitMs_(200);
+    displaySegaLogo();
+    waitMs_(200);
+    displayTeddyBearLogo();
+    waitMs_(200);
 
     basicEngineConfig();
     initGameStatus();
