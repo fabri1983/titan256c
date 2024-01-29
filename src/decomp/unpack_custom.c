@@ -1,12 +1,13 @@
 #include "decomp/unpack_custom.h"
 #include <tools.h>
-#include "titan256c_res.h"
+#include "compressionTypes_res.h"
 #include "decomp/comper.h"
 #include "decomp/kosinski.h"
 #include "decomp/rocket.h"
 #include "decomp/saxman.h"
 #include "decomp/snkrle.h"
 #include "decomp/uftc.h"
+#include "decomp/unaplib.h"
 
 void unpack_custom (u16 compression, u8* src, u8* dest) {
     switch(compression) {
@@ -38,6 +39,9 @@ void unpack_custom (u16 compression, u8* src, u8* dest) {
             break;
         case SNKRLE:
             SNKDec(src, dest);
+            break;
+        case UNAPLIB:
+            unaplib(src, dest);
             break;
         default:
             break;
