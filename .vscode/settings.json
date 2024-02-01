@@ -17,7 +17,9 @@
     "titan256c_res.h": "c",
     "logo_res.h": "c",
     "teddybearlogo.h": "c",
-    "kosinski.h": "c"
+    "kosinski.h": "c",
+    "unpack_custom.h": "c",
+    "uftc.h": "c"
 },
 "C_Cpp.errorSquiggles": "enabled",
 "[m68k]": {

@@ -25,7 +25,7 @@ static TileSet* unpackTileSet_custom(const TileSet* src, TileSet *dest) {
         result->numTile = src->numTile;
         result->compression = COMPRESSION_NONE;
         if (src->compression != COMPRESSION_NONE) {
-            unpack_custom(src->compression, (u8*) FAR_SAFE(src->tiles, src->numTile * 32), (u8*) result->tiles);
+            unpack_custom(src->compression, (u8*) FAR_SAFE(src->tiles, src->numTile * 32), (u8*) result->tiles, src->numTile);
         }
         else if (src->tiles != result->tiles) {
             const u16 size = src->numTile * 32;

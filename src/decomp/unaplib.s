@@ -28,7 +28,7 @@
 
 * C prototype: u32 unaplib (u8 *src, u8 *dest);
 func unaplib
-    movem.l     4(%sp), %a0-%a1
+    movem.l     4(%sp), %a0-%a1     // copy parameters into registers a0-a1
 
 apl_decompress:
     movem.l     %a2-%a6/%d2-%d3, -(%sp)
@@ -40,103 +40,103 @@ apl_decompress:
     lea         128.w, %a4      // load 128 offset constant
     move.l      %a1, %a5        // save destination pointer
 
-.literal:
+.apl_literal:
     move.b      (%a0)+, (%a1)+  // copy literal byte
-.after_lit:
-    moveq       #3, %d2         // set LWM flag
+.apl_after_lit:
+    moveq       #3, %d2             // set LWM flag
 
-.next_token:
-    bsr.s       .get_bit        // read 'literal or match' bit
-    bcc.s       .literal        // if 0: literal
+.apl_next_token:
+    bsr.s       .apl_get_bit        // read 'literal or match' bit
+    bcc.s       .apl_literal        // if 0: literal
 
-    bsr.s       .get_bit        // read '8+n bits or other type' bit
-    bcs.s       .other_match    // if 11x: other type of match
+    bsr.s       .apl_get_bit        // read '8+n bits or other type' bit
+    bcs.s       .apl_other_match    // if 11x: other type of match
 
-    bsr.s       .get_gamma2     // 10: read gamma2-coded high offset bits
-    sub.l       %d2, %d0        // high offset bits == 2 when LWM == 3 ?
-    bcc.s       .no_repmatch    // if not, not a rep-match
+    bsr.s       .apl_get_gamma2     // 10: read gamma2-coded high offset bits
+    sub.l       %d2, %d0            // high offset bits == 2 when LWM == 3 ?
+    bcc.s       .apl_no_repmatch    // if not, not a rep-match
 
-    bsr.s       .get_gamma2     // read repmatch length
-    bra.s       .got_len        // go copy large match
+    bsr.s       .apl_get_gamma2     // read repmatch length
+    bra.s       .apl_got_len        // go copy large match
 
-.no_repmatch:
+.apl_no_repmatch:
     lsl.l       #8, %d0         // shift high offset bits into place
     move.b      (%a0)+, %d0     // read low offset byte
     move.l      %d0, %d3        // copy offset into d3
 
-    bsr.s       .get_gamma2     // read match length
-    cmp.l       %a2, %d3        // offset >= 32000 ?
-    bge.s       .inc_by_2       // if so, increase match len by 2
-    cmp.l       %a3, %d3        // offset >= 1280 ?
-    bge.s       .inc_by_1       // if so, increase match len by 1
-    cmp.l       %a4, %d3        // offset < 128 ?
-    bge.s       .got_len        // if so, increase match len by 2
-.inc_by_2:
+    bsr.s       .apl_get_gamma2     // read match length
+    cmp.l       %a2, %d3            // offset >= 32000 ?
+    bge.s       .apl_inc_by_2       // if so, increase match len by 2
+    cmp.l       %a3, %d3            // offset >= 1280 ?
+    bge.s       .apl_inc_by_1       // if so, increase match len by 1
+    cmp.l       %a4, %d3            // offset < 128 ?
+    bge.s       .apl_got_len        // if so, increase match len by 2
+.apl_inc_by_2:
     addq.l      #1, %d0         // increase match len by 1
-.inc_by_1:
+.apl_inc_by_1:
     addq.l      #1, %d0         // increase match len by 1
 
-.got_len:
+.apl_got_len:
     move.l      %a1, %a6        // calculate backreference address
     sub.l       %d3, %a6        // (dest - match offset)
     subq.l      #1, %d0         // dbf will loop until d0 is -1, not 0
-.copy_match:
-    move.b      (%a6)+, (%a1)+      // copy matched byte
-    dbf         %d0, .copy_match    // loop for all matched bytes
-    moveq       #2, %d2             // clear LWM flag
-    bra.s       .next_token         // go decode next token
+.apl_copy_match:
+    move.b      (%a6)+, (%a1)+          // copy matched byte
+    dbf         %d0, .apl_copy_match    // loop for all matched bytes
+    moveq       #2, %d2                 // clear LWM flag
+    bra.s       .apl_next_token         // go decode next token
 
-.other_match:
-    bsr.s       .get_bit        // read '7+1 match or short literal' bit
-    bcs.s       .short_match    // if 111: 4 bit offset for 1-byte copy
+.apl_other_match:
+    bsr.s       .apl_get_bit        // read '7+1 match or short literal' bit
+    bcs.s       .apl_short_match    // if 111: 4 bit offset for 1-byte copy
 
     moveq       #1, %d0         // 110: prepare match length
     moveq       #0, %d3         // clear high bits of offset
     move.b      (%a0)+, %d3     // read low bits of offset + length bit
     lsr.b       #1, %d3         // shift offset into place, len into carry
-    beq.s       .done           // check for EOD
+    beq.s       .apl_done       // check for EOD
     addx.b      %d0, %d0        // len = (1 << 1) + carry bit, ie. 2 or 3
-    bra.s       .got_len        // go copy match
+    bra.s       .apl_got_len    // go copy match
 
-.short_match:
-    moveq       #0, %d0         // clear short offset before reading 4 bits
-    bsr.s       .get_dibits     // read a data bit into d0, one into carry
-    addx.b      %d0, %d0        // shift second bit into d0
-    bsr.s       .get_dibits     // read a data bit into d0, one into carry
-    addx.b      %d0, %d0        // shift second bit into d0
-    tst.b       %d0             // check offset value
-    beq.s       .write_zero     // if offset is zero, write a 0
+.apl_short_match:
+    moveq       #0, %d0             // clear short offset before reading 4 bits
+    bsr.s       .apl_get_dibits     // read a data bit into d0, one into carry
+    addx.b      %d0, %d0            // shift second bit into d0
+    bsr.s       .apl_get_dibits     // read a data bit into d0, one into carry
+    addx.b      %d0, %d0            // shift second bit into d0
+    tst.b       %d0                 // check offset value
+    beq.s       .apl_write_zero     // if offset is zero, write a 0
 
     move.l      %a1, %a6        // calculate backreference address
     sub.l       %d0, %a6        // (dest - short offset)
     move.b      (%a6), %d0      // read matched byte
-.write_zero:
+.apl_write_zero:
     move.b      %d0, (%a1)+     // write matched byte or 0
-    bra.s       .after_lit      // set LWM flag and go decode next token
+    bra.s       .apl_after_lit  // set LWM flag and go decode next token
 
-.done:
+.apl_done:
     move.l      %a1, %d0        // pointer to last decompressed byte + 1
     sub.l       %a6, %d0        // minus start of decompression buffer = size
     movem.l     (%sp)+, %a2-%a6/%d2-%d3
     rts
 
-.get_gamma2:
-    moveq       #1, %d0         // init to 1 so it gets shifted to 2 below
-.gamma2_loop:
-    bsr.s       .get_dibits     // read data bit, shift into d0
-                                // and read continuation bit
-    bcs.s       .gamma2_loop    // loop until a 0 continuation bit is read
+.apl_get_gamma2:
+    moveq       #1, %d0             // init to 1 so it gets shifted to 2 below
+.apl_gamma2_loop:
+    bsr.s       .apl_get_dibits     // read data bit, shift into d0
+                                    // and read continuation bit
+    bcs.s       .apl_gamma2_loop    // loop until a 0 continuation bit is read
     rts
 
-.get_dibits:
-    bsr.s       .get_bit        // read bit
+.apl_get_dibits:
+    bsr.s       .apl_get_bit    // read bit
     addx.l      %d0, %d0        // shift into d0
                                 // fall through
-.get_bit:
+.apl_get_bit:
     add.b       %d1, %d1        // shift bit queue, high bit into carry
-    bne.s       .got_bit        // queue not empty, bits remain
+    bne.s       .apl_got_bit    // queue not empty, bits remain
     move.b      (%a0)+, %d1     // read 8 new bits
     addx.b      %d1, %d1        // shift bit queue, high bit into carry
                                 // and shift 1 from carry into bit queue
-.got_bit:
+.apl_got_bit:
     rts

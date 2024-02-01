@@ -1,6 +1,12 @@
 #include "genesis.h"
 
-__attribute__((externally_visible))
+#ifdef __GNUC__
+#define EXTERNALLY_VISIBLE_DEF __attribute__((externally_visible))
+#elif defined(_MSC_VER)
+#define EXTERNALLY_VISIBLE_DEF __declspec(dllexport)
+#endif
+
+EXTERNALLY_VISIBLE_DEF
 const ROMHeader rom_header = {
 #if (ENABLE_BANK_SWITCH != 0)
     "SEGA SSF        ",
@@ -9,7 +15,7 @@ const ROMHeader rom_header = {
 #else
     "SEGA MEGA DRIVE ",
 #endif
-    "(C)SGDK 2023    ",
+    "(C)SGDK 2024    ",
     "SAMPLE PROGRAM                                  ",
     "SAMPLE PROGRAM                                  ",
     "GM 00000000-00",
