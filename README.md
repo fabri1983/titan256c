@@ -1,7 +1,7 @@
 ## Megadrive Titan 256 Colors Forever
 
 
-This is a personal project using [SGDK v1.9](https://github.com/Stephane-D/SGDK) (with latest changes) 
+This is a personal project using [SGDK v2.0](https://github.com/Stephane-D/SGDK) (with latest changes) 
 as an attempt to simulate the great Titan 512C Forever section from Titan Overdrive mega demo v1.1, 
 and learning the functioning of the megadrive and its architecture in the go.  
 This version displays up to **252 colors**.
@@ -29,7 +29,7 @@ All done inside the duration of 8 scanlines.
 
 
 **C**. Same than B but calling only once the HInt with `VDP_setHIntCounter(0)` (every scanline) and disabling it using 
-`VDP_setHIntCounter(255)` at the first line of the HInt.  
+`VDP_setHIntCounter(255)` at the first line of the HInt (which takes effect in the next line).  
 In this approach I manage to get only one invocation out of the two the HInt is being invoked, because changing the invocation 
 counter only takes effect in the next one. Here is where I use `if GET_VCOUNTER > 0 then exit from HInt` in order to dicard 
 the second unwanted HInt invocation. Ugly hack but this is what I came up so far.
