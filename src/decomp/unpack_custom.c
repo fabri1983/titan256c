@@ -4,6 +4,7 @@
 #include "decomp/comper.h"
 #include "decomp/kosinski.h"
 #include "decomp/lz4.h"
+#include "decomp/lz4Unpack.h"
 #include "decomp/rnc.h"
 #include "decomp/rocket.h"
 #include "decomp/saxman.h"
@@ -34,7 +35,8 @@ void unpack_custom (u16 compression, u8* src, u8* dest, u16 count) {
             // KLog_U1("dest aftr ", dest); // vladikomper: check if A1 points to DEST + DECOMPRESSED SIZE before rts and regs backup
             break;
         case LZ4:
-            lz4_frame_depack(src, dest);
+            // lz4_frame_depack(src, dest); // GNU GAS m68k version
+            lz4FrameUnpack(src, dest); // C version
             break;
         case RNC_1:
             rnc1_Unpack(src, dest);
