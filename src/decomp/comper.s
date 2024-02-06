@@ -40,7 +40,7 @@
 * ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
 * ---------------------------------------------------------------------------
 func ComperDec
-	movem.l     4(%sp), %a0-%a1         	// copy parameters into registers a0-a1
+	movem.l     4(%sp), %a0-%a1         // copy parameters into registers a0-a1
 	movem.l     %a2/%d2-%d7, -(%sp)     // save registers (except the scratch pad)
 
 #if _Comp_LoopUnroll > 0
@@ -49,7 +49,7 @@ func ComperDec
 
 .comp_newblock:
 	move.w		(%a0)+, %d0		// fetch description field
-	moveq		#15, %d3			// set bits counter to 16
+	moveq		#15, %d3		// set bits counter to 16
 
 .comp_mainloop:
 	_Comp_ReadBit

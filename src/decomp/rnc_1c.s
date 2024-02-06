@@ -56,13 +56,13 @@
 func rnc1_Unpack
 		movem.l 4(%sp), %a0-%a1			// copy parameters into registers a0-a1
 		movem.l	%d2-%d7/%a2-%a5,-(%sp)	// save registers (except the scratch pad)
-		lea	-BUFSIZE(%sp),%sp
+		lea		-BUFSIZE(%sp),%sp
 		move.l	%sp,%a2
 		addq.w	#4,%a0
-		bsr	rnc1_read_long
-		lea	HEADER_LEN-8(%a0),input
+		bsr		rnc1_read_long
+		lea		HEADER_LEN-8(%a0),input
 		move.l	%a1,output
-		lea	(output,%d0.l),output_hi
+		lea		(output,%d0.l),output_hi
 
 		moveq.l	#0,bit_count
 		move.b	1(input),bit_buffer
@@ -70,27 +70,27 @@ func rnc1_Unpack
 		move.b	(input),bit_buffer
 		moveq.l	#2,%d0
 		moveq.l	#2,%d1
-		bsr	rnc1_input_bits
+		bsr		rnc1_input_bits
 rnc1_unpack2:
 		move.l	%a2,%a0
-		bsr	rnc1_make_huftable
-		lea	POS_TABLE(%a2),%a0
-		bsr	rnc1_make_huftable
-		lea	LEN_TABLE(%a2),%a0
-		bsr	rnc1_make_huftable
+		bsr		rnc1_make_huftable
+		lea		POS_TABLE(%a2),%a0
+		bsr		rnc1_make_huftable
+		lea		LEN_TABLE(%a2),%a0
+		bsr		rnc1_make_huftable
 		moveq.l	#-1,%d0
 		moveq.l	#16,%d1
-		bsr	rnc1_input_bits
+		bsr		rnc1_input_bits
 		move.w	%d0,counts
 		subq.w	#1,counts
 		bra.s	rnc1_unpack5		
 rnc1_unpack3:
-		lea	POS_TABLE(%a2),%a0
+		lea		POS_TABLE(%a2),%a0
 		moveq.l	#0,%d0
 		bsr.s	rnc1_input_value
 		neg.l	%d0
-		lea	-1(output,%d0.l),%a1
-		lea	LEN_TABLE(%a2),%a0
+		lea		-1(output,%d0.l),%a1
+		lea		LEN_TABLE(%a2),%a0
 		bsr.s	rnc1_input_value
 		move.b	(%a1)+,(output)+
 rnc1_unpack4:
@@ -116,7 +116,7 @@ rnc1_unpack6:
 		cmp.l	output_hi,output
 		bcs.s	rnc1_unpack2
 
-		lea	BUFSIZE(%sp),%sp
+		lea		BUFSIZE(%sp),%sp
 		movem.l	(%sp)+,%d2-%d7/%a2-%a5		// restore registers (except the scratch pad)
 		rts
 
@@ -187,7 +187,7 @@ rnc1_make_huftable:
 		bmi.s	rnc1_make_huftable8
 		move.w	%d0,%d2
 		move.w	%d0,%d3
-		lea	-16(%sp),%sp
+		lea		-16(%sp),%sp
 		move.l	%sp,%a1
 rnc1_make_huftable3:
 		moveq.l	#0xF,%d0
@@ -202,7 +202,7 @@ rnc1_make_huftable3:
 		movem.l	%d5-%d7,-(%sp)
 rnc1_make_huftable4:
 		move.w	%d3,%d4
-		lea	12(%sp),%a1
+		lea		12(%sp),%a1
 rnc1_make_huftable5:
 		cmp.b	(%a1)+,%d1
 		bne.s	rnc1_make_huftable7
@@ -239,6 +239,6 @@ rnc1_make_huftable7:
 		cmp.b	#17,%d1
 		bne.s	rnc1_make_huftable4
 		movem.l	(%sp)+,%d5-%d7
-		lea	16(%sp),%sp
+		lea		16(%sp),%sp
 rnc1_make_huftable8:
 		rts

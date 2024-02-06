@@ -65,7 +65,7 @@
 func rnc2_Unpack
 		movem.l 4(%sp), %a0-%a1		// copy parameters into registers a0-a1
 		movem.l	%d2/%a2,-(%sp)		// save registers (except the scratch pad)
-		lea	18(input),input
+		lea		18(input),input
 		moveq	#-0x80,bitbuf
 		add.b	bitbuf,bitbuf
 		reload_rnc2

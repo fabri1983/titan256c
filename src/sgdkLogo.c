@@ -149,7 +149,7 @@ void displaySgdkLogo ()
     // Setup VDP
     VDP_setPlaneSize(64, 32, TRUE);
     VDP_setScrollingMode(HSCROLL_TILE, VSCROLL_COLUMN);
-    PAL_setPalette(PAL0, palette_black, CPU);
+    PAL_setPalette(PAL0, palette_black, DMA);
 
     // Draw SEGA logo
     {
@@ -234,7 +234,7 @@ void displaySgdkLogo ()
         SYS_doVBlankProcess();
 
         // Update all palettes
-        PAL_setColors(8, paletteBuffer+8, 7*8, CPU);
+        PAL_setColors(8, paletteBuffer+8, 7*8, DMA);
 
         ++frameCtr;
     }

@@ -14,7 +14,7 @@ void displayTeddyBearLogo ()
 
     // Setup VDP
     VDP_setPlaneSize(64, 32, TRUE);
-    PAL_setPalette(PAL0, palette_black, CPU);
+    PAL_setPalette(PAL0, palette_black, DMA);
 
     // Fill top plane with solid black tiles (tile index 1 seems to be a SGDK system tile)
     VDP_fillTileMapRect(BG_A, TILE_ATTR_FULL(PAL0, 0, FALSE, FALSE, 1), 0, 0, 40, 28);
@@ -35,7 +35,7 @@ void displayTeddyBearLogo ()
     
     // Draw first sprite with only black palette to later do the fade in
     Sprite* firstFrameTeddyBear = teddyBearAnimSpr->next;
-    PAL_setPalette(PAL3, palette_black, CPU);
+    PAL_setPalette(PAL3, palette_black, DMA);
     SPR_setPosition(firstFrameTeddyBear, 216, 56);
     SPR_update();
 

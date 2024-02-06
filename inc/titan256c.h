@@ -36,10 +36,6 @@ u16 getYPosFalling ();
 void loadTitan256cTileSet (u16 currTileIndex);
 u16 loadTitan256cTileMap (VDPPlane plane, u16 currTileIndex);
 
-/// If you are 100% sure ALL the palettes were compressed by rescomp tool (by looking at the console output) then set this to TRUE.
-/// If you are 100% sure ALL the palettes were NOT compressed by rescomp tool (by looking at the console output) then set this to FALSE.
-#define ALL_PALETTES_COMPRESSED TRUE
-
 void unpackPalettes ();
 void freePalettes ();
 u16* getUnpackedPtr ();
@@ -47,4 +43,4 @@ u16* getUnpackedPtr ();
 /// Loads the palettes belonging to strip firstStrip and firstStrip + 1.
 void load2Pals (u16 firstStrip);
 
-#endif
+#endif // TITAN_256C_H

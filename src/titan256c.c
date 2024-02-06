@@ -5,7 +5,7 @@
 #include <mapper.h>
 #include <memory.h>
 #include "titan256c.h"
-#include "decomp/unpack_custom.h"
+#include "decomp/unpackSelector.h"
 
 static TileSet* allocateTileSetInternal (VOID_OR_CHAR* adr) {
     TileSet *result = (TileSet*) adr;
@@ -25,7 +25,7 @@ static TileSet* unpackTileSet_custom(const TileSet* src, TileSet *dest) {
         result->numTile = src->numTile;
         result->compression = COMPRESSION_NONE;
         if (src->compression != COMPRESSION_NONE) {
-            unpack_custom(src->compression, (u8*) FAR_SAFE(src->tiles, src->numTile * 32), (u8*) result->tiles, src->numTile);
+            unpackSelector(src->compression, (u8*) FAR_SAFE(src->tiles, src->numTile * 32), (u8*) result->tiles, src->numTile * 32);
         }
         else if (src->tiles != result->tiles) {
             const u16 size = src->numTile * 32;
@@ -71,15 +71,16 @@ u16* unpackedData;
 
 void unpackPalettes () {
     unpackedData = (u16*) MEM_alloc(TITAN_256C_STRIPS_COUNT * TITAN_256C_COLORS_PER_STRIP * sizeof(u16));
-    #if ALL_PALETTES_COMPRESSED
-    // No FAR_SAFE() macro needed here. Palette data is always stored at near region.
-    lz4w_unpack((u8*) palTitanRGB.data, (u8*) unpackedData);
-    #else
-    // Copy the palette data. It is modified later on fading out effect.
-    const u16 size = (TITAN_256C_STRIPS_COUNT * TITAN_256C_COLORS_PER_STRIP) * 2;
-    // No FAR_SAFE() macro needed here. Palette data is always stored at near region.
-    memcpy((u8*) unpackedData, palTitanRGB.data, size);
-    #endif
+    if (palTitanRGB.compression != COMPRESSION_NONE) {
+        // No FAR_SAFE() macro needed here. Palette data is always stored at near region.
+        unpackSelector(palTitanRGB.compression, (u8*) palTitanRGB.data, (u8*) unpackedData, TITAN_256C_STRIPS_COUNT * TITAN_256C_COLORS_PER_STRIP);
+    }
+    else {
+        // Copy the palette data. It is modified later on fading out effect.
+        const u16 size = (TITAN_256C_STRIPS_COUNT * TITAN_256C_COLORS_PER_STRIP) * 2;
+        // No FAR_SAFE() macro needed here. Palette data is always stored at near region.
+        memcpy((u8*) unpackedData, palTitanRGB.data, size);
+    }
 }
 
 void freePalettes () {

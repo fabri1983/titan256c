@@ -18,7 +18,7 @@
 
 #include "asm_mac.i"
 
-#define SKIP_HEADER_CHECKS 1
+#define SKIP_HEADER_CHECKS 0
 
 * C prototype: void lz4_frame_depack (u8* src, u8* dest);
 func lz4_frame_depack

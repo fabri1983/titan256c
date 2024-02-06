@@ -66,6 +66,6 @@ s32 lz4FrameUnpack (u8* src, u8* dst)
 	if (0x40 != (src[4] & 0xc9))	// check version, no depacked size, and no DictID
 		return -1;
 
-	const u32 packedSize = readU32LittleEndian(src + 7);
-	return lz4BlockUnpack(src+7+4, dst, packedSize);
+	const u32 packedBlockSize = readU32LittleEndian(src + 7);
+	return lz4BlockUnpack(src+7+4, dst, packedBlockSize);
 }

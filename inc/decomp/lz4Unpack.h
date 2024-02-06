@@ -1,6 +1,8 @@
 #ifndef _LZ4UNPACK_H
 #define _LZ4UNPACK_H
 
+#include <types.h>
+
 /*---------------------------------------------------------
 ;
 ;	LZ4 block tiny C depacker
@@ -10,7 +12,6 @@
 ;	LZ4 technology by Yann Collet ( https://lz4.github.io/lz4/ )
 ;
 ;---------------------------------------------------------*/
-#include <types.h>
 
 // Tiny C Lz4-block depacker. Returns depacked block size.
 // Warning 1: This depacks a row LZ4 data block, without header. Use lz4FrameUnpack to depack a frame with header
