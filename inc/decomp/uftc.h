@@ -9,12 +9,6 @@
 
 #include <types.h>
 
-#ifdef __GNUC__
-#define ASM_STATEMENT __asm__
-#elif defined(_MSC_VER)
-#define ASM_STATEMENT __asm
-#endif
-
 /// UFTC decompressor
 void uftc_unpack (u16* out, u16* in, u16 start, u16 count);
 

@@ -75,9 +75,9 @@ func ComperDec
 #endif
 * ---------------------------------------------------------------------------
 .comp_loop:
-#rept (1 << _Comp_LoopUnroll)
+.rept (1 << _Comp_LoopUnroll)
 	move.w		(%a2)+, (%a1)+		// copy given sequence
-#endr
+.endr
 	dbra		%d2, .comp_loop		// repeat
 	_Comp_RunBitStream_s
 * ---------------------------------------------------------------------------

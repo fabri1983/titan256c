@@ -13,6 +13,7 @@
 #include "decomp/rnc.h"
 #include "decomp/rocket.h"
 #include "decomp/saxman.h"
+#include "decomp/sbz.h"
 #include "decomp/snkrle.h"
 #include "decomp/uftc.h"
 #include "decomp/unaplib.h"

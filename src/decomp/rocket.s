@@ -81,9 +81,9 @@ func RocketDec
 	rts
 * ---------------------------------------------------------------------------
 .rck_fill20:
-#rept (1 << _Rocket_LoopUnroll)
+.rept (1 << _Rocket_LoopUnroll)
     move.b		%d1, (%a1)+
-#endr
+.endr
 	dbra		%d5, .rck_fill20
 	tst.w		%d4						// Any copies left?
 	bmi.s		.rck_loop				// Branch if not
@@ -98,9 +98,9 @@ func RocketDec
     jmp	    	.rck_copy(%pc,%d6.w)
 #endif
 .rck_copy:
-#rept (1 << _Rocket_LoopUnroll)
+.rept (1 << _Rocket_LoopUnroll)
     move.b		(%a5)+, (%a1)+
-#endr
+.endr
 	dbra		%d4, .rck_copy
 	bra.s		.rck_loop
 * End of function RocketDec

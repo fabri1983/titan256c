@@ -108,9 +108,9 @@ compx_ComperXDec_CopyDevice:
 	movem.l     (%sp)+, %a2-%a3/%d2-%d4      // restore registers (except the scratch pad)
 	rts									// copy length = 0 stops decompression
 * -----------------------------------------------------------------------------
-#rept 127
+.rept 127
     move.l		(%a2)+, (%a1)+
-#endr
+.endr
     dbf 		%d3, .compx_fetch_flag		// if bits counter remains, parse the next word
     bra			.compx_load_flags_field
 * =============================================================================
@@ -136,9 +136,9 @@ func ComperXMDec
 	neg.w		%d0
 	jmp			.compxm_decompress_device(pc,d0)
 * -----------------------------------------------------------------------------
-#rept 16-1
+.rept 16-1
     jsr			(%a3)
-#endr
+.endr
 .compxm_decompress_device:
 	jmp			(%a3)
 	movem.l     (%sp)+, %a2-%a3/%d2-%d4      // restore registers (except the scratch pad)

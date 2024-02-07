@@ -127,15 +127,15 @@ func KosPlusDec
 #endif
 
 .kosp_largecopy:
-#rept (1 << _KosPlus_LoopUnroll)
+.rept (1 << _KosPlus_LoopUnroll)
     move.b	    (%a5)+, (%a1)+
-#endr
+.endr
     dbra	    %d4, .kosp_largecopy
 
 .kosp_mediumcopy:
-#rept 8
+.rept 8
     move.b	    (%a5)+, (%a1)+
-#endr
+.endr
     bra.w	    .kosp_FetchNewCode
 * ---------------------------------------------------------------------------
 .kosp_Quit:

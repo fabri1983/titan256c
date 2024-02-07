@@ -19,8 +19,7 @@
 *-------------------------------------------------------------------------------
 * C prototype: u16 fc8_decode_block_tru (u8* in, u8* out)
 func fc8_decode_block_tru
-	move.l 4(%sp), %a0
-	move.l 8(%sp), %a1
+	movem.l 4(%sp), %a0-%a1		// copy parameters into registers a0-a1
 	movem.l	%d2-%d7/%a2-%a6, -(%sp)
 	bra 	_Init_Decode
 

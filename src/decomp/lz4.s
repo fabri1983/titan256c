@@ -13,8 +13,8 @@
 *		 a1.l : output buffer
 * output: none
 *
-* Depack data produced by LZ4.exe command line:
-* 	lz4.exe -9 --no-frame-crc <input_file> <output_file>
+* Depack data produced with next lz4 command line:
+* 	lz4 -9 --no-frame-crc <input_file> <output_file>
 
 #include "asm_mac.i"
 
@@ -111,9 +111,9 @@ lz4_depack:
     add.w	%d1,%d1
     neg.w	%d1
     jmp		.copys(%pc,%d1.w)
-#rept 15
+.rept 15
     move.b	(%a3)+,(%a1)+
-#endr
+.endr
 .copys:
     move.b	(%a3)+,(%a1)+
     move.b	(%a3)+,(%a1)+
@@ -133,9 +133,9 @@ lz4_depack:
     add.w	%d1,%d1
     neg.w	%d1
     jmp		.copys2(%pc,%d1.w)
-#rept 15
+.rept 15
     move.b	(%a0)+,(%a1)+
-#endr
+.endr
 .copys2:
     cmpa.l	%a0,%a4
     bne		.lenOffset

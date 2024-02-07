@@ -20,9 +20,9 @@
 *-------------------------------------------------------------------------------
 * C prototype: u16 fc8_decode_block (u8* in, u8* out, u32 outsize)
 func fc8_decode_block
-	movem.l 4(%sp), %a0-%a1		// copy parameters into registers a0-a1
-    move.l 12(%sp), %d1			// copy the other parameter into d1
-	movem.l	%d2-%d7/%a2-%a6, -(%sp)
+	movem.l 4(%sp), %a0-%a1				// copy parameters into registers a0-a1
+    move.l 12(%sp), %d1					// copy the other parameter into d1
+	movem.l	%d2-%d7/%a2-%a6, -(%sp)		// save registers (except the scratch pad)
 	bra 	_Init_Decode
 
 * lookup table for decoding the copy length-1 parameter
@@ -156,9 +156,14 @@ _copyLoop:
 	bge.s 	_copy17orMore
 	* Next instruction not valid in 68000
 	* jmp		_copy16orFewer(%d6.w*2)
-	* So here is the workaround:
-	lea		0(%a6,%a6),%a3
-	jmp		_copy16orFewer(%a3)
+	* So here is my workaround:
+	movea.l	%d6, %a6
+	adda	%a6, %a6
+	jmp		_copy16orFewer(%a6)
+	* And this is vladikcomper's way:
+	*move.w	%d6, %d7
+	*add.w	%d7, %d7
+	*jmp		_copy16orFewer(%d7)
 
 _copy16orFewer:
 	bra.s	_copy1
@@ -212,10 +217,15 @@ _copy17orMore:
 	cmpi.w 	#16, %d6
 	bge.s 	_copy17orMore
 	* Next instruction not valid in 68000
-	* jmp	_copy16orFewer(%d6.w*2)
-	* So here is the workaround:
-	lea		0(%a6,%a6),%a3
-	jmp		_copy16orFewer(%a3)
+	* jmp		_copy16orFewer(%d6.w*2)
+	* So here is my workaround:
+	movea.l	%d6, %a6
+	adda	%a6, %a6
+	jmp		_copy16orFewer(%a6)
+	* And this is vladikcomper's way:
+	*move.w	%d6, %d7
+	*add.w	#1, %d7
+	*jmp		_copy16orFewer(%d7)
 
 _nearCopy:
 	cmpi.l	#1, %d5
@@ -248,5 +258,5 @@ _done:
 	moveq.l	#1, %d0				// result = 1
 
 _exit:
-	movem.l	(sp)+, %d2-%d7/%a2-%a6
+	movem.l	(sp)+, %d2-%d7/%a2-%a6	// restore registers (except the scratch pad)
 	rts

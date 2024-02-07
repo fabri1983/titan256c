@@ -202,9 +202,9 @@ func KosDec
 #endif
 * ---------------------------------------------------------------------------
 .kos_largecopy:
-#rept (1 << _Kos_LoopUnroll)
+.rept (1 << _Kos_LoopUnroll)
     move.b      (%a5)+, (%a1)+
-#endr
+.endr
 	dbra        %d4, .kos_largecopy
 	bra.w       .kos_FetchNewCode
 * ---------------------------------------------------------------------------
@@ -221,9 +221,9 @@ func KosDec
     jmp	        .kos_mediumcopy(%pc,%d4.w)
 * ---------------------------------------------------------------------------
 .kos_mediumcopy:
-#rept 8
+.rept 8
     move.b	    (%a5)+, (%a1)+
-#endr
+.endr
     bra.w	    .kos_FetchNewCode
 #endif
 * ---------------------------------------------------------------------------

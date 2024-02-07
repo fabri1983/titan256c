@@ -1,4 +1,5 @@
 #include "decomp/uftc.h"
+#include "compatibilities.h"
 
 //***************************************************************************
 // uftc

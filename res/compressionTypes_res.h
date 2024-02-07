@@ -14,7 +14,7 @@
 #define RNC2 20
 #define ROCKET 21
 #define SAXMAN 22
-#define SAXMAN2 23
+#define SBZ 23
 #define SNKRLE 24
 #define UFTC 25
 #define UFTC15 26

@@ -12,7 +12,9 @@
     "unpackselector.h": "c",
     "fc8.h": "c",
     "compressiontypes_res.h": "c",
-    "fc8unpack.h": "c"
+    "fc8unpack.h": "c",
+    "sbz.h": "c",
+    "uftc.h": "c"
 },
 "C_Cpp.errorSquiggles": "enabled",
 "[m68k]": {

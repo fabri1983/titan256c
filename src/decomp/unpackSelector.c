@@ -10,8 +10,8 @@ void unpackSelector (u16 compression, u8* src, u8* dest, u16 outSizeInBytes) {
             lz4w_unpack(src, dest);
             break;
         case FC8:
-            // fc8Decode(src, dest, TRUE);
-            fc8Unpack(src, dest, TRUE);
+            fc8Decode(src, dest, TRUE);
+            // fc8Unpack(src, dest, TRUE);
             break;
         case KOSINSKI:
             // kprintf("src  0x%08X", src);
@@ -47,6 +47,10 @@ void unpackSelector (u16 compression, u8* src, u8* dest, u16 outSizeInBytes) {
             break;
         case SAXMAN:
             SaxDec(src, dest);
+            break;
+        case SBZ:
+            // SBZ_decompress(src, dest);
+            decompress_sbz(src, dest);
             break;
         case SNKRLE:
             SNKDec(src, dest);

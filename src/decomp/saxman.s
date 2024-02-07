@@ -98,14 +98,16 @@ func SaxDec
     move.w		(%sp)+, %d6
     move.b		%d0, %d6
 #endif
-	* FALL THROUGH
+	bra.s		.sax_begin
 
 * ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
 * ---------------------------------------------------------------------------
 func SaxDec2
-	movem.l     4(%sp), %a0-%a1/%d6         	// copy parameters into registers a0-a1/d6
+	movem.l     4(%sp), %a0-%a1         		// copy parameters into registers a0-a1
+    move.l		12(%sp), %d6					// copy the other parameter into d6
 	movem.l     %a2-%a5/%d2-%d7, -(%sp)     	// save registers (except the scratch pad)
 
+.sax_begin:
 	moveq		#0, %d2					        // Flag as having no bits left.
 	lea	    	(%a1), %a4
 #if _Sax_UseLUT == 1
@@ -123,15 +125,15 @@ func SaxDec2
 	bra.s		.sax_loop
 * ---------------------------------------------------------------------------
 .sax_copy:
-#rept 18
+.rept 18
     move.b		(%a5)+, (%a1)+
-#endr
+.endr
 	bra.s		.sax_loop
 * ---------------------------------------------------------------------------
 .sax_fill0:
-#rept 18
+.rept 18
     move.b		%d3, (%a1)+			    // Exploiting the fact that low byte of d3 is zero
-#endr
+.endr
 	bra.s		.sax_loop
 * ---------------------------------------------------------------------------
 .sax_read_compressed:
