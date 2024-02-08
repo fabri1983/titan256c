@@ -27,6 +27,57 @@
 
 u8* SBZ_decompress(const u8* in, u8* out)
 {
+	/*
+		move.w    #0x3458, d5
+		addq.w    #1, d5
+		sub.w     d5, d0
+		moveq     #0x6a, d1
+		move.b    d0, (a1)+
+		move.w    #0x3e, d0
+		move.b    d0, (a1)+
+		dbra      d1, 0x8000
+		movem.w   d2-d3/a0-a1, -(a7)
+		moveq     #0x2, d2
+		move.b    d2, d6
+		moveq     #0x43, d2
+		move.b    d2, (a1)+
+		move.b    d2, (a1)+
+		addq.w    #1, d2
+		bra       0x2649
+		cmpi.w    #0xfb, (a0)+
+		bne.s     0x2008
+		moveq     #0xdb, d1
+		dbra      d1, 0x12db
+		moveq     #0x4e, d1
+		addq.w    #1, d1
+		moveq     #0xda, d2
+		subi.w    #0x41, d2
+		sub.w     d2, d0
+		moveq     #0x18, d2
+		move.b    (a0)+, d2
+		addq.b    #1, d2
+		sub.w     d2, d0
+		bra       0x3218
+		subi.w    #0x402, d4
+		subq.w    #1, d4
+		move.w    d4, d6
+		bra       0x640c
+		move.w    d6, (a1)+
+		subq.w    #1, d2
+		bra       0x141a
+		move.w    #0x76f8, d6
+		subq.w    #1, d1
+		bne       0x9403
+		move.w    d6, (a1)+
+		addq.w    #1, d1
+		bra       0x2649
+		move.w    d6, (a1)+
+		addq.w    #1, d1
+		bra       0x7604
+		dbra      d1, 0x12db
+		moveq     #0x403, d1
+		sub.w     d1, d0
+	*/
 	static const u16 asm_blob[] = {
 		0x7400,0x3458,0xd5c8,0x49fa,0x006a,0x703e,0x323c,0x8000,
 		0x4ed4,0x3602,0xc400,0xd643,0xd643,0x161a,0x2649,0x96c3,
