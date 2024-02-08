@@ -84,8 +84,8 @@ _Init_Decode:
 	lea		FC8_HEADER_SIZE(%a0), %a0
 
 	* a5 = base of length decode lookup table
-	lea		_FC8_LENGTH_DECODE_LUT(%pc), %a5
 	*lea		-110(%pc), %a5	// fix PC offset manually after assembly
+	lea		_FC8_LENGTH_DECODE_LUT(%pc), %a5
 
 	* helpful constants
 	moveq.l	#0x1F.l, %d1
@@ -145,10 +145,12 @@ _BR2:
 	move.b	%d6, %d5
 	and.w	%d3, %d5			// AND with 0x01
 	swap	%d5
-	* d5 = offset for copy = ((long)(t0 & 0x01) << 16) | (t1 << 8) | t2
-	move.b	(%a0)+, %d5
+
+	*move.w    (%a0)+, %d5		// d5 = offset for copy = ((long)(t0 & 0x01) << 16) | (t1 << 8) | t2
+	move.b	(%a0)+, %d5			// d5 = offset for copy = ((long)(t0 & 0x01) << 16) | (t1 << 8) | t2
 	lsl.w	#8, %d5
 	move.b	(%a0)+, %d5
+
 	lsr.b	#1, %d6
 	and.w	%d1, %d6			// AND with 0x1F
 	move.b	(%a5,%d6.w), %d6	// d6 = length-1 word for copy = ((word)(t0 >> 3) & 0x7) + 1
@@ -172,7 +174,7 @@ _copyLoop:
 	* Next instruction not valid in 68000
 	* jmp		_copy16orFewer(%d6.w*2)
 	* So here is my workaround:
-	move.l	%d6, %d7
+	move.w	%d6, %d7
 	lsl.w	#2, %d7
 	move.w	%d7, %a6
 	jmp		_copy16orFewer(%a6)
@@ -247,7 +249,7 @@ _copy17orFewer:
 	* Next instruction not valid in 68000
 	* jmp		_copy16orFewer(%d6.w*2)
 	* So here is my workaround:
-	move.l	%d6, %d7
+	move.w	%d6, %d7
 	lsl.w	#2, %d7
 	move.w	%d7, %a6
 	jmp		_copy16orFewer(%a6)
@@ -269,14 +271,19 @@ _copyRLE:
 _doRLE:
 	subq.w	#2, %d6
 	lsr.w	#1, %d6				// length = (length-2) / 2
+
+	*move.w    (%a4), %d5
 	move.b	(%a4), %d5
 	lsl.w	#8, %d5
 	move.b	(%a4), %d5
+
 _rleLoop:
+	*move.w    %d5, (%a1)+
 	move.w	%d5, %d7
 	lsr.w	#8, %d7
 	move.b	%d7, (%a1)+
 	move.b	%d5, (%a1)+
+
 	dbf		%d6, _rleLoop
 	bra		_mainloop
 
