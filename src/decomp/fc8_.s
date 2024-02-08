@@ -177,7 +177,7 @@ _copyLoop:
 	* jmp		_copy16orFewer(%d6.w*2)
 	* So here is my workaround:
 	move.w	%d6, %d7
-	lsl.w	#2, %d7
+	lsl.w	#2, %d7		// multiply by 4 because the jump tables use bra.w making the instruction width to be 4
 	move.w	%d7, %a6
 	jmp		_copy16orFewer(%a6)
 
@@ -252,7 +252,7 @@ _copy17orFewer:
 	* jmp		_copy16orFewer(%d6.w*2)
 	* So here is my workaround:
 	move.w	%d6, %d7
-	lsl.w	#2, %d7
+	lsl.w	#2, %d7		// multiply by 4 because the jump tables use bra.w making the instruction width to be 4
 	move.w	%d7, %a6
 	jmp		_copy16orFewer(%a6)
 

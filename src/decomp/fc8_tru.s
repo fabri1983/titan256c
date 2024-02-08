@@ -28,23 +28,6 @@ _FC8_LENGTH_DECODE_LUT:
 	dc.b	0x02,0x03,0x04,0x05,0x06,0x07,0x08,0x09,0x0A,0x0B,0x0C,0x0D,0x0E,0x0F,0x10,0x11
 	dc.b	0x12,0x13,0x14,0x15,0x16,0x17,0x18,0x19,0x1A,0x1B,0x1C,0x22,0x2E,0x47,0x7F,0xFF
 
-*-------------------------------------------------------------------------------
-* _GetUINT32 - alignment independent reader for 32-bit integers
-* a0 = in
-* d6 = offset
-* d7 = result
-* C equivalent: ((u32)in[0]) << 24 | ((u32)in[1]) << 16 | ((u32)in[2]) << 8 | ((u32)in[3])
-*-------------------------------------------------------------------------------
-_GetUINT32:
-	move.b	(%a0,%d6.w), %d7
-	asl.w	#8, %d7
-	move.b	1(%a0,%d6.w), %d7
-	swap	%d7
-	move.b	2(%a0,%d6.w), %d7
-	asl.w	#8, %d7
-	move.b	3(%a0,%d6.w), %d7
-	rts
-
 _Init_Decode:
 #if FC8_CHECK_MAGIC_NUMBER
 	* check magic ID
@@ -122,13 +105,12 @@ _BR2:
 	move.b	%d6, %d5
 	and.w	%d3, %d5			// AND with 0x01
 	swap	%d5
-	move.w	#0, %d7
-	move.w	#0, %d5
-	move.w	(%a0)+, %d5			// d5 = offset for copy = ((long)(t0 & 0x01) << 16) | (t1 << 8) | t2
-	move.w	(%a0)+, %d7			// d5 = offset for copy = ((long)(t0 & 0x01) << 16) | (t1 << 8) | t2
 
+	*move.w    (%a0)+, %d5		// d5 = offset for copy = ((long)(t0 & 0x01) << 16) | (t1 << 8) | t2
+	move.b	(%a0)+, %d5
 	lsl.w	#8, %d5
-	or.w	%d7, %d5
+	move.b	(%a0)+, %d5
+
 	lsr.b	#1, %d6
 	and.w	%d1, %d6			// AND with 0x1F
 	move.b	(%a5,%d6.w), %d6	// d6 = length-1 word for copy = ((word)(t0 >> 3) & 0x7) + 1
