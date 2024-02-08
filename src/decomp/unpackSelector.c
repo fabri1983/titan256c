@@ -4,14 +4,14 @@
 void unpackSelector (u16 compression, u8* src, u8* dest, u16 outSizeInBytes) {
     switch(compression) {
         case COMPRESSION_APLIB:
-            aplib_unpack(src, dest);
+            aplib_unpack(src, dest); // SGDK
             break;
         case COMPRESSION_LZ4W:
-            lz4w_unpack(src, dest);
+            lz4w_unpack(src, dest); // SGDK
             break;
         case FC8:
-            fc8Decode(src, dest, TRUE);
-            // fc8Unpack(src, dest, TRUE);
+            fc8Decode(src, dest, TRUE); // m68k version
+            // fc8Unpack(src, dest, TRUE); // C version
             break;
         case KOSINSKI:
             // kprintf("src  0x%08X", src);
@@ -24,8 +24,8 @@ void unpackSelector (u16 compression, u8* src, u8* dest, u16 outSizeInBytes) {
             KosPlusDec(src, dest); // vladikomper: check if A1 points to DEST + DECOMPRESSED SIZE before rts and regs backup
             break;
         case LZ4:
-            // lz4_frame_depack(src, dest); // GNU GAS m68k version
-            lz4FrameUnpack(src, dest); // C version
+            lz4_frame_depack(src, dest); // m68k version
+            // lz4FrameUnpack(src, dest); // C version
             break;
         case LZKN:
             Kon1Dec(src, dest);
@@ -49,8 +49,8 @@ void unpackSelector (u16 compression, u8* src, u8* dest, u16 outSizeInBytes) {
             SaxDec(src, dest);
             break;
         case SBZ:
-            // SBZ_decompress(src, dest);
-            decompress_sbz(src, dest);
+            decompress_sbz(src, dest); // faster m68k version
+            // SBZ_decompress(src, dest); // simple m68k version
             break;
         case SNKRLE:
             SNKDec(src, dest);

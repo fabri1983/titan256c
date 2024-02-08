@@ -11,6 +11,18 @@
 #define FC8_CHECK_MAGIC_NUMBER 0
 #define FC8_CHECK_ENOUGH_OUT_SPACE 0
 
+.macro fc8_movel_incr src, dst
+	move.b	(\src)+, (\dst)+
+	move.b	(\src)+, (\dst)+
+	move.b	(\src)+, (\dst)+
+	move.b	(\src)+, (\dst)+
+.endm
+
+.macro fc8_movew_incr src, dst
+	move.b	(\src)+, (\dst)+
+	move.b	(\src)+, (\dst)+
+.endm
+
 *-------------------------------------------------------------------------------
 * fc8_decode - Decode a compressed memory block
 * a0 = in buffer
@@ -20,8 +32,8 @@
 *-------------------------------------------------------------------------------
 * C prototype: u16 fc8_decode_block (u8* in, u8* out, u32 outsize)
 func fc8_decode_block
-	movem.l 4(%sp), %a0-%a1				// copy parameters into registers a0-a1
-    move.l 12(%sp), %d1					// copy the other parameter into d1
+	movem.l	4(%sp), %a0-%a1				// copy parameters into registers a0-a1
+    move.l	12(%sp), %d1					// copy the other parameter into d1
 	movem.l	%d2-%d7/%a2-%a6, -(%sp)		// save registers (except the scratch pad)
 	bra 	_Init_Decode
 
@@ -133,7 +145,10 @@ _BR2:
 	move.b	%d6, %d5
 	and.w	%d3, %d5			// AND with 0x01
 	swap	%d5
-	move.w	(%a0)+, %d5			// d5 = offset for copy = ((long)(t0 & 0x01) << 16) | (t1 << 8) | t2
+	* d5 = offset for copy = ((long)(t0 & 0x01) << 16) | (t1 << 8) | t2
+	move.b	(%a0)+, %d5
+	lsl.w	#8, %d5
+	move.b	(%a0)+, %d5
 	lsr.b	#1, %d6
 	and.w	%d1, %d6			// AND with 0x1F
 	move.b	(%a5,%d6.w), %d6	// d6 = length-1 word for copy = ((word)(t0 >> 3) & 0x7) + 1
@@ -145,87 +160,97 @@ _copyBackref:
 	move.l	%a1, %a4
 	sub.l	%d5, %a4			// a4 = source ptr for copy
 	cmpi.l 	#4, %d5
-	blt.s 	_nearCopy 			// must copy byte-by-byte if offset < 4, to avoid overlapping long copies
+	blt.w 	_nearCopy 			// must copy byte-by-byte if offset < 4, to avoid overlapping long copies
 
 	* Partially unrolled block copy. Requires 68020 or better.
 	* Uses move.l and move.w where possible, even though both source and dest may be unaligned.
 	* It's still faster than multiple move.b instructions
 	* d6 = length-1
 _copyLoop:
-	cmpi.w 	#16, %d6
-	bge.s 	_copy17orMore
+	cmpi.w 	#16, %d6			// test if d6 >= 16
+	bge.w 	_copy17orFewer		// if yes then move to _copy17orFewer
 	* Next instruction not valid in 68000
 	* jmp		_copy16orFewer(%d6.w*2)
 	* So here is my workaround:
-	movea.l	%d6, %a6
-	adda	%a6, %a6
+	move.l	%d6, %d7
+	lsl.w	#2, %d7
+	move.w	%d7, %a6
 	jmp		_copy16orFewer(%a6)
-	* And this is vladikcomper's way:
-	*move.w	%d6, %d7
-	*add.w	%d7, %d7
-	*jmp		_copy16orFewer(%d7)
 
 _copy16orFewer:
-	bra.s	_copy1
-	bra.s	_copy2
-	bra.s	_copy3
-	bra.s	_copy4
-	bra.s	_copy5
-	bra.s	_copy6
-	bra.s	_copy7
-	bra.s	_copy8
-	bra.s	_copy9
-	bra.s	_copy10
-	bra.s	_copy11
-	bra.s	_copy12
-	bra.s	_copy13
-	bra.s	_copy14
-	bra.s	_copy15
-	bra.s	_copy16
+	bra.w	_copy1
+	bra.w	_copy2
+	bra.w	_copy3
+	bra.w	_copy4
+	bra.w	_copy5
+	bra.w	_copy6
+	bra.w	_copy7
+	bra.w	_copy8
+	bra.w	_copy9
+	bra.w	_copy10
+	bra.w	_copy11
+	bra.w	_copy12
+	bra.w	_copy13
+	bra.w	_copy14
+	bra.w	_copy15
+	bra.w	_copy16
 
-_copy15: move.l (%a4)+, (%a1)+
-_copy11: move.l (%a4)+, (%a1)+
-_copy7: move.l 	(%a4)+, (%a1)+
-_copy3: move.w 	(%a4)+, (%a1)+
-_copy1: move.b 	(%a4)+, (%a1)+
-	    bra		_mainloop
+_copy15:
+	fc8_movel_incr	%a4, %a1
+_copy11:
+	fc8_movel_incr	%a4, %a1
+_copy7:
+	fc8_movel_incr	%a4, %a1
+_copy3:
+	fc8_movew_incr	%a4, %a1
+_copy1:
+	move.b 	(%a4)+, (%a1)+
+	bra		_mainloop
 
-_copy14: move.l (%a4)+, (%a1)+
-_copy10: move.l (%a4)+, (%a1)+
-_copy6: move.l 	(%a4)+, (%a1)+
-_copy2: move.w 	(%a4)+, (%a1)+
-	    bra		_mainloop
+_copy14:
+	fc8_movel_incr	%a4, %a1
+_copy10:
+	fc8_movel_incr	%a4, %a1
+_copy6:
+	fc8_movel_incr	%a4, %a1
+_copy2:
+	fc8_movew_incr	%a4, %a1
+	bra		_mainloop
 
-_copy13: move.l (%a4)+, (%a1)+
-_copy9: move.l 	(%a4)+, (%a1)+
-_copy5: move.l 	(%a4)+, (%a1)+
-	    move.b 	(%a4)+, (%a1)+
-	    bra		_mainloop
+_copy13:
+	fc8_movel_incr	%a4, %a1
+_copy9:
+	fc8_movel_incr	%a4, %a1
+_copy5:
+	fc8_movel_incr	%a4, %a1
+	move.b 	(%a4)+, (%a1)+
+	bra		_mainloop
 
-_copy16: move.l (%a4)+, (%a1)+
-_copy12: move.l (%a4)+, (%a1)+
-_copy8: move.l 	(%a4)+, (%a1)+
-_copy4: move.l	(%a4)+, (%a1)+
-	    bra		_mainloop
+_copy16:
+	fc8_movel_incr	%a4, %a1
+_copy12:
+	fc8_movel_incr	%a4, %a1
+_copy8:
+	fc8_movel_incr	%a4, %a1
+_copy4:
+	fc8_movel_incr	%a4, %a1
+	bra		_mainloop
 
-_copy17orMore:
-	move.l 	(%a4)+, (%a1)+
-	move.l 	(%a4)+, (%a1)+
-	move.l 	(%a4)+, (%a1)+
-	move.l 	(%a4)+, (%a1)+
-	subi.w 	#16, %d6
-	cmpi.w 	#16, %d6
-	bge.s 	_copy17orMore
+_copy17orFewer:
+	fc8_movel_incr	%a4, %a1
+	fc8_movel_incr	%a4, %a1
+	fc8_movel_incr	%a4, %a1
+	fc8_movel_incr	%a4, %a1
+	subi.w 	#16, %d6		// we just copied 16 bytes
+	cmpi.w 	#16, %d6		// test if d6 >= 16
+	bge.s 	_copy17orFewer	// if yes then continue with _copy17orFewer. Otherwise copy the remaining bytes < 16
 	* Next instruction not valid in 68000
 	* jmp		_copy16orFewer(%d6.w*2)
 	* So here is my workaround:
-	movea.l	%d6, %a6
-	adda	%a6, %a6
+	move.l	%d6, %d7
+	lsl.w	#2, %d7
+	move.w	%d7, %a6
 	jmp		_copy16orFewer(%a6)
-	* And this is vladikcomper's way:
-	*move.w	%d6, %d7
-	*add.w	#1, %d7
-	*jmp		_copy16orFewer(%d7)
 
 _nearCopy:
 	cmpi.l	#1, %d5
@@ -244,9 +269,14 @@ _copyRLE:
 _doRLE:
 	subq.w	#2, %d6
 	lsr.w	#1, %d6				// length = (length-2) / 2
-	move.w	(%a4), %d5
+	move.b	(%a4), %d5
+	lsl.w	#8, %d5
+	move.b	(%a4), %d5
 _rleLoop:
-	move.w	%d5, (%a1)+
+	move.w	%d5, %d7
+	lsr.w	#8, %d7
+	move.b	%d7, (%a1)+
+	move.b	%d5, (%a1)+
 	dbf		%d6, _rleLoop
 	bra		_mainloop
 

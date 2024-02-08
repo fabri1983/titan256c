@@ -88,7 +88,7 @@ func SaxDec
 	movem.l     4(%sp), %a0-%a1         	// copy parameters into registers a0-a1
 	movem.l     %a2-%a5/%d2-%d7, -(%sp)     // save registers (except the scratch pad)
 
-	* Read and byte-swap one word.
+	* Read and byte-swap one word. d6 will hold length in bytes of compressed stream. This seems to be a LE reading.
 #if _Sax_AlignedSource == 1
     move.w		(%a0)+, %d6
     rol.w		#8, %d6
