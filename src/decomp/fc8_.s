@@ -49,6 +49,7 @@ _FC8_LENGTH_DECODE_LUT:
 * d7 = result
 * C equivalent: ((u32)in[0]) << 24 | ((u32)in[1]) << 16 | ((u32)in[2]) << 8 | ((u32)in[3])
 *-------------------------------------------------------------------------------
+#if FC8_CHECK_ENOUGH_OUT_SPACE
 _GetUINT32:
 	move.b	(%a0,%d6.w), %d7
 	asl.w	#8, %d7
@@ -58,6 +59,7 @@ _GetUINT32:
 	asl.w	#8, %d7
 	move.b	3(%a0,%d6.w), %d7
 	rts
+#endif
 
 _Init_Decode:
 #if FC8_CHECK_MAGIC_NUMBER
@@ -147,7 +149,7 @@ _BR2:
 	swap	%d5
 
 	*move.w    (%a0)+, %d5		// d5 = offset for copy = ((long)(t0 & 0x01) << 16) | (t1 << 8) | t2
-	move.b	(%a0)+, %d5			// d5 = offset for copy = ((long)(t0 & 0x01) << 16) | (t1 << 8) | t2
+	move.b	(%a0)+, %d5
 	lsl.w	#8, %d5
 	move.b	(%a0)+, %d5
 
