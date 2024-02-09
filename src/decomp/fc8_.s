@@ -178,8 +178,7 @@ _copyLoop:
 	* So here is my workaround:
 	move.w	%d6, %d7
 	lsl.w	#2, %d7		// multiply by 4 because the jump tables use bra.w making the instruction width to be 4
-	move.w	%d7, %a6
-	jmp		_copy16orFewer(%a6)
+	jmp		_copy16orFewer(%pc,%d7.w)  // here we can use a byte jump using d7 because destination label is inside 128 bytes
 
 _copy16orFewer:
 	bra.w	_copy1
@@ -254,7 +253,7 @@ _copy17orFewer:
 	move.w	%d6, %d7
 	lsl.w	#2, %d7		// multiply by 4 because the jump tables use bra.w making the instruction width to be 4
 	move.w	%d7, %a6
-	jmp		_copy16orFewer(%a6)
+	jmp		_copy16orFewer(%a6)	// we can't use _copy16orFewer(%pc,%d7) because destination label is far than 128 bytes
 
 _nearCopy:
 	cmpi.l	#1, %d5

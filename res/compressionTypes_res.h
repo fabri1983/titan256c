@@ -3,22 +3,23 @@
 
 #define COMPER 10
 #define COMPERX 11
-#define FC8 12
-#define KOSINSKI 13
-#define KOSINSKI_PLUS 14
-#define LZ4 15
-#define LZKN 16
-#define LZKN1 17
-#define MEGAPACK 18
-#define RNC1 19
-#define RNC2 20
-#define ROCKET 21
-#define SAXMAN 22
-#define SBZ 23
-#define SNKRLE 24
-#define UFTC 25
-#define UFTC15 26
-#define UNAPLIB 27
+#define COMPERXM 12
+#define FC8 13
+#define KOSINSKI 14
+#define KOSINSKI_PLUS 15
+#define LZ4 16
+#define LZKN 17
+#define LZKN1 18
+#define MEGAPACK 19
+#define RNC1 20
+#define RNC2 21
+#define ROCKET 22
+#define SAXMAN 23
+#define SBZ 24
+#define SNKRLE 25
+#define UFTC 26
+#define UFTC15 27
+#define UNAPLIB 28
 
 
 #endif // _RES_COMPRESSIONTYPES_RES_H_

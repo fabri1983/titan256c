@@ -39,12 +39,13 @@
 
 * ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
 * ---------------------------------------------------------------------------
+* C prototype: void ComperDec (u8* src, u8* dest);
 func ComperDec
 	movem.l     4(%sp), %a0-%a1         // copy parameters into registers a0-a1
-	movem.l     %a2/%d2-%d7, -(%sp)     // save registers (except the scratch pad)
+	movem.l     %a2/%d2-%d5, -(%sp)     // save registers (except the scratch pad)
 
 #if _Comp_LoopUnroll > 0
-	moveq		#(1 << _Comp_LoopUnroll)-1, %d7
+	moveq		#(1 << _Comp_LoopUnroll)-1, %d5
 #endif
 
 .comp_newblock:
@@ -68,7 +69,7 @@ func ComperDec
 #if _Comp_LoopUnroll > 0
     move.w		%d2, %d4
     not.w		%d4
-    and.w		%d7, %d4
+    and.w		%d5, %d4
     add.w		%d4, %d4
     lsr.w		#_Comp_LoopUnroll, %d2
     jmp	    	.comp_loop(%pc,%d4.w)
@@ -82,6 +83,6 @@ func ComperDec
 	_Comp_RunBitStream_s
 * ---------------------------------------------------------------------------
 .comp_end:
-	movem.l     (%sp)+, %a2/%d2-%d7      // restore registers (except the scratch pad)
+	movem.l     (%sp)+, %a2/%d2-%d5      // restore registers (except the scratch pad)
 	rts
 * ===========================================================================

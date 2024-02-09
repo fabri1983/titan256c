@@ -9,6 +9,12 @@ void unpackSelector (u16 compression, u8* src, u8* dest, u16 outSizeInBytes) {
         case COMPRESSION_LZ4W:
             lz4w_unpack(src, dest); // SGDK
             break;
+        case COMPER:
+            ComperDec(src, dest);
+        case COMPERX:
+            comperx_dec(src, dest);
+        case COMPERXM:
+            comperxm_dec(src, dest);
         case FC8:
             fc8Decode(src, dest, TRUE); // m68k version
             // fc8Unpack(src, dest, TRUE); // C version

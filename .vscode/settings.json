@@ -15,7 +15,9 @@
     "fc8unpack.h": "c",
     "sbz.h": "c",
     "uftc.h": "c",
-    "saxman.h": "c"
+    "saxman.h": "c",
+    "asm.h": "c",
+    "comper.h": "c"
 },
 "C_Cpp.errorSquiggles": "enabled",
 "[m68k]": {
