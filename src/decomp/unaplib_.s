@@ -1,3 +1,5 @@
+#include "compressionTypesTracker.h"
+#ifdef USING_UNAPLIB
 
 *  unaplib_68000.s - aPLib decompressor for 68000 - 156 bytes
 *
@@ -140,3 +142,5 @@ apl_decompress:
                                 // and shift 1 from carry into bit queue
 .apl_got_bit:
     rts
+
+#endif // USING_UNAPLIB

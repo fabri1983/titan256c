@@ -5,7 +5,12 @@ typedef struct
 {
     u16 compression;
     u16* data;
-} Palette32AllStripsComp;
+} Palette32AllStripsCompField;
+
+typedef struct
+{
+    u16* data;
+} Palette32AllStrips;
 
 typedef struct
 {
@@ -14,6 +19,6 @@ typedef struct
 } ImageNoPals;
 
 extern const ImageNoPals titanRGB;
-extern const Palette32AllStripsComp palTitanRGB;
+extern const Palette32AllStripsCompField palTitanRGB;
 
 #endif // _RES_TITAN256C_RES_H_

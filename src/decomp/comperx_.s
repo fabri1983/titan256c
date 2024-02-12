@@ -1,3 +1,5 @@
+#include "compressionTypesTracker.h"
+#if defined(USING_COMPERX) || defined(USING_COMPERXM)
 
 * -----------------------------------------------------------------------------
 * Comper-X a newer, much faster implementation of Comper compression
@@ -149,3 +151,4 @@ func ComperXMDec
 .compxm_decompress_device:
 	jmp			(%a3)
 * =============================================================================
+#endif // USING_COMPERX || USING_COMPERXM

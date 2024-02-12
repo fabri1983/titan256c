@@ -1,3 +1,5 @@
+#include "compressionTypesTracker.h"
+#ifdef USING_RNC2
 
 *------------------------------------------------------------------------------
 * PRO-PACK Unpack Source Code (Compact Version) - MC68000, Method 2 
@@ -258,3 +260,5 @@ rnc2_Check4end:
 		bcs.s	rnc2_GetBits2
 		movem.l	(%sp)+,%d2/%a2		// restore registers (except the scratch pad)
 		rts
+
+#endif // USING_RNC2

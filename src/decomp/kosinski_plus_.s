@@ -1,3 +1,5 @@
+#include "compressionTypesTracker.h"
+#ifdef USING_KOSINSKI_PLUS
 
 * ---------------------------------------------------------------------------
 * New format based on Kosinski. It changes several design decisions to allow
@@ -142,3 +144,4 @@ func KosPlusDec
     movem.l     (%sp)+, %a2-%a5/%d2-%d6      // restore registers (except the scratch pad)
 	rts
 * ===========================================================================
+#endif // USING_KOSINSKI_PLUS

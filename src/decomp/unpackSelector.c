@@ -1,5 +1,6 @@
 #include "decomp/unpackSelector.h"
-#include <tools.h>
+#include "compressionTypesTracker.h"
+#include <tools.h> // COMPRESSION_APLIB and COMPRESSION_LZ4W constants
 
 void unpackSelector (u16 compression, u8* src, u8* dest, u16 outSizeInBytes) {
     switch(compression) {
@@ -9,67 +10,105 @@ void unpackSelector (u16 compression, u8* src, u8* dest, u16 outSizeInBytes) {
         case COMPRESSION_LZ4W:
             lz4w_unpack(src, dest); // SGDK
             break;
+        #ifdef USING_COMPER
         case COMPER:
             ComperDec(src, dest);
+            break;
+        #endif
+        #ifdef USING_COMPERX
         case COMPERX:
             comperx_dec(src, dest);
+            break;
+        #endif
+        #ifdef USING_COMPERXM
         case COMPERXM:
             comperxm_dec(src, dest);
+            break;
+        #endif
+        #ifdef USING_FC8
         case FC8:
             fc8Decode(src, dest, TRUE); // m68k version
             // fc8Unpack(src, dest, TRUE); // C version
             break;
+        #endif
+        #ifdef USING_KOSINSKI
         case KOSINSKI:
             // kprintf("src  0x%08X", src);
             // kprintf("dest 0x%08X", dest);
             KosDec(src, dest); // vladikomper: check if A1 points to DEST + DECOMPRESSED SIZE before rts and regs backup
             break;
+        #endif
+        #ifdef USING_KOSINSKI_PLUS
         case KOSINSKI_PLUS:
             // kprintf("src  0x%08X", src);
             // kprintf("dest 0x%08X", dest);
             KosPlusDec(src, dest); // vladikomper: check if A1 points to DEST + DECOMPRESSED SIZE before rts and regs backup
             break;
+        #endif
+        #ifdef USING_LZ4
         case LZ4:
+            KLog("USING_LZ4");
             lz4_frame_depack(src, dest); // m68k version
             // lz4FrameUnpack(src, dest); // C version
             break;
+        #endif
+        #if defined(USING_LZKN) || defined(USING_LZKN1)
         case LZKN:
-            Kon1Dec(src, dest);
-            break;
         case LZKN1:
             Kon1Dec(src, dest);
             break;
+        #endif
+        #ifdef USING_MEGAPACK
         case MEGAPACK:
             
             break;
+        #endif
+        #ifdef USING_RNC1
         case RNC1:
             rnc1_Unpack(src, dest);
             break;
+        #endif
+        #ifdef USING_RNC2
         case RNC2:
             rnc2_Unpack(src, dest);
             break;
+        #endif
+        #ifdef USING_ROCKET
         case ROCKET:
             RocketDec(src, dest);
             break;
+        #endif
+        #ifdef USING_SAXMAN
         case SAXMAN:
             SaxDec(src, dest);
             break;
+        #endif
+        #ifdef USING_SBZ
         case SBZ:
-            decompress_sbz(src, dest); // faster m68k version
             // SBZ_decompress(src, dest); // simple m68k version
+            decompress_sbz(src, dest); // faster m68k version
             break;
+        #endif
+        #ifdef USING_SNKRLE
         case SNKRLE:
             SNKDec(src, dest);
             break;
+        #endif
+        #ifdef USING_UFTC
         case UFTC:
             uftc_unpack((u16*)src, (u16*)dest, 0, outSizeInBytes/32);
             break;
+        #endif
+        #ifdef USING_UFTC15
         case UFTC15:
             uftc15_unpack((s16*)src, (s16*)dest, 0, (s16)outSizeInBytes/32);
             break;
+        #endif
+        #ifdef USING_UNAPLIB
         case UNAPLIB:
             unaplib(src, dest);
             break;
+        #endif
         default:
             break;
     }

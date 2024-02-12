@@ -1,3 +1,6 @@
+#include "compressionTypesTracker.h"
+#ifdef USING_ROCKET
+
 * ---------------------------------------------------------------------------
 * Permission to use, copy, modify, and/or distribute this software for any
 * purpose with or without fee is hereby granted.
@@ -157,3 +160,4 @@ rck_RocketDec_ByteMap:
 	dc.b		0x0F,0x8F,0x4F,0xCF,0x2F,0xAF,0x6F,0xEF,0x1F,0x9F,0x5F,0xDF,0x3F,0xBF,0x7F,0xFF
 #endif
 * ===========================================================================
+#endif // USING_ROCKET

@@ -1,3 +1,6 @@
+#include "compressionTypesTracker.h"
+#ifdef USING_FC8
+
 * 
 * This version of the FC8 decoder comes from https://github.com/leuat/TRSE
 * 
@@ -137,3 +140,5 @@ _done:
 _exit:
 	movem.l	(sp)+,%d2-%d7/%a2-%a6
 	rts
+
+#endif // USING_FC8

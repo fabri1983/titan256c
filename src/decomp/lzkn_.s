@@ -1,3 +1,5 @@
+#include "compressionTypesTracker.h"
+#if defined(USING_LZKN) || defined(USING_LZKN1)
 
 * ===============================================================
 * NOTICE
@@ -9,6 +11,7 @@
 * Modify for the assembler of your choice if neccessary.
 * ===============================================================
 
+#include "asm_mac.i"
 
 * ---------------------------------------------------------------
 * Konami's LZSS variant 1 (LZKN1) decompressor
@@ -20,9 +23,6 @@
 * USES:
 *       d0-d2, a0-a2
 * ---------------------------------------------------------------
-
-#include "asm_mac.i"
-
 * C prototype: u16 Kon1Dec (u8* in, u8* out)
 func Kon1Dec
     movem.l 4(%sp), %a0-%a1
@@ -36,7 +36,6 @@ func Kon1Dec
 *
 * NOTICE: This size is not used during decompression anyways.
 * ---------------------------------------------------------------
-
 * C prototype: u16 Kon1Dec2 (u8* in, u8* out)
 func Kon1Dec2
     movem.l 4(%sp), %a0-%a1
@@ -103,3 +102,5 @@ func Kon1Dec2
 .kn1_QuitDecomp:
     movem.l	(sp)+, %d2/%a2
     rts
+
+#endif // USING_LZKN || USING_LZKN1

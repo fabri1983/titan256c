@@ -1,3 +1,5 @@
+#include "compressionTypesTracker.h"
+#ifdef USING_RNC1
 
 *------------------------------------------------------------------------------
 * PRO-PACK Unpack Source Code (Compact Version) - MC68000, Method 1
@@ -242,3 +244,5 @@ rnc1_make_huftable7:
 		lea		16(%sp),%sp
 rnc1_make_huftable8:
 		rts
+
+#endif // USING_RNC1

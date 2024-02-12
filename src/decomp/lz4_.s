@@ -1,3 +1,6 @@
+#include "compressionTypesTracker.h"
+#ifdef USING_LZ4
+
 *---------------------------------------------------------
 *
 *	LZ4 Frame 68k depacker
@@ -158,3 +161,5 @@ lz4_depack:
     
 .over:
     rts						// end
+
+#endif // USING_LZ4

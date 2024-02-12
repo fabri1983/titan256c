@@ -143,7 +143,7 @@ void NO_INLINE updateTextGradientColors () {
     u16 colorIdx = titanCharsCycleCnt / TITAN_CHARS_GRADIENT_SCROLL_FREQ; // advance ramp color every N frames (use divu for divisor non power of 2)
     if (colorIdx > TITAN_CHARS_GRADIENT_MAX_COLORS) colorIdx = 0;
 
-    for (u16 i=TITAN_CHARS_CURR_GRADIENT_ELEMS; i--;) {
+    for (u16 i=0; i < TITAN_CHARS_CURR_GRADIENT_ELEMS; ++i) {
         u16 d = *(titanCharsGradientColors + colorIdx++);
         if (i < innerStripLimit) {
             d -= min(0xEEE, fadeTextAmount);

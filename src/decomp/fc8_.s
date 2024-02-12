@@ -1,3 +1,6 @@
+#include "compressionTypesTracker.h"
+#ifdef USING_FC8
+
 * 
 * FC8 compression by Steve Chamberlin
 * Derived from liblzg by Marcus Geelnard
@@ -298,3 +301,5 @@ _done:
 _exit:
 	movem.l	(sp)+, %d2-%d7/%a2-%a6	// restore registers (except the scratch pad)
 	rts
+
+#endif // USING_FC8

@@ -1,3 +1,6 @@
+#include "compressionTypesTracker.h"
+#ifdef USING_SBZ
+
 *======================================================================
 * Copyright (C) 2024 Ian Karlsson
 *
@@ -153,3 +156,5 @@ func decompress_sbz
     move.b	(%a2)+,(%a1)+
 .endr
 	jmp		(%a4)
+
+#endif // USING_SBZ

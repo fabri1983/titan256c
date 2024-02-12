@@ -1,3 +1,5 @@
+#include "compressionTypesTracker.h"
+#ifdef USING_COMPER
 
 * ---------------------------------------------------------------------------
 * Original version written by vladikcomper, with improvements by Flamewing
@@ -86,3 +88,4 @@ func ComperDec
 	movem.l     (%sp)+, %a2/%d2-%d5      // restore registers (except the scratch pad)
 	rts
 * ===========================================================================
+#endif // USING_COMPER

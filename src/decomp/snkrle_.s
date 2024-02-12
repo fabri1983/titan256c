@@ -1,3 +1,5 @@
+#include "compressionTypesTracker.h"
+#ifdef USING_SNKRLE
 
 * ---------------------------------------------------------------------------
 * Original by snkenjoi, this much faster version written by Flamewing
@@ -219,3 +221,4 @@ snk_SNKDec_CopyLUT:
 snk_SNKDec_CopyLUT_End:
     rts
 * ===========================================================================
+#endif // USING_SNKRLE
