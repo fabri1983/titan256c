@@ -21,8 +21,8 @@
 #define SKIP_HEADER_CHECKS 0
 
 *---------------------------------------------------------
-* C prototype: extern void lz4_frame_depack (u8* src, u8* dest);
-func lz4_frame_depack
+* C prototype: extern void lz4_frame_depack_normal (u8* src, u8* dest);
+func lz4_frame_depack_normal
     *movem.l 4(%sp),%a0-%a1          // copy parameters into registers a0-a1
     *movem.l %d2-%d4/%a2-%a4,-(%sp)	// save registers (except the scratch pad)
 #if SKIP_HEADER_CHECKS
@@ -83,7 +83,7 @@ lz4_depack:
     moveq	#0,%d3
     moveq	#15,%d4
     bra.s	.tokenLoop
-    
+
 .lenOffset:
     move.b	(%a0)+,%d1      // read 16bits offset, little endian, unaligned
     move.b	(%a0)+,-(%sp)

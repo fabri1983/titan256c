@@ -1,5 +1,5 @@
-#ifndef _LZ4UNPACK_H
-#define _LZ4UNPACK_H
+#ifndef _LZ4_TINY_H
+#define _LZ4_TINY_H
 
 #include <types.h>
 
@@ -24,4 +24,4 @@ s32	lz4BlockUnpack (u8* src, u8* out, u32 srcSize);
 // Warning: the LZ4 block should only contain valid data!
 s32	lz4FrameUnpack (u8* src, u8* dst);
 
-#endif // _LZ4UNPACK_H
+#endif // _LZ4_TINY_H

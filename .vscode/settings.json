@@ -21,7 +21,9 @@
     "lz4.h": "c",
     "comperx.h": "c",
     "kosinski.h": "c",
-    "kosinskiplus.h": "c"
+    "kosinskiplus.h": "c",
+    "compressiontypestracker.h": "c",
+    "megaunp.h": "c"
 },
 "C_Cpp.errorSquiggles": "enabled",
 "[m68k]": {

@@ -4,7 +4,7 @@
 #include "compressionTypesTracker.h"
 #ifdef USING_LZ4
 
-void lz4_caller (u8* src, u8* dest) {
+void lz4_normal_caller (u8* src, u8* dest) {
 #ifdef __GNUC__
 	register void* a0 asm ("a0") = src;
 	register void* a1 asm ("a1") = dest;
@@ -13,10 +13,26 @@ void lz4_caller (u8* src, u8* dest) {
     u8* a1 = dest;
 #endif
 	ASM_STATEMENT __volatile__ (
-		"jsr lz4_frame_depack"
+		"jsr lz4_frame_depack_normal"
 		: "+a" (a1)
 		: "a" (a0)
-		: "a2","a3","a4","d2","d3","d4", "cc"
+		: "a2","a3","a4","d2","d3","d4","cc"
+	);
+}
+
+void lz4_fastest_caller (u8* src, u8* dest) {
+#ifdef __GNUC__
+	register void* a0 asm ("a0") = src;
+	register void* a1 asm ("a1") = dest;
+#else
+    u8* a0 = src;
+    u8* a1 = dest;
+#endif
+	ASM_STATEMENT __volatile__ (
+		"jsr lz4_frame_depack_fastest"
+		: "+a" (a1)
+		: "a" (a0)
+		: "a2","a3","a4","d2","d3","d5","d7","cc"
 	);
 }
 

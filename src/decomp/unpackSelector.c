@@ -2,6 +2,10 @@
 #include "compressionTypesTracker.h"
 #include <tools.h> // constants: COMPRESSION_APLIB and COMPRESSION_LZ4W
 
+#ifdef USING_MEGAPACK
+static bool megainitCalled = FALSE;
+#endif
+
 void unpackSelector (u16 compression, u8* src, u8* dest, u16 outSizeInBytes) {
     switch(compression) {
         case COMPRESSION_APLIB:
@@ -43,8 +47,8 @@ void unpackSelector (u16 compression, u8* src, u8* dest, u16 outSizeInBytes) {
         #endif
         #ifdef USING_LZ4
         case LZ4:
-            lz4_caller(src, dest); // m68k version
-            // lz4FrameUnpack(src, dest); // C version
+            lz4_fastest_caller(src, dest); // m68k version
+            // lz4FrameUnpack(src, dest); // C tiny version
             break;
         #endif
         #if defined(USING_LZKN) || defined(USING_LZKN1)
@@ -55,7 +59,11 @@ void unpackSelector (u16 compression, u8* src, u8* dest, u16 outSizeInBytes) {
         #endif
         #ifdef USING_MEGAPACK
         case MEGAPACK:
-            
+            if (megainitCalled == FALSE) {
+                init_mega();
+                megainitCalled = TRUE;
+            }
+            megaunp(src, dest);
             break;
         #endif
         #ifdef USING_RNC1

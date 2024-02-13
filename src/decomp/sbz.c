@@ -110,17 +110,22 @@ u8* SBZ_blob_decompress(const u8* in, u8* out)
 		0x12da,0x12da,0x12da,0x4ed4
 	};
 
+#ifdef __GNUC__
 	register const void* a0 asm ("a0") = in;
 	register unsigned char* a1 asm ("a1") = out;
+#else
+    u8* a0 = in;
+    u8* a1 = out;
+#endif
 
-	ASM_STATEMENT __volatile__ (
+	ASM_STATEMENT volatile (
 		"jsr %2"
 		: "+a" (a1)
 		: "a" (a0), "m" (asm_blob)
 		: "a2","a3","a4","d0","d1","d2","d3","cc"
 	);
 
-	return a1;
+	return a1; // return end of decompressed data
 }
 
 void SBZ_decompress_caller (u8* in, u8* out) {
@@ -131,7 +136,7 @@ void SBZ_decompress_caller (u8* in, u8* out) {
     u8* a0 = in;
     u8* a1 = out;
 #endif
-	ASM_STATEMENT __volatile__ (
+	ASM_STATEMENT volatile (
 		"jsr SBZ_decompress"
 		: "+a" (a1)
 		: "a" (a0)

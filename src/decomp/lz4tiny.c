@@ -7,7 +7,7 @@
 ;	LZ4 technology by Yann Collet ( https://lz4.github.io/lz4/ )
 ;
 ;---------------------------------------------------------*/
-#include "decomp/lz4Unpack.h"
+#include "decomp/lz4tiny.h"
 
 #include "compressionTypesTracker.h"
 #ifdef USING_LZ4
