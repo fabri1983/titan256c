@@ -25,7 +25,10 @@
 #include "decomp/sbz.h"
 #include "compatibilities.h"
 
-u8* SBZ_decompress(const u8* in, u8* out)
+#include "compressionTypesTracker.h"
+#ifdef USING_SBZ
+
+u8* SBZ_blob_decompress(const u8* in, u8* out)
 {
 	/*
 		move.w    #0x3458, d5
@@ -119,3 +122,21 @@ u8* SBZ_decompress(const u8* in, u8* out)
 
 	return a1;
 }
+
+void SBZ_decompress_caller (u8* in, u8* out) {
+#ifdef __GNUC__
+	register void* a0 asm ("a0") = in;
+	register void* a1 asm ("a1") = out;
+#else
+    u8* a0 = in;
+    u8* a1 = out;
+#endif
+	ASM_STATEMENT __volatile__ (
+		"jsr SBZ_decompress"
+		: "+a" (a1)
+		: "a" (a0)
+		: "a2","a3","a4","d2","d3","cc"
+	);
+}
+
+#endif // USING_SBZ

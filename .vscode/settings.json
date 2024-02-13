@@ -17,7 +17,11 @@
     "uftc.h": "c",
     "saxman.h": "c",
     "asm.h": "c",
-    "comper.h": "c"
+    "comper.h": "c",
+    "lz4.h": "c",
+    "comperx.h": "c",
+    "kosinski.h": "c",
+    "kosinskiplus.h": "c"
 },
 "C_Cpp.errorSquiggles": "enabled",
 "[m68k]": {

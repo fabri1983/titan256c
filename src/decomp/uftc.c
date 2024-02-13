@@ -1,6 +1,9 @@
 #include "decomp/uftc.h"
 #include "compatibilities.h"
 
+#include "compressionTypesTracker.h"
+#ifdef USING_UFTC
+
 //***************************************************************************
 // uftc
 // Decompresses tiles stored in UFTC format
@@ -50,3 +53,5 @@ void uftc_unpack (u16* out, u16* in, u16 start, u16 count) {
       : "d2","a2","a3","a4","memory","cc"
     );
 }
+
+#endif // USING_UFTC

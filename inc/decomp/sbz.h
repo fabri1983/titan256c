@@ -9,9 +9,12 @@
  *  \param   out  Pointer to destination memory address.
  *  \return       Pointer to the end of decompressed data.
  */
-u8* SBZ_decompress(const u8* in, u8* out);
+u8* SBZ_blob_decompress (const u8* in, u8* out);
 
 /// @brief ASM m68k implementation. Ian Karlsson SBZ Decompressor.
-extern void decompress_sbz (u8* in, u8* out);
+extern void SBZ_decompress (u8* in, u8* out);
+
+/// @brief Caller for the ASM m68k implementation
+void SBZ_decompress_caller (u8* in, u8* out);
 
 #endif

@@ -1,6 +1,3 @@
-#include "compressionTypesTracker.h"
-#ifdef USING_RNC1
-
 *------------------------------------------------------------------------------
 * PRO-PACK Unpack Source Code (Compact Version) - MC68000, Method 1
 *
@@ -54,7 +51,7 @@
 *	all other registers are preserved
 *------------------------------------------------------------------------------
 
-* C prototype: u32 rnc1_Unpack (u8 *src, u8 *dest);
+* C prototype: extern u32 rnc1_Unpack (u8 *src, u8 *dest);
 func rnc1_Unpack
 		movem.l 4(%sp), %a0-%a1			// copy parameters into registers a0-a1
 		movem.l	%d2-%d7/%a2-%a5,-(%sp)	// save registers (except the scratch pad)
@@ -244,5 +241,3 @@ rnc1_make_huftable7:
 		lea		16(%sp),%sp
 rnc1_make_huftable8:
 		rts
-
-#endif // USING_RNC1

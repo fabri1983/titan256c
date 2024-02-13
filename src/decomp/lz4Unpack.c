@@ -9,6 +9,9 @@
 ;---------------------------------------------------------*/
 #include "decomp/lz4Unpack.h"
 
+#include "compressionTypesTracker.h"
+#ifdef USING_LZ4
+
 static u32 lz4_rlen (u32 size, u8* ppRead)
 {
 	if (15 == size)
@@ -69,3 +72,5 @@ s32 lz4FrameUnpack (u8* src, u8* dst)
 	const u32 packedBlockSize = readU32LittleEndian(src + 7);
 	return lz4BlockUnpack(src+7+4, dst, packedBlockSize);
 }
+
+#endif // USING_LZ4

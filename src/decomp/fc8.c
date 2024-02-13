@@ -1,4 +1,8 @@
 #include "decomp/fc8.h"
+#include "compatibilities.h"
+
+#include "compressionTypesTracker.h"
+#ifdef USING_FC8
 
 static u32 GetUInt32 (u8* in) {
     return ((u32)in[0]) << 24 | ((u32)in[1]) << 16 | ((u32)in[2]) << 8 | ((u32)in[3]);
@@ -33,3 +37,5 @@ void fc8Decode (u8* inBuf, u8* outBuf, bool onlyOneBlock) {
             break;
     }
 }
+
+#endif // USING_FC8

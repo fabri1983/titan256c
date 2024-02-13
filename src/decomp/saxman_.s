@@ -1,6 +1,3 @@
-#include "compressionTypesTracker.h"
-#ifdef USING_SAXMAN
-
 * ---------------------------------------------------------------------------
 * For format explanation see https://segaretro.org/Saxman_compression
 * ---------------------------------------------------------------------------
@@ -86,6 +83,7 @@
 
 * ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
 * ---------------------------------------------------------------------------
+* C prototype: extern void SaxDec (u8* src, u8* dest);
 func SaxDec
 	movem.l     4(%sp), %a0-%a1         	// copy parameters into registers a0-a1
 	movem.l     %a2-%a5/%d2-%d7, -(%sp)     // save registers (except the scratch pad)
@@ -104,6 +102,7 @@ func SaxDec
 
 * ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
 * ---------------------------------------------------------------------------
+* C prototype: extern void SaxDec2 (u8* src, u8* dest, u16 length);
 func SaxDec2
 	movem.l     4(%sp), %a0-%a1         		// copy parameters into registers a0-a1
     move.l		12(%sp), %d6					// copy the other parameter into d6
@@ -180,4 +179,3 @@ sax_SaxDec_ByteMap:
 	dc.b		0x0F,0x8F,0x4F,0xCF,0x2F,0xAF,0x6F,0xEF,0x1F,0x9F,0x5F,0xDF,0x3F,0xBF,0x7F,0xFF
 #endif
 * ===========================================================================
-#endif // USING_SAXMAN

@@ -1,6 +1,3 @@
-#include "compressionTypesTracker.h"
-#ifdef USING_SNKRLE
-
 * ---------------------------------------------------------------------------
 * Original by snkenjoi, this much faster version written by Flamewing
 * ---------------------------------------------------------------------------
@@ -45,6 +42,7 @@
 
 * ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
 * ---------------------------------------------------------------------------
+* C prototype: extern void SNKDec (u8* src, u8* dest);
 func SNKDec
     movem.l     4(%sp), %a0-%a1             // copy parameters into registers a0-a1
     movem.l     %a2-%a4/%d2-%d6, -(%sp)     // save registers (except the scratch pad)
@@ -221,4 +219,3 @@ snk_SNKDec_CopyLUT:
 snk_SNKDec_CopyLUT_End:
     rts
 * ===========================================================================
-#endif // USING_SNKRLE

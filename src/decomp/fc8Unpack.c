@@ -1,6 +1,9 @@
 
 #include "decomp/fc8Unpack.h"
 
+#include "compressionTypesTracker.h"
+#ifdef USING_FC8
+
 /// LUT for decoding the copy length parameter
 static const u16 _FC8_LENGTH_DECODE_LUT[32] = {
     3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,35,48,72,128,256
@@ -114,3 +117,5 @@ u32 fc8Unpack (u8* inBuf, u8* outBuf, bool onlyOneBlock) {
 
     return outSize;
 }
+
+#endif // USING_FC8

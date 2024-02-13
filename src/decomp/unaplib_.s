@@ -1,6 +1,3 @@
-#include "compressionTypesTracker.h"
-#ifdef USING_UNAPLIB
-
 *  unaplib_68000.s - aPLib decompressor for 68000 - 156 bytes
 *
 *  in:  a0 = start of compressed data
@@ -28,7 +25,7 @@
 
 #include "asm_mac.i"
 
-* C prototype: u32 unaplib (u8 *src, u8 *dest);
+* C prototype: extern u32 unaplib (u8 *src, u8 *dest);
 func unaplib
     movem.l     4(%sp), %a0-%a1     // copy parameters into registers a0-a1
 
@@ -142,5 +139,3 @@ apl_decompress:
                                 // and shift 1 from carry into bit queue
 .apl_got_bit:
     rts
-
-#endif // USING_UNAPLIB

@@ -1,6 +1,3 @@
-#include "compressionTypesTracker.h"
-#ifdef USING_KOSINSKI_PLUS
-
 * ---------------------------------------------------------------------------
 * New format based on Kosinski. It changes several design decisions to allow
 * a faster decompressor without loss of compression ratio.
@@ -43,6 +40,7 @@
 
 * ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
 * ---------------------------------------------------------------------------
+* C prototype: extern void KosDecPlus (u8* src, u8* dest);
 func KosPlusDec
     movem.l     4(%sp), %a0-%a1             // copy parameters into registers a0-a1
     movem.l     %a2-%a5/%d2-%d6, -(%sp)     // save registers (except the scratch pad)
@@ -142,6 +140,5 @@ func KosPlusDec
 * ---------------------------------------------------------------------------
 .kosp_Quit:
     movem.l     (%sp)+, %a2-%a5/%d2-%d6      // restore registers (except the scratch pad)
-	rts
+	rts         // vladikomper: check if A1 points to DEST + DECOMPRESSED SIZE before rts and regs backup
 * ===========================================================================
-#endif // USING_KOSINSKI_PLUS

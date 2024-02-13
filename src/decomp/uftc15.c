@@ -1,5 +1,8 @@
 #include "decomp/uftc.h"
 
+#include "compressionTypesTracker.h"
+#ifdef USING_UFTC15
+
 //***************************************************************************
 // uftc15
 // Decompresses tiles stored in UFTC15 format
@@ -55,3 +58,5 @@ void uftc15_unpack (s16* out, s16* in, s16 start, s16 count) {
       *out++ = *block2++;
    }
 }
+
+#endif // USING_UFTC15

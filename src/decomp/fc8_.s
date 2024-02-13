@@ -1,6 +1,3 @@
-#include "compressionTypesTracker.h"
-#ifdef USING_FC8
-
 * 
 * FC8 compression by Steve Chamberlin
 * Derived from liblzg by Marcus Geelnard
@@ -26,20 +23,6 @@
 	move.b	(\src)+, (\dst)+
 .endm
 
-*-------------------------------------------------------------------------------
-* fc8_decode - Decode a compressed memory block
-* a0 = in buffer
-* a1 = out buffer
-* d1 = outsize
-* d0 = result (1 if decompression was successful, or 0 upon failure)
-*-------------------------------------------------------------------------------
-* C prototype: u16 fc8_decode_block (u8* in, u8* out, u32 outsize)
-func fc8_decode_block
-	movem.l	4(%sp), %a0-%a1				// copy parameters into registers a0-a1
-    move.l	12(%sp), %d1					// copy the other parameter into d1
-	movem.l	%d2-%d7/%a2-%a6, -(%sp)		// save registers (except the scratch pad)
-	bra 	_Init_Decode
-
 * lookup table for decoding the copy length-1 parameter
 _FC8_LENGTH_DECODE_LUT:
 	dc.b	0x02,0x03,0x04,0x05,0x06,0x07,0x08,0x09,0x0A,0x0B,0x0C,0x0D,0x0E,0x0F,0x10,0x11
@@ -63,6 +46,19 @@ _GetUINT32:
 	move.b	3(%a0,%d6.w), %d7
 	rts
 #endif
+
+*-------------------------------------------------------------------------------
+* fc8_decode - Decode a compressed memory block
+* a0 = in buffer
+* a1 = out buffer
+* d1 = outsize
+* d0 = result (1 if decompression was successful, or 0 upon failure)
+*-------------------------------------------------------------------------------
+* C prototype: extern u16 fc8_decode_block (u8* in, u8* out, u32 outsize)
+func fc8_decode_block
+	movem.l	4(%sp), %a0-%a1				// copy parameters into registers a0-a1
+    move.l	12(%sp), %d1				// copy the other parameter into d1
+	movem.l	%d2-%d7/%a2-%a6, -(%sp)		// save registers (except the scratch pad)
 
 _Init_Decode:
 #if FC8_CHECK_MAGIC_NUMBER
@@ -301,5 +297,3 @@ _done:
 _exit:
 	movem.l	(sp)+, %d2-%d7/%a2-%a6	// restore registers (except the scratch pad)
 	rts
-
-#endif // USING_FC8

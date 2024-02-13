@@ -1,6 +1,3 @@
-#include "compressionTypesTracker.h"
-#ifdef USING_KOSINSKI
-
 * ---------------------------------------------------------------------------
 * For format explanation see https://segaretro.org/Kosinski_compression
 * New faster version written by vladikcomper, with additional improvements
@@ -59,6 +56,7 @@
 
 * ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
 * ---------------------------------------------------------------------------
+* C prototype: extern void KosDec (u8* src, u8* dest);
 func KosDec
     movem.l     4(%sp), %a0-%a1             // copy parameters into registers a0-a1
     movem.l     %a2-%a5/%d2-%d7, -(%sp)     // save registers (except the scratch pad)
@@ -231,7 +229,7 @@ func KosDec
 * ---------------------------------------------------------------------------
 .kos_Quit:
     movem.l     (%sp)+, %a2-%a5/%d2-%d7      // restore registers (except the scratch pad)
-	rts
+	rts         // vladikomper: check if A1 points to DEST + DECOMPRESSED SIZE before rts and regs backup
 * ===========================================================================
 #if _Kos_UseLUT == 1
 kos_KosDec_ByteMap:
@@ -253,4 +251,3 @@ kos_KosDec_ByteMap:
 	dc.b	    0x0F,0x8F,0x4F,0xCF,0x2F,0xAF,0x6F,0xEF,0x1F,0x9F,0x5F,0xDF,0x3F,0xBF,0x7F,0xFF
 #endif
 * ===========================================================================
-#endif // USING_KOSINSKI

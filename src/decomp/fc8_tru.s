@@ -1,6 +1,3 @@
-#include "compressionTypesTracker.h"
-#ifdef USING_FC8
-
 * 
 * This version of the FC8 decoder comes from https://github.com/leuat/TRSE
 * 
@@ -20,10 +17,10 @@
 * a1 = out buffer
 * d0 = result (1 if decompression was successful, or 0 upon failure)
 *-------------------------------------------------------------------------------
-* C prototype: u16 fc8_decode_block_tru (u8* in, u8* out)
+* C prototype: extern u16 fc8_decode_block_tru (u8* in, u8* out)
 func fc8_decode_block_tru
-	movem.l 4(%sp), %a0-%a1		// copy parameters into registers a0-a1
-	movem.l	%d2-%d7/%a2-%a6, -(%sp)
+	*movem.l 4(%sp), %a0-%a1		// copy parameters into registers a0-a1
+	*movem.l	%d2-%d7/%a2-%a6, -(%sp)
 	bra 	_Init_Decode
 
 * lookup table for decoding the copy length-1 parameter
@@ -138,7 +135,5 @@ _done:
 	moveq.l	#1, %d0				// result = 1
 
 _exit:
-	movem.l	(sp)+,%d2-%d7/%a2-%a6
+	*movem.l	(sp)+,%d2-%d7/%a2-%a6
 	rts
-
-#endif // USING_FC8

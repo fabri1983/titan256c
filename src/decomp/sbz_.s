@@ -1,6 +1,3 @@
-#include "compressionTypesTracker.h"
-#ifdef USING_SBZ
-
 *======================================================================
 * Copyright (C) 2024 Ian Karlsson
 *
@@ -33,10 +30,10 @@
 * TRASHES
 *  d0-d3/a0-a4
 *======================================================================
-* C prototype: void decompress_sbz (u8* in, u8* out)
-func decompress_sbz
-	movem.l 4(%sp), %a0-%a1				// copy parameters into registers a0-a1
-	movem.l	%d2-%d3/%a2-%a4, -(%sp)		// save registers (except the scratch pad)
+* C prototype: extern void SBZ_decompress (u8* in, u8* out)
+func SBZ_decompress
+	*movem.l 4(%sp), %a0-%a1				// copy parameters into registers a0-a1
+	*movem.l	%d2-%d3/%a2-%a4, -(%sp)		// save registers (except the scratch pad)
 	moveq	#0,%d2
 	move.w	(%a0)+,%a2
 	adda.l	%a0,%a2
@@ -150,11 +147,9 @@ func decompress_sbz
 	jmp		.sbz_extended_j-.sbz_loop(%a4,%d2)
 
 .sbz_direct_j:
-	movem.l	(sp)+, %d2-%d3/%a2-%a4	// restore registers (except the scratch pad)
+	*movem.l	(sp)+, %d2-%d3/%a2-%a4	// restore registers (except the scratch pad)
 	rts
 .rept 71
     move.b	(%a2)+,(%a1)+
 .endr
 	jmp		(%a4)
-
-#endif // USING_SBZ

@@ -1,6 +1,3 @@
-#include "compressionTypesTracker.h"
-#ifdef USING_COMPER
-
 * ---------------------------------------------------------------------------
 * Original version written by vladikcomper, with improvements by Flamewing
 * ---------------------------------------------------------------------------
@@ -41,10 +38,10 @@
 
 * ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
 * ---------------------------------------------------------------------------
-* C prototype: void ComperDec (u8* src, u8* dest);
+* C prototype: extern void ComperDec (u8* src, u8* dest);
 func ComperDec
-	movem.l     4(%sp), %a0-%a1         // copy parameters into registers a0-a1
-	movem.l     %a2/%d2-%d5, -(%sp)     // save registers (except the scratch pad)
+	*movem.l     4(%sp), %a0-%a1         // copy parameters into registers a0-a1
+	*movem.l     %a2/%d2-%d5, -(%sp)     // save registers (except the scratch pad)
 
 #if _Comp_LoopUnroll > 0
 	moveq		#(1 << _Comp_LoopUnroll)-1, %d5
@@ -85,7 +82,6 @@ func ComperDec
 	_Comp_RunBitStream_s
 * ---------------------------------------------------------------------------
 .comp_end:
-	movem.l     (%sp)+, %a2/%d2-%d5      // restore registers (except the scratch pad)
+	*movem.l     (%sp)+, %a2/%d2-%d5      // restore registers (except the scratch pad)
 	rts
 * ===========================================================================
-#endif // USING_COMPER

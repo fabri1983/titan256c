@@ -1,6 +1,3 @@
-#include "compressionTypesTracker.h"
-#ifdef USING_LZ4
-
 *---------------------------------------------------------
 *
 *	LZ4 Frame 68k depacker
@@ -23,10 +20,11 @@
 
 #define SKIP_HEADER_CHECKS 0
 
-* C prototype: void lz4_frame_depack (u8* src, u8* dest);
+*---------------------------------------------------------
+* C prototype: extern void lz4_frame_depack (u8* src, u8* dest);
 func lz4_frame_depack
-    movem.l 4(%sp),%a0-%a1          // copy parameters into registers a0-a1
-    movem.l %d2-%d4/%a2-%a4,-(%sp)	// save registers (except the scratch pad)
+    *movem.l 4(%sp),%a0-%a1          // copy parameters into registers a0-a1
+    *movem.l %d2-%d4/%a2-%a4,-(%sp)	// save registers (except the scratch pad)
 #if SKIP_HEADER_CHECKS
     lea		4(%a0),%a0              // skip Magic Number (4 bytes). Faster than addq #4,(%a0)
 #else
@@ -55,7 +53,7 @@ func lz4_frame_depack
     bra.s	lz4_depack
 
 lz4_frame_error:
-    movem.l	(%sp)+,%d2-%d4/%a2-%a4  // restore registers (except the scratch pad)
+    *movem.l	(%sp)+,%d2-%d4/%a2-%a4  // restore registers (except the scratch pad)
     rts
 
 *---------------------------------------------------------
@@ -161,5 +159,3 @@ lz4_depack:
     
 .over:
     rts						// end
-
-#endif // USING_LZ4

@@ -1,6 +1,6 @@
 #include "decomp/unpackSelector.h"
 #include "compressionTypesTracker.h"
-#include <tools.h> // COMPRESSION_APLIB and COMPRESSION_LZ4W constants
+#include <tools.h> // constants: COMPRESSION_APLIB and COMPRESSION_LZ4W
 
 void unpackSelector (u16 compression, u8* src, u8* dest, u16 outSizeInBytes) {
     switch(compression) {
@@ -12,17 +12,17 @@ void unpackSelector (u16 compression, u8* src, u8* dest, u16 outSizeInBytes) {
             break;
         #ifdef USING_COMPER
         case COMPER:
-            ComperDec(src, dest);
+            ComperDec_caller(src, dest);
             break;
         #endif
         #ifdef USING_COMPERX
         case COMPERX:
-            comperx_dec(src, dest);
+            ComperXDec_caller(src, dest);
             break;
         #endif
         #ifdef USING_COMPERXM
         case COMPERXM:
-            comperxm_dec(src, dest);
+            ComperXMDec_caller(src, dest);
             break;
         #endif
         #ifdef USING_FC8
@@ -33,22 +33,17 @@ void unpackSelector (u16 compression, u8* src, u8* dest, u16 outSizeInBytes) {
         #endif
         #ifdef USING_KOSINSKI
         case KOSINSKI:
-            // kprintf("src  0x%08X", src);
-            // kprintf("dest 0x%08X", dest);
-            KosDec(src, dest); // vladikomper: check if A1 points to DEST + DECOMPRESSED SIZE before rts and regs backup
+            KosDec(src, dest);
             break;
         #endif
         #ifdef USING_KOSINSKI_PLUS
         case KOSINSKI_PLUS:
-            // kprintf("src  0x%08X", src);
-            // kprintf("dest 0x%08X", dest);
-            KosPlusDec(src, dest); // vladikomper: check if A1 points to DEST + DECOMPRESSED SIZE before rts and regs backup
+            KosPlusDec(src, dest);
             break;
         #endif
         #ifdef USING_LZ4
         case LZ4:
-            KLog("USING_LZ4");
-            lz4_frame_depack(src, dest); // m68k version
+            lz4_caller(src, dest); // m68k version
             // lz4FrameUnpack(src, dest); // C version
             break;
         #endif
@@ -85,8 +80,8 @@ void unpackSelector (u16 compression, u8* src, u8* dest, u16 outSizeInBytes) {
         #endif
         #ifdef USING_SBZ
         case SBZ:
-            // SBZ_decompress(src, dest); // simple m68k version
-            decompress_sbz(src, dest); // faster m68k version
+            // SBZ_blob_decompress(src, dest); // simple m68k version
+            SBZ_decompress_caller(src, dest); // faster m68k version
             break;
         #endif
         #ifdef USING_SNKRLE

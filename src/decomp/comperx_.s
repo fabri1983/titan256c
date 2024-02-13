@@ -1,6 +1,3 @@
-#include "compressionTypesTracker.h"
-#if defined(USING_COMPERX) || defined(USING_COMPERXM)
-
 * -----------------------------------------------------------------------------
 * Comper-X a newer, much faster implementation of Comper compression
 *
@@ -42,12 +39,13 @@
     dbf 		%d3, .compx_fetch_flag	    // if bits counter remains, parse the next word
 	*moveq		#-1, %d1					// d1 is used for negative sign-extended displacement
 	*moveq		#0, %d2						// d2 is used as 8-bit index for copy jump tables
-    *bra.s		.compx_load_flags_field	    // ... fall through ...
+	* ... fall through ... (don't uncomment next instruction)
+    *bra.s		.compx_load_flags_field	    
 
 * -----------------------------------------------------------------------------
 * Decompressor starts here ...
 * -----------------------------------------------------------------------------
-* C prototype: void ComperXDec (u8* src, u8* dest);
+* C prototype: extern void ComperXDec (u8* src, u8* dest);
 func ComperXDec
 	*movem.l     4(%sp), %a0-%a1         	// copy parameters into registers a0-a1
 	*movem.l     %a2-%a3/%d2-%d4, -(%sp)     // save registers (except the scratch pad)
@@ -132,7 +130,7 @@ func ComperXDec
 *		a0		- Source Offset
 *		a1		- Destination buffer
 * -----------------------------------------------------------------------------
-* C prototype: void ComperXMDec (u8* src, u8* dest);
+* C prototype: extern void ComperXMDec (u8* src, u8* dest);
 func ComperXMDec
 	*movem.l     4(%sp), %a0-%a1         	// copy parameters into registers a0-a1
 	*movem.l     %a2-%a3/%d2-%d4, -(%sp)     // save registers (except the scratch pad)
@@ -151,4 +149,3 @@ func ComperXMDec
 .compxm_decompress_device:
 	jmp			(%a3)
 * =============================================================================
-#endif // USING_COMPERX || USING_COMPERXM

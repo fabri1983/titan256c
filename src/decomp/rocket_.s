@@ -1,6 +1,3 @@
-#include "compressionTypesTracker.h"
-#ifdef USING_ROCKET
-
 * ---------------------------------------------------------------------------
 * Permission to use, copy, modify, and/or distribute this software for any
 * purpose with or without fee is hereby granted.
@@ -49,6 +46,7 @@
 
 * ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
 * ---------------------------------------------------------------------------
+* C prototype: extern void RocketDec (u8* src, u8* dest);
 func RocketDec
 	movem.l     4(%sp), %a0-%a1             // copy parameters into registers a0-a1
 	movem.l     %a2-%a6/%d2-%d7, -(%sp)     // save registers (except the scratch pad)
@@ -160,4 +158,3 @@ rck_RocketDec_ByteMap:
 	dc.b		0x0F,0x8F,0x4F,0xCF,0x2F,0xAF,0x6F,0xEF,0x1F,0x9F,0x5F,0xDF,0x3F,0xBF,0x7F,0xFF
 #endif
 * ===========================================================================
-#endif // USING_ROCKET
