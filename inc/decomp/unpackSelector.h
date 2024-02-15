@@ -5,6 +5,7 @@
 #include "compressionTypes_res.h"
 #include "decomp/comper.h"
 #include "decomp/comperx.h"
+#include "decomp/elektro.h"
 #include "decomp/fc8.h"
 #include "decomp/fc8Unpack.h"
 #include "decomp/kosinski.h"

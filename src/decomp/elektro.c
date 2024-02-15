@@ -1,0 +1,23 @@
+#include "decomp/elektro.h"
+#include "compatibilities.h"
+
+#include "compressionTypesTracker.h"
+#ifdef USING_ELEKTRO
+
+void elektro_unpack_caller (u8* src, u8* dest) {
+#ifdef __GNUC__
+	register void* a1 asm ("a1") = src;
+	register void* a2 asm ("a2") = dest;
+#else
+    u8* a1 = src;
+    u8* a2 = dest;
+#endif
+	ASM_STATEMENT __volatile__ (
+		"jsr elektro_unpack"
+		: "+a" (a2)
+		: "a" (a1)
+		: "cc"
+	);
+}
+
+#endif // USING_ELEKTRO

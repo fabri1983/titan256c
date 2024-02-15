@@ -26,6 +26,7 @@ func NemDec_RAM
 func NemDec_VDP
     * INPUT:
     *   a0 -> number of patterns + mode, followed by compressed data
+    *   A VDP command to write to the destination VRAM address must be issued before calling this routine
     movem.l 4(%sp), %a0               // copy parameters into register a0
     movem.l %d2-%d6/%a3-%a5,-(%sp)    // save registers (except the scratch pad)
 
