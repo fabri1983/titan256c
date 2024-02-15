@@ -51,19 +51,26 @@ void unpackSelector (u16 compression, u8* src, u8* dest, u16 outSizeInBytes) {
             // lz4FrameUnpack(src, dest); // C tiny version
             break;
         #endif
-        #if defined(USING_LZKN) || defined(USING_LZKN1)
-        case LZKN:
-        case LZKN1:
+        #if defined(USING_LZKN1_MDCOMP) || defined(USING_LZKN1_R57SHELL) || defined(USING_LZKN1_VLADIKCOMPER)
+        case LZKN1_MDCOMP:
+        case LZKN1_R57SHELL:
+        case LZKN1_VLADIKCOMPER:
             Kon1Dec(src, dest);
             break;
         #endif
         #ifdef USING_MEGAPACK
         case MEGAPACK:
+            // TODO: need to test if this needs to be called once or everytime
             if (megainitCalled == FALSE) {
                 init_mega();
                 megainitCalled = TRUE;
             }
             megaunp(src, dest);
+            break;
+        #endif
+        #ifdef USING_NEMESIS
+        case NEMESIS:
+            NemDec_RAM(src, dest);
             break;
         #endif
         #ifdef USING_RNC1

@@ -8,18 +8,19 @@
 #define KOSINSKI 14
 #define KOSINSKI_PLUS 15
 #define LZ4 16
-#define LZKN 17
-#define LZKN1 18
-#define MEGAPACK 19
-#define RNC1 20
-#define RNC2 21
-#define ROCKET 22
-#define SAXMAN 23
-#define SBZ 24
-#define SNKRLE 25
-#define UFTC 26
-#define UFTC15 27
-#define UNAPLIB 28
+#define LZKN1_MDCOMP 17
+#define LZKN1_R57SHELL 18
+#define LZKN1_VLADIKCOMPER 19
+#define MEGAPACK 20
+#define RNC1 21
+#define RNC2 22
+#define ROCKET 23
+#define SAXMAN 24
+#define SBZ 25
+#define SNKRLE 26
+#define UFTC 27
+#define UFTC15 28
+#define UNAPLIB 29
 
 
 #endif // _RES_COMPRESSIONTYPES_RES_H_
