@@ -23,7 +23,8 @@
     "kosinski.h": "c",
     "kosinskiplus.h": "c",
     "compressiontypestracker.h": "c",
-    "megaunp.h": "c"
+    "megaunp.h": "c",
+    "enigma.h": "c"
 },
 "C_Cpp.errorSquiggles": "enabled",
 "[m68k]": {

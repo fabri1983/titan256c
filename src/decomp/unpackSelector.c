@@ -34,6 +34,11 @@ void unpackSelector (u16 compression, u8* src, u8* dest, u16 outSizeInBytes) {
             elektro_unpack_caller(src, dest);
             break;
         #endif
+        #ifdef USING_ENIGMA
+        case ENIGMA:
+            EniDec(src, dest, 0); // 0 acts as a mapBaseTileIndex which we don't use here
+            break;
+        #endif
         #ifdef USING_FC8
         case FC8:
             fc8Decode(src, dest, TRUE); // m68k version
