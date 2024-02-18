@@ -1,10 +1,10 @@
-#include "decomp/comper.h"
+#include "decomp/bytekiller.h"
 #include "compatibilities.h"
 
 #include "compressionTypesTracker.h"
-#ifdef USING_COMPER
+#ifdef USING_BYTEKILLER
 
-void ComperDec_caller (u8* src, u8* dest) {
+void bytekiller_depack_caller (u8* src, u8* dest) {
 #ifdef __GNUC__
 	register void* a0 asm ("a0") = src;
 	register void* a1 asm ("a1") = dest;
@@ -13,11 +13,11 @@ void ComperDec_caller (u8* src, u8* dest) {
     u8* a1 = dest;
 #endif
 	ASM_STATEMENT __volatile__ (
-		"jsr ComperDec\n"
+		"jsr bytekiller_depack\n"
 		: "+a" (a1)
 		: "a" (a0)
-		: "a2","d2","d3","d4","d5","cc"
+		: "a2","d2","d3","cc"
 	);
 }
 
-#endif // USING_COMPER
+#endif // USING_BYTEKILLER

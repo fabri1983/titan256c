@@ -14,6 +14,11 @@ void unpackSelector (u16 compression, u8* src, u8* dest, u16 outSizeInBytes) {
         case COMPRESSION_LZ4W:
             lz4w_unpack(src, dest); // SGDK
             break;
+        #ifdef USING_BYTEKILLER
+        case BYTEKILLER:
+            bytekiller_depack_caller(src, dest);
+            break;
+        #endif
         #ifdef USING_COMPER
         case COMPER:
             ComperDec_caller(src, dest);
@@ -81,6 +86,11 @@ void unpackSelector (u16 compression, u8* src, u8* dest, u16 outSizeInBytes) {
         #ifdef USING_NEMESIS
         case NEMESIS:
             NemDec_RAM(src, dest);
+            break;
+        #endif
+        #ifdef USING_NIBBLER
+        case NIBBLER:
+            Denibble(src, dest);
             break;
         #endif
         #ifdef USING_RNC1

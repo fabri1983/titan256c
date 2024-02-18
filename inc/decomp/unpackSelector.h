@@ -3,6 +3,7 @@
 
 #include <types.h>
 #include "compressionTypes_res.h"
+#include "decomp/bytekiller.h"
 #include "decomp/comper.h"
 #include "decomp/comperx.h"
 #include "decomp/elektro.h"
@@ -16,6 +17,7 @@
 #include "decomp/lzkn1.h"
 #include "decomp/megaunp.h"
 #include "decomp/nemesis.h"
+#include "decomp/nibbler.h"
 #include "decomp/rnc.h"
 #include "decomp/rocket.h"
 #include "decomp/saxman.h"

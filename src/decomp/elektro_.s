@@ -603,6 +603,6 @@ loc_C08C:
         bra.w   loc_BE24
 
 loc_C096:
-        move.l  %a0,%d0
+        move.l  %a0,%d0         // end of the output
         movem.l (%sp)+,%d2-%d7/%a2-%a3   // restore registers (except the scratch pad)
         rts
