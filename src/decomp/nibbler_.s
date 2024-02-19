@@ -23,27 +23,27 @@
 
 ********************  Nibbler Options  ********************
 
-#define DEN_CPU68000 1			// 1=speed gain for 68000 ONLY. +12b code
-#define DEN_SIZEOPTI 0			// 1=1.1% slower, -30b code.
+#define DEN_CPU68000 1		// 1=speed gain for 68000 ONLY. +12b code
+#define DEN_SIZEOPTI 0		// 1=1.1% slower, -30b code.
 
 ********** MACROS **********
-	
+
 *\1=pattlen
 .macro DEN_PATTREP _pattlen
-	sub.l %d4,%a3
-	move.b (%a3)+,(%a1)+
+	sub.l   %d4,%a3
+	move.b  (%a3)+,(%a1)+
 #if _pattlen > 1
-	move.b (%a3)+,(%a1)+
+	move.b  (%a3)+,(%a1)+
 #endif
 #if _pattlen > 2
-	move.b (%a3)+,(%a1)+
+	move.b  (%a3)+,(%a1)+
 #endif
 #if _pattlen > 3
 	move.b (%a3)+,(%a1)+
 #endif
 	move.b (%a6)+,%d1
-	bpl.b DEN_Dinsyncl
-	jmp (%a5)
+	bpl.b   DEN_Dinsyncl
+	jmp     (%a5)
 .endm
 
 ********** DECRUNCH DA GREEN, SLIMY TOAD **********
