@@ -50,7 +50,7 @@ void uftc_unpack (u16* out, u16* in, u16 start, u16 count) {
       
       : "=a"(in),"=a"(out),"=d"(start),"=d"(count)
       : "0"(in), "1"(out), "2"(start), "3"(count)
-      : "d2","a2","a3","a4","memory","cc"
+      : "d2","a2","a3","a4","memory","cc"  // backup registers used in the asm implementation, except scratch pad
     );
 }
 

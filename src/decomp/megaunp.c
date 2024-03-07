@@ -14,7 +14,7 @@ void init_mega_caller () {
 //         "jsr init_mega\n"
 //         : "+a" (a2)
 //         : "a" (a2)
-//         : "d2", "d3", "d4", "d5", "d6", "d7", "a3", "a4", "a5", "a6"
+//         : "d2", "d3", "d4", "d5", "d6", "d7", "a3", "a4", "a5", "a6"  // backup registers used in the asm implementation, except scratch pad
 //     );
 }
 
@@ -30,7 +30,7 @@ void megaunp_caller (const u8* data, u8* dest) {
 //         "jsr megaunp\n"
 //         : "+a" (a0), "+a" (a1)
 //         : "a" (a0), "a" (a1)
-//         : "d2", "d3", "d4", "d5", "d6", "d7", "a2", "a3", "a4", "a5", "a6"
+//         : "d2", "d3", "d4", "d5", "d6", "d7", "a2", "a3", "a4", "a5", "a6"  // backup registers used in the asm implementation, except scratch pad
 //     );
 }
 

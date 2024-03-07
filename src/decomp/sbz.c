@@ -122,7 +122,7 @@ u8* SBZ_blob_decompress(const u8* in, u8* out)
 		"jsr %2\n"
 		: "+a" (a1)
 		: "a" (a0), "m" (asm_blob)
-		: "a2","a3","a4","d0","d1","d2","d3","cc"
+		: "a2","a3","a4","d0","d1","d2","d3","cc"  // backup registers used in the asm implementation, except scratch pad
 	);
 
 	return a1; // return end of decompressed data
@@ -140,7 +140,7 @@ void SBZ_decompress_caller (u8* in, u8* out) {
 		"jsr SBZ_decompress\n"
 		: "+a" (a1)
 		: "a" (a0)
-		: "a2","a3","a4","d2","d3","cc"
+		: "a2","a3","a4","d2","d3","cc"  // backup registers used in the asm implementation, except scratch pad
 	);
 }
 

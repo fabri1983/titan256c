@@ -16,7 +16,7 @@ void ComperXDec_caller (u8* src, u8* dest) {
 		"jsr ComperXDec\n"
 		: "+a" (a1)
 		: "a" (a0)
-		: "a2","a3","a4","d2","d3","d4","cc"
+		: "a2","a3","a4","d2","d3","d4","cc"  // backup registers used in the asm implementation, except scratch pad
 	);
 }
 
@@ -32,7 +32,7 @@ void ComperXMDec_caller (u8* src, u8* dest) {
 		"jsr ComperXMDec\n"
 		: "+a" (a1)
 		: "a" (a0)
-		: "a2","a3","a4","d2","d3","d4","cc"
+		: "a2","a3","a4","d2","d3","d4","cc"  // backup registers used in the asm implementation, except scratch pad
 	);
 }
 

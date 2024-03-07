@@ -16,7 +16,7 @@ void ComperDec_caller (u8* src, u8* dest) {
 		"jsr ComperDec\n"
 		: "+a" (a1)
 		: "a" (a0)
-		: "a2","d2","d3","d4","d5","cc"
+		: "a2","d2","d3","d4","d5","cc"  // backup registers used in the asm implementation, except scratch pad
 	);
 }
 

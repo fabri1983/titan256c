@@ -16,7 +16,7 @@ void lz4_normal_caller (u8* src, u8* dest) {
 		"jsr lz4_frame_depack_normal\n"
 		: "+a" (a1)
 		: "a" (a0)
-		: "a2","a3","a4","d2","d3","d4","cc"
+		: "a2","a3","a4","d2","d3","d4","cc"  // backup registers used in the asm implementation, except scratch pad
 	);
 }
 
@@ -32,7 +32,7 @@ void lz4_fastest_caller (u8* src, u8* dest) {
 		"jsr lz4_frame_depack_fastest\n"
 		: "+a" (a1)
 		: "a" (a0)
-		: "a2","a3","a4","d2","d3","d5","d7","cc"
+		: "a2","a3","a4","d2","d3","d5","d7","cc"  // backup registers used in the asm implementation, except scratch pad
 	);
 }
 

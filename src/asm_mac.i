@@ -1,4 +1,3 @@
-
 * This file included from other .s files
 
 .macro func _name, _align=2

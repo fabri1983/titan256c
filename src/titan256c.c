@@ -92,15 +92,19 @@ FORCE_INLINE u16* getUnpackedPtr () {
     return unpackedData;
 }
 
-FORCE_INLINE void load2Pals (u16 firstStrip) {
-    if (firstStrip == TITAN_256C_HEIGHT/TITAN_256C_STRIP_HEIGHT - 1)
-        --firstStrip;
+FORCE_INLINE void load2Pals (u16 startingScreenStrip) {
+    // if current starting strip is at the top of the screen (0 based) we move one strip backwards so we can correctly load startingScreenStrip and startingScreenStrip + 1
+    if (startingScreenStrip == (TITAN_256C_HEIGHT/TITAN_256C_STRIP_HEIGHT - 1))
+        --startingScreenStrip;
 
-    if ((firstStrip % 2) == 0) {
-        PAL_setColors(0, unpackedData + TITAN_256C_COLORS_PER_STRIP * firstStrip, TITAN_256C_COLORS_PER_STRIP * 2, DMA_QUEUE);
-    } else {
-        PAL_setColors(0, unpackedData + TITAN_256C_COLORS_PER_STRIP * (firstStrip + 1), TITAN_256C_COLORS_PER_STRIP, DMA_QUEUE);
-        PAL_setColors(TITAN_256C_COLORS_PER_STRIP, unpackedData + TITAN_256C_COLORS_PER_STRIP * firstStrip, TITAN_256C_COLORS_PER_STRIP, DMA_QUEUE);
+    // if current strip is even then nest strip is odd, so we can just load PAL0,PAL1 followed by PAL2,PAL3
+    if ((startingScreenStrip % 2) == 0) {
+        PAL_setColors(0, unpackedData + TITAN_256C_COLORS_PER_STRIP * startingScreenStrip, TITAN_256C_COLORS_PER_STRIP * 2, DMA_QUEUE);
+    }
+    // if current strip is odd then next strip is even, so we first load next strip PAL0,PAL1 and then PAL2,PAL3
+    else {
+        PAL_setColors(0, unpackedData + TITAN_256C_COLORS_PER_STRIP * (startingScreenStrip + 1), TITAN_256C_COLORS_PER_STRIP, DMA_QUEUE);
+        PAL_setColors(TITAN_256C_COLORS_PER_STRIP, unpackedData + TITAN_256C_COLORS_PER_STRIP * startingScreenStrip, TITAN_256C_COLORS_PER_STRIP, DMA_QUEUE);
     }
 }
 

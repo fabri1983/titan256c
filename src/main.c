@@ -30,6 +30,8 @@ static void titan256cDisplay () {
             SYS_setVBlankCallback(vertIntOnTitan256cCallback_HIntEveryN);
             VDP_setHIntCounter(TITAN_256C_STRIP_HEIGHT - 1);
             SYS_setHIntCallback(horizIntOnTitan256cCallback_CPU_EveryN);
+            // SYS_setHIntCallback(horizIntOnTitan256cCallback_CPU_EveryN_asm);
+            
         }
         // Call the HInt every N scanlines. Uses DMA for palette swapping
         else if (titan256cHIntMode == 1) {
@@ -48,7 +50,7 @@ static void titan256cDisplay () {
 
     VDP_setEnable(TRUE);
 
-    u16 yPos = TITAN_256C_HEIGHT - 1;
+    u16 yPos = TITAN_256C_HEIGHT - 1; // initial value, same than set in hvinterrupts.c
     s16 velocity = 0;
 
     // disable the fading effect on titan text

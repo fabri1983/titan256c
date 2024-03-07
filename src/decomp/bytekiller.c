@@ -16,7 +16,7 @@ void bytekiller_depack_caller (u8* src, u8* dest) {
 		"jsr bytekiller_depack\n"
 		: "+a" (a1)
 		: "a" (a0)
-		: "a2","d2","d3","cc"
+		: "a2","d2","d3","cc"  // backup registers used in the asm implementation, except scratch pad
 	);
 }
 

@@ -45,7 +45,7 @@ All done inside the duration of 8 scanlines.
 
 
 ### TODO:
-- Fix correct location for color ramp color effect on text while falling and bouncing.
+- Fix correct location for ramp color effect on text while falling and bouncing.
 - Fix black BG color lines over text in approaches B and C.
 - Add DMA command buffering as Steph does. See dma.c.
 - Try to use titan256c_rgb.png as input and do the color ramp effect over the white color.

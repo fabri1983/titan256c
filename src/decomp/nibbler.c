@@ -16,7 +16,7 @@ void Denibble_caller (u8* src, u8* dest) {
 // 		"jsr Denibble\n"
 // 		: "+a" (a1)
 // 		: "a" (a0)
-// 		: "a2","a3","a4","a5","a6","d2","d3","d4","d5","d6","d7","cc"
+// 		: "a2","a3","a4","a5","a6","d2","d3","d4","d5","d6","d7","cc"  // backup registers used in the asm implementation, except scratch pad
 // 	);
 }
 

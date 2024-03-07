@@ -6,20 +6,7 @@
 #include <sprite_eng.h>
 #include "titan256c_res.h"
 #include "compatibilities.h"
-
-#define TITAN_256C_STRIPS_COUNT 28
-#define TITAN_256C_WIDTH 320 // In pixels
-#define TITAN_256C_HEIGHT 224 // In pixels
-#define TITAN_256C_STRIP_HEIGHT 8
-#define TITAN_256C_COLORS_PER_STRIP 32
-// in case you were to split any calculation over the colors of strip by an odd divisor
-#define TITAN_256C_COLORS_PER_STRIP_REMINDER(n) (TITAN_256C_COLORS_PER_STRIP - n*(TITAN_256C_COLORS_PER_STRIP/n))
-#define TITAN_256C_TEXT_STARTING_STRIP 21
-#define TITAN_256C_TEXT_ENDING_STRIP 25
-
-#define TITAN_CHARS_GRADIENT_SCROLL_FREQ 4
-#define TITAN_CHARS_GRADIENT_MAX_COLORS 42
-#define TITAN_CHARS_CURR_GRADIENT_ELEMS 16
+#include "titan256c_consts.h"
 
 u16* getGradientColorsBuffer ();
 /// Use 0 if no fading required
@@ -40,7 +27,7 @@ void unpackPalettes ();
 void freePalettes ();
 u16* getUnpackedPtr ();
 
-/// Loads the palettes belonging to strip firstStrip and firstStrip + 1.
-void load2Pals (u16 firstStrip);
+/// Loads the palettes belonging to strip startingScreenStrip and startingScreenStrip + 1.
+void load2Pals (u16 startingScreenStrip);
 
 #endif // TITAN_256C_H
