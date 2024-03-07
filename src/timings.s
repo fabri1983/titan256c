@@ -12,3 +12,8 @@
     cmpa    d0,a0
     cmp.b   (a1),d0
     cmp.b   d1,d0
+
+* MOVE
+    moveq   #127,d0
+    move.w  #145,d0
+

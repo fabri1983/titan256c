@@ -35,9 +35,9 @@ FORCE_INLINE void waitHCounter_old (u16 n) {
     // VDP_HVCOUNTER_PORT + 1 = 0xC00009 (HCOUNTER)
     ASM_STATEMENT __volatile__ (
         ".loopHC%=:\n"
-        "    cmpi.b  %[hcLimit], 0xC00009.l\n"    // cmp: (0xC00009) - hcLimit
-        "    blo     .loopHC%=\n"                 // we're only interested in comparing byte since hcLimit won't be > 160 for our practical cases
-        // blo is for unsigned comparisons, same than bcs
+        "    cmpi.b    %[hcLimit], 0xC00009.l\n"    // cmp: (0xC00009) - hcLimit
+        "    blo       .loopHC%=\n"                 // Compares byte because hcLimit won't be > 160 for our practical cases
+            // blo is for unsigned comparisons, same than bcs
         :
         : [hcLimit] "i" (n)
         :
@@ -48,17 +48,15 @@ FORCE_INLINE void waitHCounter_old (u16 n) {
  * Wait until HCounter 0xC00009 reaches nth position (actually the (n*2)th pixel since the VDP counts by 2).
 */
 FORCE_INLINE void waitHCounter (u16 n) {
-    u32* regA=0; // placeholder used to indicate the use of an A register
-    u16 regD=0; // placeholder used to indicate the use of a D register
+    u32* regA=0; // placeholder used to indicate the use of an An register
     ASM_STATEMENT __volatile__ (
-        "    move.l    #0xC00009, %0\n"    // Load H Counter address into aN register
-        "    move.w    %[hcLimit], %1\n"   // Load hcLimit into dN register
-        ".hcLimit%=:\n" 
-        "    cmp.b     (%0), %1\n"         // cmp: hcLimit - (0xC00009)
-        "    bhi       .hcLimit%=\n"       // loop back if hcLimit is higher than (0xC00009)
-        // bhi is for unsigned comparisons
-        : "+a" (regA), "+d" (regD)
-        : [hcLimit] "i" (n)
+        "    move.l    #0xC00009, %0\n"    // Load HCounter (VDP_HVCOUNTER_PORT + 1 = 0xC00009) into any An register
+        ".loopHC%=:\n" 
+        "    cmp.b     (%0), %1\n"         // cmp: n - (0xC00009). Compares byte because hcLimit won't be > 160 for our practical cases
+        "    bhi       .loopHC%=\n"        // loop back if n is higher than (0xC00009)
+            // bhi is for unsigned comparisons
+        : "+a" (regA)
+        : "d" (n)
         : "cc"
     );
 }
@@ -67,13 +65,13 @@ FORCE_INLINE void waitHCounter (u16 n) {
  * Wait until VCounter 0xC00008 reaches nth scanline position. Only valid with constants.
 */
 FORCE_INLINE void waitVCounterConst (u16 n) {
-    u32* regA=0; // placeholder used to indicate the use of an A register
+    u32* regA=0; // placeholder used to indicate the use of an An register
     ASM_STATEMENT __volatile__ (
-        "    move.l    #0xC00008, %0\n"     // Load V Counter address into aN register
+        "    move.l    #0xC00008, %0\n"     // Load V Counter address into any An register
         ".LoopVC%=:\n"
         "    cmpi.w     %[vcLimit],(%0)\n"  // cmp: (0xC00008) - vcLimit
         "    blo       .LoopVC%=\n"         // if (0xC00008) < vcLimit then loop back
-        // blo is for unsigned comparisons, same than bcs
+            // blo is for unsigned comparisons, same than bcs
         : "+a" (regA)
         : [vcLimit] "i" (n << 8) // (n << 8) | 0xFF
         : "cc"
@@ -84,13 +82,13 @@ FORCE_INLINE void waitVCounterConst (u16 n) {
  * Wait until VCounter 0xC00008 reaches nth scanline position. Parameter n is loaded into a register.
 */
 FORCE_INLINE void waitVCounterReg (u16 n) {
-    u32* regA=0; // placeholder used to indicate the use of an A register
+    u32* regA=0; // placeholder used to indicate the use of an An register
     ASM_STATEMENT __volatile__ (
-        "    move.l    #0xC00008, %0\n"    // Load V Counter address into aN register
+        "    move.l    #0xC00008, %0\n"    // Load V Counter address into any An register
         ".LoopVC%=:\n"
         "    cmp.w     (%0), %1\n"         // cmp: n - (0xC00008)
         "    bhi       .LoopVC%=\n"        // loop back if n is higher than (0xC00008)
-        // bhi is for unsigned comparisons
+            // bhi is for unsigned comparisons
         : "+a" (regA)
         : "d" (n << 8) // (n << 8) | 0xFF
         : "cc"
@@ -168,6 +166,8 @@ HINTERRUPT_CALLBACK horizIntOnTitan256cCallback_CPU_EveryN_asm () {
         "   move.l      %[titan256cPalsPtr],%%a1\n"           // a1: titan256cPalsPtr
         "   movea.l     #0xC00004.l,%%a2\n"                   // a2: VDP_CTRL_PORT 0xC00004
         "   movea.l     #0xC00000.l,%%a3\n"                   // a3: VDP_DATA_PORT 0xC00000
+        "   movea.l     #0xC00009,%%a4\n"                     // a4: HCounter address 0xC00009
+        "   move.w      #145,%%d7\n"                          // d7: 147 is the HCounter limit
 
 		"   moveq.l     #0,%%d4\n"                            // d4: setGradColorForText = 0 (FALSE)
 		"   move.w      %[vcounterManual],%%d0\n"             // d0: vcounterManual
@@ -195,10 +195,11 @@ HINTERRUPT_CALLBACK horizIntOnTitan256cCallback_CPU_EveryN_asm () {
 		".color_batch_1_pal:\n"
 		"   move.l      0(%%a1),%%d0\n"         // d0: colors2_A = *((u32*) (titan256cPalsPtr + 0)); // 2 colors
 		"   move.l      4(%%a1),%%d1\n"         // d1: colors2_B = *((u32*) (titan256cPalsPtr + 2)); // next 2 colors
-		".waitHCounter1_%=:\n"
-		"   cmpi.b      #145,0xC00009.l\n"      // VDP_HVCOUNTER_PORT + 1 = 0xC00009 (HCOUNTER)
-		"   blo         .waitHCounter1_%=\n"    // we're only interested in comparing byte since hcLimit won't be > 160 for our practical cases
-			// blo is for unsigned comparisons, same than bcs
+        // wait HCounter
+        ".waitHCounter1_%=:\n"
+        "   cmp.b       (%%a4),%%d7\n"            // cmp: d7 - (a4). Compare byte size given that d7 won't be > 160 for our practical cases
+        "   bhi         .waitHCounter1_%=\n"      // loop back if d7 is higher than (a4)
+            // bhi is for unsigned comparisons
 		// turnOffVDP
 		"   move.w      %[turnoff],(%%a2)\n"    // *(vu16*) VDP_CTRL_PORT = 0x8100 | (reg01 & ~0x40);
 		// send colors
@@ -218,10 +219,11 @@ HINTERRUPT_CALLBACK horizIntOnTitan256cCallback_CPU_EveryN_asm () {
 		"   move.l      12(%%a1),%%d1\n"        // d1: colors2_B = *((u32*) (titan256cPalsPtr + 6)); // next 2 colors
 		"   move.l      16(%%a1),%%d2\n"        // d2: colors2_C = *((u32*) (titan256cPalsPtr + 8)); // next 2 colors
 		"   move.l      20(%%a1),%%d3\n"        // d3: colors2_D = *((u32*) (titan256cPalsPtr + 10)); // next 2 colors
-		".waitHCounter2_%=:\n"
-		"   cmpi.b      #145,0xC00009.l\n"      // VDP_HVCOUNTER_PORT + 1 = 0xC00009 (HCOUNTER)
-		"   blo         .waitHCounter2_%=\n"    // we're only interested in comparing byte since hcLimit won't be > 160 for our practical cases
-			// blo is for unsigned comparisons, same than bcs
+        // wait HCounter
+        ".waitHCounter2_%=:\n"
+        "   cmp.b       (%%a4),%%d7\n"            // cmp: d7 - (a4). Compare byte size given that d7 won't be > 160 for our practical cases
+        "   bhi         .waitHCounter2_%=\n"      // loop back if d7 is higher than (a4)
+            // bhi is for unsigned comparisons
 		// turnOffVDP
 		"   move.w      %[turnoff],(%%a2)\n"    // *(vu16*) VDP_CTRL_PORT = 0x8100 | (reg01 & ~0x40);
 		// send colors
@@ -244,10 +246,11 @@ HINTERRUPT_CALLBACK horizIntOnTitan256cCallback_CPU_EveryN_asm () {
 		".color_batch_3_pal:\n"
 		"   move.l      24(%%a1),%%d0\n"        // d0: colors2_A = *((u32*) (titan256cPalsPtr + 12)); // 2 colors
 		"   move.l      28(%%a1),%%d1\n"        // d1: colors2_B = *((u32*) (titan256cPalsPtr + 14)); // next 2 colors
-		".waitHCounter3_%=:\n"
-		"   cmpi.b      #145,0xC00009.l\n"      // VDP_HVCOUNTER_PORT + 1 = 0xC00009 (HCOUNTER)
-		"   blo         .waitHCounter3_%=\n"    // we're only interested in comparing byte since hcLimit won't be > 160 for our practical cases
-			// blo is for unsigned comparisons, same than bcs
+        // wait HCounter
+        ".waitHCounter3_%=:\n"
+        "   cmp.b       (%%a4),%%d7\n"            // cmp: d7 - (a4). Compare byte size given that d7 won't be > 160 for our practical cases
+        "   bhi         .waitHCounter3_%=\n"      // loop back if d7 is higher than (a4)
+            // bhi is for unsigned comparisons
 		// turnOffVDP
 		"   move.w      %[turnoff],(%%a2)\n"    // *(vu16*) VDP_CTRL_PORT = 0x8100 | (reg01 & ~0x40);
 		// send colors
@@ -267,10 +270,11 @@ HINTERRUPT_CALLBACK horizIntOnTitan256cCallback_CPU_EveryN_asm () {
 		"   move.l      36(%%a1),%%d1\n"        // d1: colors2_B = *((u32*) (titan256cPalsPtr + 18)); // next 2 colors
 		"   move.l      40(%%a1),%%d2\n"        // d2: colors2_C = *((u32*) (titan256cPalsPtr + 20)); // next 2 colors
 		"   move.l      44(%%a1),%%d3\n"        // d3: colors2_D = *((u32*) (titan256cPalsPtr + 22)); // next 2 colors
-		".waitHCounter4_%=:\n"
-		"   cmpi.b      #145,0xC00009.l\n"      // VDP_HVCOUNTER_PORT + 1 = 0xC00009 (HCOUNTER)
-		"   blo         .waitHCounter4_%=\n"    // we're only interested in comparing byte since hcLimit won't be > 160 for our practical cases
-			// blo is for unsigned comparisons, same than bcs
+        // wait HCounter
+        ".waitHCounter4_%=:\n"
+        "   cmp.b       (%%a4),%%d7\n"            // cmp: d7 - (a4). Compare byte size given that d7 won't be > 160 for our practical cases
+        "   bhi         .waitHCounter4_%=\n"      // loop back if d7 is higher than (a4)
+            // bhi is for unsigned comparisons
 		// turnOffVDP
 		"   move.w      %[turnoff],(%%a2)\n"    // *(vu16*) VDP_CTRL_PORT = 0x8100 | (reg01 & ~0x40);
 		// send colors
@@ -293,10 +297,11 @@ HINTERRUPT_CALLBACK horizIntOnTitan256cCallback_CPU_EveryN_asm () {
 		".color_batch_5_pal:\n"
 		"   move.l      48(%%a1),%%d0\n"        // d0: colors2_A = *((u32*) (titan256cPalsPtr + 24)); // 2 colors
 		"   move.l      52(%%a1),%%d1\n"        // d1: colors2_B = *((u32*) (titan256cPalsPtr + 26)); // next 2 colors
-		".waitHCounter5_%=:\n"
-		"   cmpi.b      #145,0xC00009.l\n"      // VDP_HVCOUNTER_PORT + 1 = 0xC00009 (HCOUNTER)
-		"   blo         .waitHCounter5_%=\n"    // we're only interested in comparing byte since hcLimit won't be > 160 for our practical cases
-			// blo is for unsigned comparisons, same than bcs
+        // wait HCounter
+        ".waitHCounter5_%=:\n"
+        "   cmp.b       (%%a4),%%d7\n"            // cmp: d7 - (a4). Compare byte size given that d7 won't be > 160 for our practical cases
+        "   bhi         .waitHCounter5_%=\n"      // loop back if d7 is higher than (a4)
+            // bhi is for unsigned comparisons
 		// turnOffVDP
 		"   move.w      %[turnoff],(%%a2)\n"    // *(vu16*) VDP_CTRL_PORT = 0x8100 | (reg01 & ~0x40);
 		// send colors
@@ -314,10 +319,11 @@ HINTERRUPT_CALLBACK horizIntOnTitan256cCallback_CPU_EveryN_asm () {
 		".color_batch_6_pal:\n"
 		"   move.l      56(%%a1),%%d0\n"        // d0: colors2_A = *((u32*) (titan256cPalsPtr + 28)); // 2 colors
 		"   move.l      60(%%a1),%%d1\n"        // d1: colors2_B = *((u32*) (titan256cPalsPtr + 30)); // next 2 colors
-		".waitHCounter6_%=:\n"
-		"   cmpi.b      #145,0xC00009.l\n"      // VDP_HVCOUNTER_PORT + 1 = 0xC00009 (HCOUNTER)
-		"   blo         .waitHCounter6_%=\n"    // we're only interested in comparing byte since hcLimit won't be > 160 for our practical cases
-			// blo is for unsigned comparisons, same than bcs
+        // wait HCounter
+        ".waitHCounter6_%=:\n"
+        "   cmp.b       (%%a4),%%d7\n"            // cmp: d7 - (a4). Compare byte size given that d7 won't be > 160 for our practical cases
+        "   bhi        .waitHCounter6_%=\n"      // loop back if d7 is higher than (a4)
+            // bhi is for unsigned comparisons
 		// turnOffVDP
 		"   move.w      %[turnoff],(%%a2)\n"    // *(vu16*) VDP_CTRL_PORT = 0x8100 | (reg01 & ~0x40);
 		// send colors
@@ -343,10 +349,12 @@ HINTERRUPT_CALLBACK horizIntOnTitan256cCallback_CPU_EveryN_asm () {
 		"   eori.w      %[i_TITAN_256C_COLORS_PER_STRIP],%[palIdx]\n"       // palIdx ^= TITAN_256C_COLORS_PER_STRIP; // cycles between 0 and 32
 
 		".color_batch_7_pal:\n"
-		".waitHCounter7_%=:\n"
-		"   cmpi.b      #150,0xC00009.l\n"      // VDP_HVCOUNTER_PORT + 1 = 0xC00009 (HCOUNTER)
-		"   blo         .waitHCounter7_%=\n"    // we're only interested in comparing byte since hcLimit won't be > 160 for our practical cases
-			// blo is for unsigned comparisons, same than bcs
+        // wait HCounter
+        "   move.w      #150,%%d7\n"                // d7: 150 as HCounter limit
+        ".waitHCounter7_%=:\n"
+        "   cmp.b       (%%a4),%%d7\n"            // cmp: d7 - (a4). Compare byte size given that d7 won't be > 160 for our practical cases
+        "   bhi         .waitHCounter7_%=\n"      // loop back if d7 is higher than (a4)
+            // bhi is for unsigned comparisons
 		// turnOffVDP
 		"   move.w      %[turnoff],(%%a2)\n"    // *(vu16*) VDP_CTRL_PORT = 0x8100 | (reg01 & ~0x40);
 		// send colors
@@ -362,8 +370,7 @@ HINTERRUPT_CALLBACK horizIntOnTitan256cCallback_CPU_EveryN_asm () {
         "   move.l      %[palette_black],%[titan256cPalsPtr]\n"    // titan256cPalsPtr = (u16*) palette_black;
         "   bra         .fin%=\n"
         ".accomodate_vars_D:\n"
-            // titan256cPalsPtr += TITAN_256C_COLORS_PER_STRIP; // advance to next strip's palette
-        "   addi        %[i_TITAN_256C_COLORS_PER_STRIP],%[titan256cPalsPtr]\n"
+        "   addi        %[i_TITAN_256C_COLORS_PER_STRIP],%[titan256cPalsPtr]\n" // titan256cPalsPtr += TITAN_256C_COLORS_PER_STRIP; // advance to next strip's palette
         ".fin%=:\n"
 		: 
         [currGradPtr] "+m" (currGradPtr),
@@ -380,7 +387,7 @@ HINTERRUPT_CALLBACK horizIntOnTitan256cCallback_CPU_EveryN_asm () {
 		[i_TITAN_256C_COLORS_PER_STRIP] "i" (TITAN_256C_COLORS_PER_STRIP),
 		[i_TITAN_256C_STRIP_HEIGHT] "i" (TITAN_256C_STRIP_HEIGHT)
 		:
-		"d0","d1","d2","d3","d4","d5","d6","a0","a1","a2","a3","cc"  // backup registers used in the asm implementation
+		"d0","d1","d2","d3","d4","d5","d6","d7","a0","a1","a2","a3","a4","cc"  // backup registers used in the asm implementation
     );
 }
 
