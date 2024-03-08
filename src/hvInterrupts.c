@@ -160,7 +160,7 @@ void vertIntOnTitan256cCallback_HIntOneTime () {
 }
 
 HINTERRUPT_CALLBACK horizIntOnTitan256cCallback_CPU_EveryN_asm () {
-    // 1534-1552 cycles
+    // 1550-1582 cycles
     ASM_STATEMENT __volatile__ (
         "   move.l      %[currGradPtr],%%a0\n"                // a0: currGradPtr
         "   move.l      %[titan256cPalsPtr],%%a1\n"           // a1: titan256cPalsPtr
@@ -189,7 +189,7 @@ HINTERRUPT_CALLBACK horizIntOnTitan256cCallback_CPU_EveryN_asm () {
             // d6 previously set with base command address
 		".set_bgColor1:\n"
 		"   moveq.l     #0,%%d5\n"              // d5: bgColor1 = 0
-		"   cmpi.w      #0,%%d4\n"              // d4: setGradColorForText => if setGradColorForText = 0 (FALSE)
+		"   tst.w       %%d4\n"                 // d4: setGradColorForText => if setGradColorForText = 0 (FALSE)
 		"   beq         .color_batch_1_pal\n"
 		"   move.w      0(%%a0),%%d5\n"         // d5: bgColor1 = *(currGradPtr + 0);
 		".color_batch_1_pal:\n"
@@ -240,7 +240,7 @@ HINTERRUPT_CALLBACK horizIntOnTitan256cCallback_CPU_EveryN_asm () {
 		"   addi.l      #0x100000.l,%%d6\n"     // d6: cmdAddress += 0x100000 // previous batch advanced 8 colors
 		".set_bgColor2:\n"
 		"   moveq.l     #0,%%d5\n"              // d5: bgColor2 = 0
-		"   cmpi.w      #0,%%d4\n"              // d4: setGradColorForText => if setGradColorForText = 0 (FALSE)
+        "   tst.w       %%d4\n"                 // d4: setGradColorForText => if setGradColorForText = 0 (FALSE)
 		"   beq         .color_batch_3_pal\n"
 		"   move.w      2(%%a0),%%d5\n"         // d5: bgColor2 = *(currGradPtr + 1);
 		".color_batch_3_pal:\n"
@@ -291,7 +291,7 @@ HINTERRUPT_CALLBACK horizIntOnTitan256cCallback_CPU_EveryN_asm () {
 		"   addi.l      #0x100000.l,%%d6\n"     // d6: cmdAddress += 0x100000 // previous batch advanced 8 colors
 		".set_bgColor3:\n"
 		"   moveq.l     #0,%%d5\n"              // d5: bgColor3 = 0
-		"   cmpi.w      #0,%%d4\n"              // d4: setGradColorForText => if setGradColorForText = 0 (FALSE)
+		"   tst.w       %%d4\n"                 // d4: setGradColorForText => if setGradColorForText = 0 (FALSE)
 		"   beq         .color_batch_5_pal\n"
 		"   move.w      4(%%a0),%%d5\n"         // d5: bgColor3 = *(currGradPtr + 2);
 		".color_batch_5_pal:\n"
@@ -335,13 +335,13 @@ HINTERRUPT_CALLBACK horizIntOnTitan256cCallback_CPU_EveryN_asm () {
 
 		".set_bgColor4:\n"
 		"   moveq.l     #0,%%d5\n"              // d5: bgColor4 = 0
-		"   cmpi.w      #0,%%d4\n"              // d4: setGradColorForText => if setGradColorForText = 0 (FALSE)
+		"   tst.w       %%d4\n"                 // d4: setGradColorForText => if setGradColorForText = 0 (FALSE)
 		"   beq         .accomodate_vars_A\n"
 		"   move.w      6(%%a0),%%d5\n"         // d5: bgColor4 = *(currGradPtr + 3);
 
 		".accomodate_vars_A:\n"
 		    // currGradPtr += setGradColorForText ? 4 : 0; // advance 4 colors if condition is met
-        "   cmpi.w      #0,%%d4\n"              // d4: setGradColorForText => if setGradColorForText = 0 (FALSE)
+        "   tst.w       %%d4\n"                 // d4: setGradColorForText => if setGradColorForText = 0 (FALSE)
         "   beq         .accomodate_vars_B\n"
         "   addq.w      #8,%[currGradPtr]\n"    // currGradPtr += 4
 		".accomodate_vars_B:\n"
@@ -384,7 +384,7 @@ HINTERRUPT_CALLBACK horizIntOnTitan256cCallback_CPU_EveryN_asm () {
 		[applyBlackPalPosY] "m" (applyBlackPalPosY),
 		[palette_black] "m" (palette_black),
 		[turnoff] "i" (0x8100 | (116 & ~0x40)), // 0x8134
-		[turnon] "i" (0x8100 | (116 & 0x40)), // 0x8174
+		[turnon] "i" (0x8100 | (116 | 0x40)), // 0x8174
 		[i_TITAN_256C_COLORS_PER_STRIP] "i" (TITAN_256C_COLORS_PER_STRIP),
 		[i_TITAN_256C_STRIP_HEIGHT] "i" (TITAN_256C_STRIP_HEIGHT)
 		:
