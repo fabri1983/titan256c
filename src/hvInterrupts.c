@@ -117,10 +117,10 @@ void NO_INLINE setupDMAForPals (u16 len, u32 fromAddr) {
 }
 
 u16* titan256cPalsPtr; // 1st and 2nd strip's palette are loaded at the beginning of the display loop, so this ptr starts at 3rd strip
-u16 palIdx; // 3rd strip starts with palettes at [PAL0,PAL1]
+u8 palIdx; // 3rd strip starts with palettes at [PAL0,PAL1]
 u16* currGradPtr;
 u16 applyBlackPalPosY = TITAN_256C_HEIGHT - 1; // initial value, same than the one set in main.c
-u16 vcounterManual;
+u8 vcounterManual;
 u16 textRampEffectLimitTop;
 u16 textRampEffectLimitBottom;
 
@@ -170,7 +170,7 @@ HINTERRUPT_CALLBACK horizIntOnTitan256cCallback_CPU_EveryN_asm () {
         "   move.w      #145,%%d7\n"                          // d7: 147 is the HCounter limit
 
 		"   moveq.l     #0,%%d4\n"                            // d4: setGradColorForText = 0 (FALSE)
-		"   move.w      %[vcounterManual],%%d0\n"             // d0: vcounterManual
+		"   move.b      %[vcounterManual],%%d0\n"             // d0: vcounterManual
 		"   cmp.w       %[textRampEffectLimitTop],%%d0\n"     // cmp: vcounterManual - textRampEffectLimitTop
 		"   bhs         .setGradColorForText\n"               // branch if (vcounterManual >= textRampEffectLimitTop)
 		"   cmp.w       %[textRampEffectLimitBottom],%%d0\n"  // cmp: vcounterManual - textRampEffectLimitBottom
@@ -345,8 +345,10 @@ HINTERRUPT_CALLBACK horizIntOnTitan256cCallback_CPU_EveryN_asm () {
         "   beq         .accomodate_vars_B\n"
         "   addq.w      #8,%[currGradPtr]\n"    // currGradPtr += 4
 		".accomodate_vars_B:\n"
-		"   addq.w      %[i_TITAN_256C_STRIP_HEIGHT],%[vcounterManual]\n"   // vcounterManual += TITAN_256C_STRIP_HEIGHT;
-		"   eori.w      %[i_TITAN_256C_COLORS_PER_STRIP],%[palIdx]\n"       // palIdx ^= TITAN_256C_COLORS_PER_STRIP; // cycles between 0 and 32
+        "   addq.b      %[i_TITAN_256C_STRIP_HEIGHT],%%d0\n"    // d0: vcounterManual + TITAN_256C_STRIP_HEIGHT
+        "   move.b      %%d0,%[vcounterManual]\n"               // vcounterManual = d0;
+        "   eor.b       %[i_TITAN_256C_COLORS_PER_STRIP],%%d1\n"    // d1: palIdx ^ TITAN_256C_COLORS_PER_STRIP
+        "   move.b      %%d1,%[palIdx]\n"                           // palIdx = d1; // cycles between 0 and 32
 
 		".color_batch_7_pal:\n"
         // wait HCounter
@@ -367,11 +369,12 @@ HINTERRUPT_CALLBACK horizIntOnTitan256cCallback_CPU_EveryN_asm () {
         "   move.w      %[vcounterManual],%%d0\n"      // d0: vcounterManual
         "   cmp.w       %[applyBlackPalPosY],%%d0\n"   // cmp: vcounterManual - applyBlackPalPosY
         "   blo         .accomodate_vars_D\n"          // branch if (vcounterManual < applyBlackPalPosY)
-        "   move.l      %[palette_black],%[titan256cPalsPtr]\n"    // titan256cPalsPtr = (u16*) palette_black;
+        "   lea         %[palette_black],%%a0\n"       // a1: palette_black
+        "   move.l      %%a1,%[titan256cPalsPtr]\n"    // titan256cPalsPtr = (u16*) palette_black;
         "   bra         .fin%=\n"
         ".accomodate_vars_D:\n"
-        "   addi        #(2*%c[i_TITAN_256C_COLORS_PER_STRIP]),%[titan256cPalsPtr]\n" // titan256cPalsPtr += TITAN_256C_COLORS_PER_STRIP; // advance to next strip's palette
-            // we must multiply by 2 (size of u16) in orer to advance the pointer in bytes
+        "   lea         (%c[i_2X_TITAN_256C_COLORS_PER_STRIP],%%a1),%%a1\n"  // multiplied by 2 (size of u16) in order to advance in bytes
+        "   move.l      %%a1,%[titan256cPalsPtr]\n"                          // titan256cPalsPtr += TITAN_256C_COLORS_PER_STRIP; // advance to next strip's palette
         ".fin%=:\n"
 		: 
         [currGradPtr] "+m" (currGradPtr),
@@ -386,6 +389,7 @@ HINTERRUPT_CALLBACK horizIntOnTitan256cCallback_CPU_EveryN_asm () {
 		[turnoff] "i" (0x8100 | (116 & ~0x40)), // 0x8134
 		[turnon] "i" (0x8100 | (116 | 0x40)), // 0x8174
 		[i_TITAN_256C_COLORS_PER_STRIP] "i" (TITAN_256C_COLORS_PER_STRIP),
+        [i_2X_TITAN_256C_COLORS_PER_STRIP] "i" (2*TITAN_256C_COLORS_PER_STRIP), // multiplied by 2 (size of u16) in order to advance in bytes
 		[i_TITAN_256C_STRIP_HEIGHT] "i" (TITAN_256C_STRIP_HEIGHT)
 		:
 		"d0","d1","d2","d3","d4","d5","d6","d7","a0","a1","a2","a3","a4","cc"  // backup registers used in the asm implementation
