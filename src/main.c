@@ -31,7 +31,6 @@ static void titan256cDisplay () {
             VDP_setHIntCounter(TITAN_256C_STRIP_HEIGHT - 1);
             SYS_setHIntCallback(horizIntOnTitan256cCallback_CPU_EveryN);
             // SYS_setHIntCallback(horizIntOnTitan256cCallback_CPU_EveryN_asm);
-            
         }
         // Call the HInt every N scanlines. Uses DMA for palette swapping
         else if (titan256cHIntMode == 1) {

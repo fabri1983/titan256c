@@ -7,13 +7,16 @@
 * See all instructions here: https://github.com/prb28/m68k-instructions-documentation
 
 * CMP
-    cmpi.b  #145,0xC00009.l
+    cmpi.b  #145,$C00009.l
     cmpi.b  #145,(a0)
     cmpa    d0,a0
-    cmp.b   (a1),d0
-    cmp.b   d1,d0
+    cmp     (a1),d0
+    cmp     d1,d0
+    cmp     $EEFF0022,d0  // cmp memory content to d0
+    cmpm    (a0)+,(a1)+   // cmp memory to memory (only An registers and both post incremented)
 
 * MOVE
     moveq   #127,d0
-    move.w  #145,d0
+    move    #$EEFF,d0     // load a constant into d0
+    move    $EEFF0022,d0  // move memory content into d0
 
