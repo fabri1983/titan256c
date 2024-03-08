@@ -160,7 +160,7 @@ void vertIntOnTitan256cCallback_HIntOneTime () {
 }
 
 HINTERRUPT_CALLBACK horizIntOnTitan256cCallback_CPU_EveryN_asm () {
-    // 1770-1802 cycles
+    // 1534-1552 cycles
     ASM_STATEMENT __volatile__ (
         "   move.l      %[currGradPtr],%%a0\n"                // a0: currGradPtr
         "   move.l      %[titan256cPalsPtr],%%a1\n"           // a1: titan256cPalsPtr
@@ -370,7 +370,8 @@ HINTERRUPT_CALLBACK horizIntOnTitan256cCallback_CPU_EveryN_asm () {
         "   move.l      %[palette_black],%[titan256cPalsPtr]\n"    // titan256cPalsPtr = (u16*) palette_black;
         "   bra         .fin%=\n"
         ".accomodate_vars_D:\n"
-        "   addi        %[i_TITAN_256C_COLORS_PER_STRIP],%[titan256cPalsPtr]\n" // titan256cPalsPtr += TITAN_256C_COLORS_PER_STRIP; // advance to next strip's palette
+        "   addi        #(2*%c[i_TITAN_256C_COLORS_PER_STRIP]),%[titan256cPalsPtr]\n" // titan256cPalsPtr += TITAN_256C_COLORS_PER_STRIP; // advance to next strip's palette
+            // we must multiply by 2 (size of u16) in orer to advance the pointer in bytes
         ".fin%=:\n"
 		: 
         [currGradPtr] "+m" (currGradPtr),
