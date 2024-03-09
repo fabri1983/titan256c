@@ -35,7 +35,7 @@ FORCE_INLINE void waitHCounter_old (u16 n) {
     // VDP_HVCOUNTER_PORT + 1 = 0xC00009 (HCOUNTER)
     ASM_STATEMENT __volatile__ (
         ".loopHC%=:\n"
-        "    cmpi.b    %[hcLimit], 0xC00009.l\n"    // cmp: (0xC00009) - hcLimit
+        "    cmpi.b    %[hcLimit], 0xC00009\n"    // cmp: (0xC00009) - hcLimit
         "    blo       .loopHC%=\n"                 // Compares byte because hcLimit won't be > 160 for our practical cases
             // blo is for unsigned comparisons, same than bcs
         :
@@ -164,31 +164,29 @@ HINTERRUPT_CALLBACK horizIntOnTitan256cCallback_CPU_EveryN_asm () {
     ASM_STATEMENT __volatile__ (
         "   move.l      %[currGradPtr],%%a0\n"                // a0: currGradPtr
         "   move.l      %[titan256cPalsPtr],%%a1\n"           // a1: titan256cPalsPtr
-        "   movea.l     #0xC00004.l,%%a2\n"                   // a2: VDP_CTRL_PORT 0xC00004
-        "   movea.l     #0xC00000.l,%%a3\n"                   // a3: VDP_DATA_PORT 0xC00000
-        "   movea.l     #0xC00009.l,%%a4\n"                   // a4: HCounter address 0xC00009
+        "   movea.l     #0xC00004,%%a2\n"                     // a2: VDP_CTRL_PORT 0xC00004
+        "   movea.l     #0xC00000,%%a3\n"                     // a3: VDP_DATA_PORT 0xC00000
+        "   movea.l     #0xC00009,%%a4\n"                     // a4: HCounter address 0xC00009
         "   move.w      #145,%%d7\n"                          // d7: 147 is the HCounter limit
 
 		"   moveq.l     #0,%%d4\n"                            // d4: setGradColorForText = 0 (FALSE)
 		"   move.b      %[vcounterManual],%%d0\n"             // d0: vcounterManual
 		"   cmp.w       %[textRampEffectLimitTop],%%d0\n"     // cmp: vcounterManual - textRampEffectLimitTop
-		"   bhs         .setGradColorForText\n"               // branch if (vcounterManual >= textRampEffectLimitTop)
+		"   blo         .color_batch_1_cmd\n"                 // branch if (vcounterManual < textRampEffectLimitTop) (opposite than vcounterManual >= textRampEffectLimitTop)
 		"   cmp.w       %[textRampEffectLimitBottom],%%d0\n"  // cmp: vcounterManual - textRampEffectLimitBottom
-		"   bhi         .color_batch_1_cmd\n"                 // branch if vcounterManual > textRampEffectLimitBottom (opposite than vcounterManual <= textRampEffectLimitBottom)
-		".setGradColorForText:\n"
+		"   bhi         .color_batch_1_cmd\n"                 // branch if (vcounterManual > textRampEffectLimitBottom) (opposite than vcounterManual <= textRampEffectLimitBottom)
 		"   moveq.l     #1,%%d4\n"                            // d4: setGradColorForText = 1 (TRUE)
-
-        // set base command address once and then we'll add the right offset in each color batch block
-		"   move.l      #0xC0000000,%%d6\n"     // d6: cmdAddress = 0xC0000000
-		"   tst.b       %[palIdx]\n"            // palIdx == 0?
-		"   bne         .color_batch_1_cmd\n"
-		"   move.l      #0xC0400000,%%d6\n"     // d6: cmdAddress = 0xC0400000
 
 		".color_batch_1_cmd:\n"
 			// cmdAddress = palIdx == 0 ? 0xC0000000 : 0xC0400000;
-            // d6 previously set with base command address
+            // set base command address once and then we'll add the right offset in remaining color batch blocks
+		"   move.l      #0xC0000000,%%d6\n"     // d6: cmdAddress = 0xC0000000
+		"   tst.b       %[palIdx]\n"            // palIdx == 0?
+		"   beq         .set_bgColor1\n"
+		"   move.l      #0xC0400000,%%d6\n"     // d6: cmdAddress = 0xC0400000
 		".set_bgColor1:\n"
 		"   moveq.l     #0,%%d5\n"              // d5: bgColor1 = 0
+            // from here on, d5=0 as long as d4 == 0, so no need to reset d5 in other color batch blocks
 		"   tst.w       %%d4\n"                 // d4: setGradColorForText => if setGradColorForText = 0 (FALSE)
 		"   beq         .color_batch_1_pal\n"
 		"   move.w      0(%%a0),%%d5\n"         // d5: bgColor1 = *(currGradPtr + 0);
@@ -213,7 +211,7 @@ HINTERRUPT_CALLBACK horizIntOnTitan256cCallback_CPU_EveryN_asm () {
 
 		".color_batch_2_cmd:\n"
 			// cmdAddress = palIdx == 0 ? 0xC0080000 : 0xC0480000;
-		"   addi.l      #0x80000.l,%%d6\n"      // d6: cmdAddress += 0x80000 // previous batch advanced 4 colors
+		"   addi.l      #0x80000,%%d6\n"        // d6: cmdAddress += 0x80000 // previous batch advanced 4 colors
 		".color_batch_2_pal:\n"
 		"   move.l      8(%%a1),%%d0\n"         // d0: colors2_A = *((u32*) (titan256cPalsPtr + 4)); // 2 colors
 		"   move.l      12(%%a1),%%d1\n"        // d1: colors2_B = *((u32*) (titan256cPalsPtr + 6)); // next 2 colors
@@ -237,9 +235,8 @@ HINTERRUPT_CALLBACK horizIntOnTitan256cCallback_CPU_EveryN_asm () {
 
 		".color_batch_3_cmd:\n"
 			// cmdAddress = palIdx == 0 ? 0xC0180000 : 0xC0580000;
-		"   addi.l      #0x100000.l,%%d6\n"     // d6: cmdAddress += 0x100000 // previous batch advanced 8 colors
+		"   addi.l      #0x100000,%%d6\n"       // d6: cmdAddress += 0x100000 // previous batch advanced 8 colors
 		".set_bgColor2:\n"
-		"   moveq.l     #0,%%d5\n"              // d5: bgColor2 = 0
         "   tst.w       %%d4\n"                 // d4: setGradColorForText => if setGradColorForText = 0 (FALSE)
 		"   beq         .color_batch_3_pal\n"
 		"   move.w      2(%%a0),%%d5\n"         // d5: bgColor2 = *(currGradPtr + 1);
@@ -264,7 +261,7 @@ HINTERRUPT_CALLBACK horizIntOnTitan256cCallback_CPU_EveryN_asm () {
 
 		".color_batch_4_cmd:\n"
 			// cmdAddress = palIdx == 0 ? 0xC0200000 : 0xC0600000;
-		"   addi.l      #0x80000.l,%%d6\n"      // d6: cmdAddress += 0x80000 // previous batch advanced 4 colors
+		"   addi.l      #0x80000,%%d6\n"        // d6: cmdAddress += 0x80000 // previous batch advanced 4 colors
 		".color_batch_4_pal:\n"
 		"   move.l      32(%%a1),%%d0\n"        // d0: colors2_A = *((u32*) (titan256cPalsPtr + 16)); // 2 colors
 		"   move.l      36(%%a1),%%d1\n"        // d1: colors2_B = *((u32*) (titan256cPalsPtr + 18)); // next 2 colors
@@ -288,9 +285,8 @@ HINTERRUPT_CALLBACK horizIntOnTitan256cCallback_CPU_EveryN_asm () {
 
 		".color_batch_5_cmd:\n"
 			// cmdAddress = palIdx == 0 ? 0xC0300000 : 0xC0700000;
-		"   addi.l      #0x100000.l,%%d6\n"     // d6: cmdAddress += 0x100000 // previous batch advanced 8 colors
+		"   addi.l      #0x100000,%%d6\n"       // d6: cmdAddress += 0x100000 // previous batch advanced 8 colors
 		".set_bgColor3:\n"
-		"   moveq.l     #0,%%d5\n"              // d5: bgColor3 = 0
 		"   tst.w       %%d4\n"                 // d4: setGradColorForText => if setGradColorForText = 0 (FALSE)
 		"   beq         .color_batch_5_pal\n"
 		"   move.w      4(%%a0),%%d5\n"         // d5: bgColor3 = *(currGradPtr + 2);
@@ -315,7 +311,7 @@ HINTERRUPT_CALLBACK horizIntOnTitan256cCallback_CPU_EveryN_asm () {
 
 		".color_batch_6_cmd:\n"
 			// cmdAddress = palIdx == 0 ? 0xC0380000 : 0xC0780000;
-		"   addi.l      #0x80000.l,%%d6\n"      // d6: cmdAddress += 0x80000 // previous batch advanced 4 colors
+		"   addi.l      #0x80000,%%d6\n"        // d6: cmdAddress += 0x80000 // previous batch advanced 4 colors
 		".color_batch_6_pal:\n"
 		"   move.l      56(%%a1),%%d0\n"        // d0: colors2_A = *((u32*) (titan256cPalsPtr + 28)); // 2 colors
 		"   move.l      60(%%a1),%%d1\n"        // d1: colors2_B = *((u32*) (titan256cPalsPtr + 30)); // next 2 colors
@@ -334,7 +330,6 @@ HINTERRUPT_CALLBACK horizIntOnTitan256cCallback_CPU_EveryN_asm () {
 		"   move.w      %[turnon],(%%a2)\n"     // *(vu16*) VDP_CTRL_PORT = 0x8100 | (reg01 | 0x40);
 
 		".set_bgColor4:\n"
-		"   moveq.l     #0,%%d5\n"              // d5: bgColor4 = 0
 		"   tst.w       %%d4\n"                 // d4: setGradColorForText => if setGradColorForText = 0 (FALSE)
 		"   beq         .accomodate_vars_A\n"
 		"   move.w      6(%%a0),%%d5\n"         // d5: bgColor4 = *(currGradPtr + 3);
