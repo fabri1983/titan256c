@@ -17,18 +17,18 @@
 * D1 >= D0        BGE        BCC (branch on Carry Clear) (instead of BHS?)
 
 * CMP
-    cmpi.b  #145,$C00009
-    cmpi.b  #145,(a0)
+    cmp     d1,d0
+    cmpa    d0,a0
     cmpi    #0,d0
     cmp     (a1),d0
-    cmpa    d0,a0
-    cmp     d1,d0
-    cmp     $EEFF0022,d0    ;// cmp memory content to d0
     cmpm    (a0)+,(a1)+     ;// cmp memory to memory (only An registers and both post incremented)
+    cmpi.b  #145,(a0)
+    cmp     $EEFF0022,d0    ;// cmp memory content to d0
+    cmpi.b  #145,$C00009
 
 * CMPI #0 vs TST
     cmpi    #0,d0
-    * vs
+* vs
     tst     d0
 
 * MOVE
@@ -39,31 +39,48 @@
 
 * MOVE.l between memory locations vs LEA then MOVE.l to An
     move.l  $EEFF0022,$EEFF0026  ;// memory to memory
-    * vs
+* vs
     lea     $EEFF0022,a0
     move.l  a0,$EEFF0026
 
 * ADD
-    addq.b  #8,$EEFF0022
-    addi.w  #12345,$EEFF0022
+    add.w   d0,d1
+    addq.b  #8,d0
     addi.w  #12345,d0
     addi.l  #16123456,d0
+    addq.b  #8,$EEFF0022
+    addi.w  #12345,$EEFF0022
 
-* Increment a pointer by 2*TITAN_256C_COLORS_PER_STRIP (2*32) vs just addi instruction
+* Increment a pointer by a constant vs just addi/addq instruction
     lea     (64,a0),a0
     move.l  a0,$EEFF0022
-    * vs
-    addi    #64,$EEFF0022
+* vs
+    addi.b  #255,$EEFF0022
+* vs
+    addq    #8,$EEFF0022
+* vs
+    move.l  $EEFF0022,d0
+    addi.b  #255,d0
 
+* bool setGradColorForText = vcounterManual >= textRampEffectLimitTop && vcounterManual <= textRampEffectLimitBottom;
+* d4 will act as the flag setGradColorForText
+    *// 76-80 cycles
+    moveq       #0,d4
+    move.b      $EEFF0022,d0
+    cmp.b       $EEFF0026,d0
+    blo         .color_batch_1_cmd
+    cmp.b       $EEFF0030,d0
+    bhi         .color_batch_1_cmd
+    moveq       #1,d4
+* vs
+    *// 58-62 cycles
+    move.b      $EEFF0022,d4 ;// vcounterManual
+    * translate vcounterManual to base textRampEffectLimitTop:
+    sub.b       $EEFF0026,d4 ;// vcounterManual - textRampEffectLimitTop
+    * 32 is the amount of scanlines between top and bottom text ramp effect
+    cmpi.b      #32,d4 ;// d4 - 32
+    spl.b       d4 ;// d4=0xF if d4 >= 0 then d4=0xFF (enable bg color), if d4 < 0 then d4=0x00 (no bg color)
+    bls         .color_batch_1_cmd ;// branch if d4 <= 32 (at this moment d4 is correctly set)
+    moveq       #0,d4 ;// d4=0 (no bg color)
 
-* For *(currGradPtr + n) and *((u32*) (titan256cPalsPtr + n))
-* Use .w and .l respectively
-* Try this
-    move.w      (a0)+,d5
-* instead of:
-    move.w      0(a0),d5
-    *...
-    move.w      2(a0),d5
-    *...
-    move.w      4(a0),d5
-    * ...
+    eori  #32,$EEFF0022
