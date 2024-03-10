@@ -160,8 +160,9 @@ void vertIntOnTitan256cCallback_HIntOneTime () {
 }
 
 HINTERRUPT_CALLBACK horizIntOnTitan256cCallback_CPU_EveryN_asm () {
-    // 1436-1466 cycles
+    // 1406-1436 cycles
     ASM_STATEMENT __volatile__ (
+        ".prepare_regs_%=:\n"
         "   move.l      %[currGradPtr],%%a0\n"                // a0: currGradPtr
         "   move.l      %[titan256cPalsPtr],%%a1\n"           // a1: titan256cPalsPtr
         "   movea.l     #0xC00004,%%a2\n"                     // a2: VDP_CTRL_PORT 0xC00004
@@ -169,6 +170,7 @@ HINTERRUPT_CALLBACK horizIntOnTitan256cCallback_CPU_EveryN_asm () {
         "   movea.l     #0xC00009,%%a4\n"                     // a4: HCounter address 0xC00009
         "   move.b      #150,%%d7\n"                          // d7: 150 is the HCounter limit
 
+        ".set_setGradColorForText_flag_%=:\n"
 		"   moveq       #0,%%d4\n"                            // d4: setGradColorForText = 0 (FALSE)
 		"   move.b      %[vcounterManual],%%d0\n"             // d0: vcounterManual
 		"   cmp.b       %[textRampEffectLimitTop],%%d0\n"     // cmp: vcounterManual - textRampEffectLimitTop
@@ -353,11 +355,10 @@ HINTERRUPT_CALLBACK horizIntOnTitan256cCallback_CPU_EveryN_asm () {
         ".accomodate_vars_B:\n"
         "   cmp.b       %[applyBlackPalPosY],%%d0\n"   // cmp: vcounterManual - applyBlackPalPosY
         "   blo         .accomodate_vars_C\n"          // branch if (vcounterManual < applyBlackPalPosY)
-        "   lea         %[palette_black],%%a1\n"       // a1: palette_black
-        "   move.l      %%a1,%[titan256cPalsPtr]\n"    // titan256cPalsPtr = (u16*) palette_black;
+        "   move.l      %[palette_black],%%a1\n"       // a1 = palette_black;
         "   bra         .fin%=\n"
         ".accomodate_vars_C:\n"
-        "   move.l      %%a1,%[titan256cPalsPtr]\n"    // store current value of (a1) into variable titan256cPalsPtr
+        "   move.l      %%a1,%[titan256cPalsPtr]\n"    // store current value of a1 into variable titan256cPalsPtr
         ".fin%=:\n"
 		: 
         [currGradPtr] "+m" (currGradPtr),

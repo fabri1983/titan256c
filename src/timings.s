@@ -83,4 +83,4 @@
     bls         .color_batch_1_cmd ;// branch if d4 <= 32 (at this moment d4 is correctly set)
     moveq       #0,d4 ;// d4=0 (no bg color)
 
-    eori  #32,$EEFF0022
+
