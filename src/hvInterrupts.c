@@ -160,7 +160,7 @@ void vertIntOnTitan256cCallback_HIntOneTime () {
 }
 
 HINTERRUPT_CALLBACK horizIntOnTitan256cCallback_CPU_EveryN_asm () {
-    // 1406-1436 cycles
+    // 1398-1428 cycles
     ASM_STATEMENT __volatile__ (
         ".prepare_regs_%=:\n"
         "   move.l      %[currGradPtr],%%a0\n"                // a0: currGradPtr
@@ -170,14 +170,15 @@ HINTERRUPT_CALLBACK horizIntOnTitan256cCallback_CPU_EveryN_asm () {
         "   movea.l     #0xC00009,%%a4\n"                     // a4: HCounter address 0xC00009
         "   move.b      #150,%%d7\n"                          // d7: 150 is the HCounter limit
 
-        ".set_setGradColorForText_flag_%=:\n"
-		"   moveq       #0,%%d4\n"                            // d4: setGradColorForText = 0 (FALSE)
-		"   move.b      %[vcounterManual],%%d0\n"             // d0: vcounterManual
-		"   cmp.b       %[textRampEffectLimitTop],%%d0\n"     // cmp: vcounterManual - textRampEffectLimitTop
-		"   blo         .color_batch_1_cmd\n"                 // branch if (vcounterManual < textRampEffectLimitTop) (opposite than vcounterManual >= textRampEffectLimitTop)
-		"   cmp.b       %[textRampEffectLimitBottom],%%d0\n"  // cmp: vcounterManual - textRampEffectLimitBottom
-		"   bhi         .color_batch_1_cmd\n"                 // branch if (vcounterManual > textRampEffectLimitBottom) (opposite than vcounterManual <= textRampEffectLimitBottom)
-		"   moveq       #1,%%d4\n"                            // d4: setGradColorForText = 1 (TRUE)
+        ".setGradColorForText_flag_%=:\n"
+        "   move.b      %[vcounterManual],%%d4\n"           // d4: vcounterManual
+            // translate vcounterManual to base textRampEffectLimitTop:
+        "   sub.b       %[textRampEffectLimitTop],%%d4\n"   // d4: vcounterManual - textRampEffectLimitTop
+            // 32 is the amount of scanlines between top and bottom text ramp effect
+        "   cmpi.b      #32,%%d4\n"                         // d4 -= 32
+        "   scs.b       %%d4\n"                             // d4=0xF if d4 >= 0 then d4=0xFF (enable bg color), if d4 < 0 then d4=0x00 (no bg color)
+        "   bls         .color_batch_1_cmd\n"               // branch if d4 <= 32 (at this moment d4 is correctly set)
+        "   moveq       #0,%%d4\n"                          // d4=0 (no bg color)
 
 		".color_batch_1_cmd:\n"
 			// cmdAddress = palIdx == 0 ? 0xC0000000 : 0xC0400000;

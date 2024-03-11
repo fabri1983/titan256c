@@ -64,23 +64,23 @@
 
 * bool setGradColorForText = vcounterManual >= textRampEffectLimitTop && vcounterManual <= textRampEffectLimitBottom;
 * d4 will act as the flag setGradColorForText
-    *// 76-80 cycles
-    moveq       #0,d4
-    move.b      $EEFF0022,d0
-    cmp.b       $EEFF0026,d0
-    blo         .color_batch_1_cmd
-    cmp.b       $EEFF0030,d0
-    bhi         .color_batch_1_cmd
-    moveq       #1,d4
+    * 76-80 cycles
+    moveq       #0,d4          ;// d4: setGradColorForText = 0 (FALSE)
+    move.b      $EEFF0022,d0   ;// d0: vcounterManual
+    cmp.b       $EEFF0024,d0   ;// cmp: vcounterManual - textRampEffectLimitTop
+    blo         .color_batch_1_cmd ;// branch if (vcounterManual < textRampEffectLimitTop) (opposite than vcounterManual >= textRampEffectLimitTop)
+    cmp.b       $EEFF0028,d0   ;// cmp: vcounterManual - textRampEffectLimitBottom
+    bhi         .color_batch_1_cmd ;// branch if (vcounterManual > textRampEffectLimitBottom) (opposite than vcounterManual <= textRampEffectLimitBottom)
+    moveq       #1,d4          ;// d4: setGradColorForText = 1 (TRUE)
 * vs
-    *// 58-62 cycles
-    move.b      $EEFF0022,d4 ;// vcounterManual
+    * 58-62 cycles
+    move.b      $EEFF0022,d4   ;// vcounterManual
     * translate vcounterManual to base textRampEffectLimitTop:
-    sub.b       $EEFF0026,d4 ;// vcounterManual - textRampEffectLimitTop
+    sub.b       $EEFF0024,d4   ;// vcounterManual - textRampEffectLimitTop
     * 32 is the amount of scanlines between top and bottom text ramp effect
-    cmpi.b      #32,d4 ;// d4 - 32
-    spl.b       d4 ;// d4=0xF if d4 >= 0 then d4=0xFF (enable bg color), if d4 < 0 then d4=0x00 (no bg color)
+    cmpi.b      #32,d4         ;// d4 - 32
+    scs.b       d4             ;// d4=0xF if d4 >= 0 then d4=0xFF (enable bg color), if d4 < 0 then d4=0x00 (no bg color)
     bls         .color_batch_1_cmd ;// branch if d4 <= 32 (at this moment d4 is correctly set)
-    moveq       #0,d4 ;// d4=0 (no bg color)
+    moveq       #0,d4          ;// d4=0 (no bg color)
 
 
