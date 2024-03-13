@@ -102,10 +102,9 @@ func SaxDec
 
 * ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
 * ---------------------------------------------------------------------------
-* C prototype: extern void SaxDec2 (u8* src, u8* dest, u16 length);
+* C prototype: extern void SaxDec2 (u16 length, u8* src, u8* dest);
 func SaxDec2
-	movem.l     4(%sp), %a0-%a1         		// copy parameters into registers a0-a1
-    move.l		12(%sp), %d6					// copy the other parameter into d6
+	movem.l     4(%sp), %d6/%a0-%a1        		// copy parameters into registers d6/a0-a1
 	movem.l     %a2-%a5/%d2-%d7, -(%sp)     	// save registers (except the scratch pad)
 
 .sax_begin:

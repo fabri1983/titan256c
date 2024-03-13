@@ -122,6 +122,10 @@ static const u16 titanCharsGradientColors[TITAN_CHARS_GRADIENT_MAX_COLORS + TITA
     0x00E, 0x02E
 };
 
+const u16* getTitanCharsGradientColors () {
+    return titanCharsGradientColors;
+}
+
 u16 gradColorsBuffer[TITAN_CHARS_CURR_GRADIENT_ELEMS];
 
 static u8 titanCharsCycleCnt = 0;

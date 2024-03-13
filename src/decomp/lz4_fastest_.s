@@ -26,7 +26,7 @@ func lz4_frame_depack_fastest
     *movem.l 4(%sp),%a0-%a1          // copy parameters into registers a0-a1
     *movem.l %d2-%d7/%a2-%a4,-(%sp)	// save registers (except the scratch pad)
 #if SKIP_HEADER_CHECKS
-    lea		4(%a0),%a0              // skip Magic Number (4 bytes). Faster than addq #4,(%a0)
+    lea		4(%a0),%a0              // skip Magic Number (4 bytes). Faster than addq #4,%a0
 #else
     * C: if (readU32LittleEndian(src) != 0x184D2204)
     cmpi.l	#0x04224D18,(%a0)+	    // LZ4 frame MagicNb.

@@ -22,8 +22,8 @@
 * ---------------------------------------------------------------
 * C prototype: void u16 Kon1Dec (u8* in, u8* out)
 func Kon1Dec
-    movem.l 4(%sp), %a0-%a1
-	movem.l	%d2/%a2, -(%sp)
+    movem.l 4(%sp), %a0-%a1    // copy parameters into registers a0-a1
+	movem.l	%d2/%a2, -(%sp)    // save registers (except the scratch pad)
 
     move.w  (%a0)+, %d0        // read uncompressed data size   // NOTICE: not used
     bra.s   .kn1_InitDecomp
@@ -36,8 +36,8 @@ func Kon1Dec
 * ---------------------------------------------------------------
 * C prototype: void u16 Kon1Dec2 (u8* in, u8* out)
 func Kon1Dec2
-    movem.l 4(%sp), %a0-%a1
-    movem.l	%d2/%a2, -(%sp)
+    movem.l 4(%sp), %a0-%a1   // copy parameters into registers a0-a1
+    movem.l	%d2/%a2, -(%sp)   // save registers (except the scratch pad)
     addq.l  #2, %a0           // skip data size in compressed stream
 * ---------------------------------------------------------------
 
@@ -98,5 +98,5 @@ func Kon1Dec2
 * ---------------------------------------------------------------
 
 .kn1_QuitDecomp:
-    movem.l	(sp)+, %d2/%a2
+    movem.l	(sp)+, %d2/%a2    // restore registers (except the scratch pad)
     rts

@@ -15,7 +15,7 @@ void fc8Decode (u8* inBuf, u8* outBuf, bool onlyOneBlock);
 
 /// FC8 m68k decompressor by Steve Chamberlin.
 /// Returns 1 if decompression was successful, or 0 upon failure.
-extern u16 fc8_decode_block (u8* in, u8* out, u32 outsize);
+extern u16 fc8_decode_block (u32 outsize, u8* in, u8* out);
 
 /// FC8 m68k decompressor from https://github.com/leuat/TRSE.
 /// Returns 1 if decompression was successful, or 0 upon failure.

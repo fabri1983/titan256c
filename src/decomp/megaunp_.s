@@ -1,8 +1,8 @@
 #include "asm_mac.i"
 
-/* C prototype: extern void init_mega (); */
+*; C prototype: extern void init_mega ();
 func init_mega
-                movem.l     %a2-%a6/%d2-%d7, -(%sp)     // save registers (except the scratch pad)
+                movem.l %a2-%a6/%d2-%d7, -(%sp)     // save registers (except the scratch pad)
 
                 movea.l #0xFFD4CA,%a0
                 movea.l %a0,%a2
@@ -78,7 +78,7 @@ loc_C62C:
                 movem.l     (%sp)+, %a2-%a6/%d2-%d7      // restore registers (except the scratch pad)
                 rts
 .size   init_mega, .-init_mega
-/*; End of function init_mega*/
+*; End of function init_mega
 
 .align  2
 sub_C2B0:
@@ -408,13 +408,13 @@ loc_C4F4:
                 bcc.w   loc_C372
                 addq.l  #4,%sp
                 rts
-/*; End of function sub_C2B0*/
+*; End of function sub_C2B0
 
 .align  2
 sub_C12C:
                 move.w  -6(%a6),%d5
                 and.w   (%a2,%d1.w),%d5
-/*; End of function sub_C12C*/
+*; End of function sub_C12C
 
 
 sub_C134:
@@ -474,7 +474,7 @@ loc_C192:
                 moveq   #8,%d0
                 add.b   (%a0,%d5.w),%d0
                 rts
-/*; End of function sub_C134*/
+*; End of function sub_C134
 
 .align  2
 sub_C1A0:
@@ -614,7 +614,7 @@ loc_C29E:
                 subi.w  #0x100,%d4
                 bcc.w   loc_C200
                 rts
-/*; End of function sub_C1A0*/
+*; End of function sub_C1A0
 
 .align  2
 sub_C0A8:
@@ -648,9 +648,9 @@ loc_C0C6:
 	moveq   #0x10,%d6
 	sub.b   %d0,%d6
 	rts
-/*; End of function sub_C0BC*/
+*; End of function sub_C0BC
 
-/*; START OF FUNCTION CHUNK FOR sub_C0F8*/
+*; START OF FUNCTION CHUNK FOR sub_C0F8
 
 loc_C0D8:
 	subq.w  #1,%d1
@@ -669,17 +669,17 @@ loc_C0D8:
 	bsr.s   sub_C0BC
 	add.w   %d2,%d7
 	rts
-/*; END OF FUNCTION CHUNK FOR sub_C0F8*/
+*; END OF FUNCTION CHUNK FOR sub_C0F8
 
 
 .align  2
 sub_C0F8:
 
-/*; FUNCTION CHUNK AT 0000C0D8 SIZE 00000020 BYTES*/
+*; FUNCTION CHUNK AT 0000C0D8 SIZE 00000020 BYTES
 
 	cmp.w   #0x100,%d1
 	bhi.s   loc_C0D8
-/*; End of function sub_C0F8*/
+*; End of function sub_C0F8
 
 
 .align  2
@@ -707,11 +707,11 @@ loc_C11A:
 	sub.b   0x7F(%a3,%d1.w),%d7
 	subq.w  #1,%d7
 	rts
-/*; End of function sub_C0FE*/
+*; End of function sub_C0FE
 
-/*; %a0 - src*/
-/*; %a1 - dst*/
-/* C prototype: extern void megaunp (u8* data, u8* dest); */
+*; %a0 - src
+*; %a1 - dst
+*; C prototype: extern void megaunp (u8* data, u8* dest);
 func megaunp
     movem.l     4(%sp), %a0-%a1         	// copy parameters into registers a0-a1
     movem.l     %a2-%a6/%d2-%d7, -(%sp)     // save registers (except the scratch pad)
@@ -802,4 +802,4 @@ loc_C5A4:
     movem.l     (%sp)+, %a2-%a6/%d2-%d7      // restore registers (except the scratch pad)
 	rts
 .size   megaunp, .-megaunp
-/*; End of function megaunp*/
+*; End of function megaunp

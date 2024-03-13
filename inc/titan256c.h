@@ -8,6 +8,7 @@
 #include "compatibilities.h"
 #include "titan256c_consts.h"
 
+const u16* getTitanCharsGradientColors ();
 u16* getGradientColorsBuffer ();
 /// Use 0 if no fading required
 void setCurrentFadingStripForText (u16 currFadingStrip_);

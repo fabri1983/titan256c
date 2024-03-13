@@ -2,6 +2,7 @@
 #include <vdp.h>
 #include <pal.h>
 #include <sys.h>
+#include <timer.h>
 #include <tools.h> // KLog methods
 #include "hvInterrupts.h"
 #include "titan256c.h"
@@ -119,10 +120,10 @@ void NO_INLINE setupDMAForPals (u16 len, u32 fromAddr) {
 u16* titan256cPalsPtr; // 1st and 2nd strip's palette are loaded at the beginning of the display loop, so this ptr starts at 3rd strip
 u8 palIdx; // 3rd strip starts with palettes at [PAL0,PAL1]
 u16* currGradPtr;
-u8 applyBlackPalPosY = TITAN_256C_HEIGHT - 1; // initial value, same than the one set in main.c
-u8 vcounterManual;
-u8 textRampEffectLimitTop;
-u8 textRampEffectLimitBottom;
+u16 applyBlackPalPosY = TITAN_256C_HEIGHT - 1; // initial value, same than the one set in varsSetup() and in main.c
+u16 vcounterManual;
+u16 textRampEffectLimitTop;
+u16 textRampEffectLimitBottom;
 
 void blackCurrentGradientPtr () {
     currGradPtr = (u16*) palette_black;
@@ -135,12 +136,12 @@ FORCE_INLINE void varsSetup () {
     u16 posYFalling = getYPosFalling();
     u16 stripN = min(TITAN_256C_HEIGHT/TITAN_256C_STRIP_HEIGHT - 1, (posYFalling / TITAN_256C_STRIP_HEIGHT) + 2);
     titan256cPalsPtr = getUnpackedPtr() + stripN * TITAN_256C_COLORS_PER_STRIP;
-    applyBlackPalPosY = max(0, (TITAN_256C_HEIGHT - 1) - posYFalling);
+    applyBlackPalPosY = (TITAN_256C_HEIGHT - 1) - posYFalling;
     // On even strips we know we use [PAL0,PAL1] so starts with palIdx=0. On odd strips is [PAL1,PAL2] so starts with palIdx=32.
     palIdx = ((posYFalling / TITAN_256C_STRIP_HEIGHT) % 2) == 0 ? 0 : TITAN_256C_COLORS_PER_STRIP;
     currGradPtr = getGradientColorsBuffer();
-    textRampEffectLimitTop = max(0, TITAN_256C_TEXT_STARTING_STRIP * TITAN_256C_STRIP_HEIGHT - posYFalling);
-    textRampEffectLimitBottom = max(0, TITAN_256C_TEXT_ENDING_STRIP * TITAN_256C_STRIP_HEIGHT - posYFalling + 2);
+    textRampEffectLimitTop = TITAN_256C_TEXT_STARTING_STRIP * TITAN_256C_STRIP_HEIGHT - posYFalling;
+    textRampEffectLimitBottom = TITAN_256C_TEXT_ENDING_STRIP * TITAN_256C_STRIP_HEIGHT - posYFalling + 2;
 }
 
 void vertIntOnTitan256cCallback_HIntEveryN () {
@@ -160,29 +161,39 @@ void vertIntOnTitan256cCallback_HIntOneTime () {
 }
 
 HINTERRUPT_CALLBACK horizIntOnTitan256cCallback_CPU_EveryN_asm () {
-    // 1398-1428 cycles
+    // 1380-1408 cycles
     ASM_STATEMENT __volatile__ (
         ".prepare_regs_%=:\n"
-        "   move.l      %[currGradPtr],%%a0\n"                // a0: currGradPtr
-        "   move.l      %[titan256cPalsPtr],%%a1\n"           // a1: titan256cPalsPtr
-        "   movea.l     #0xC00004,%%a2\n"                     // a2: VDP_CTRL_PORT 0xC00004
-        "   movea.l     #0xC00000,%%a3\n"                     // a3: VDP_DATA_PORT 0xC00000
-        "   movea.l     #0xC00009,%%a4\n"                     // a4: HCounter address 0xC00009
-        "   move.b      #150,%%d7\n"                          // d7: 150 is the HCounter limit
+        "   move.l      %[currGradPtr],%%a0\n"         // a0: currGradPtr
+        "   move.l      %[titan256cPalsPtr],%%a1\n"    // a1: titan256cPalsPtr
+        "   movea.l     #0xC00004,%%a2\n"              // a2: VDP_CTRL_PORT 0xC00004
+        "   movea.l     #0xC00000,%%a3\n"              // a3: VDP_DATA_PORT 0xC00000
+        "   movea.l     #0xC00009,%%a4\n"              // a4: HCounter address 0xC00009
+        "   move.b      #150,%%d7\n"                   // d7: 150 is the HCounter limit
+
+        // ".setGradColorForText_flag_%=:\n"
+        // "   moveq       #0,%%d4\n"                            // d4: setGradColorForText = 0 (FALSE)
+        // "   move.w      %[vcounterManual],%%d0\n"             // d0: vcounterManual
+        // "   cmp.w       %[textRampEffectLimitTop],%%d0\n"     // cmp: vcounterManual - textRampEffectLimitTop
+        // "   blo         .color_batch_1_cmd\n"                 // branch if (vcounterManual < textRampEffectLimitTop) (opposite than vcounterManual >= textRampEffectLimitTop)
+        // "   cmp.w       %[textRampEffectLimitBottom],%%d0\n"  // cmp: vcounterManual - textRampEffectLimitBottom
+        // "   bhi         .color_batch_1_cmd\n"                 // branch if (vcounterManual > textRampEffectLimitBottom) (opposite than vcounterManual <= textRampEffectLimitBottom)
+        // "   moveq       #1,%%d4\n"                            // d4: setGradColorForText = 1 (TRUE)
 
         ".setGradColorForText_flag_%=:\n"
-        "   move.b      %[vcounterManual],%%d4\n"           // d4: vcounterManual
+        "   move.w      %[vcounterManual],%%d0\n"              // d0: vcounterManual
             // translate vcounterManual to base textRampEffectLimitTop:
-        "   sub.b       %[textRampEffectLimitTop],%%d4\n"   // d4: vcounterManual - textRampEffectLimitTop
-            // 32 is the amount of scanlines between top and bottom text ramp effect
-        "   cmpi.b      #32,%%d4\n"                         // d4 -= 32
-        "   scs.b       %%d4\n"                             // d4=0xF if d4 >= 0 then d4=0xFF (enable bg color), if d4 < 0 then d4=0x00 (no bg color)
-        "   bls         .color_batch_1_cmd\n"               // branch if d4 <= 32 (at this moment d4 is correctly set)
-        "   moveq       #0,%%d4\n"                          // d4=0 (no bg color)
+        "   sub.w       %[textRampEffectLimitTop],%%d0\n"      // d0: vcounterManual - textRampEffectLimitTop
+            // i_TEXT_RAMP_EFFECT_HEIGHT is the amount of scanlines the text ramp effect takes:
+        "   cmpi.w      %[i_TEXT_RAMP_EFFECT_HEIGHT],%%d0\n"   // d0 -= i_TEXT_RAMP_EFFECT_HEIGHT
+        "   scs.b       %%d4\n"                                // if d0 >= 0 => d4=0xFF (enable bg color), if d0 < 0 => d4=0x00 (no bg color)
+        // Next instructions not needed, logic works fine without them. I don't get it.
+        //"   bls         .color_batch_1_cmd\n"                  // branch if d0 <= i_TEXT_RAMP_EFFECT_HEIGHT (at this moment d4 is correctly set)
+        //"   moveq       #0,%%d4\n"                             // d4=0x00 (no bg color)
 
 		".color_batch_1_cmd:\n"
 			// cmdAddress = palIdx == 0 ? 0xC0000000 : 0xC0400000;
-            // set base command address once and then we'll add the right offset in remaining color batch blocks
+            // set base command address once and then we'll add the right offset in next color batch blocks
 		"   move.l      #0xC0000000,%%d6\n"     // d6: cmdAddress = 0xC0000000
 		"   tst.b       %[palIdx]\n"            // palIdx == 0?
 		"   beq         .set_bgColor1\n"
@@ -333,9 +344,9 @@ HINTERRUPT_CALLBACK horizIntOnTitan256cCallback_CPU_EveryN_asm () {
         "   move.l      %%a0,%[currGradPtr]\n"  // store current value currGradPtr
 
 		".accomodate_vars_A:\n"
-        "   move.b      %[vcounterManual],%%d0\n"                  // d0: vcounterManual
-        "   addq.b      %[i_TITAN_256C_STRIP_HEIGHT],%%d0\n"       // d0: vcounterManual += TITAN_256C_STRIP_HEIGHT
-        "   move.b      %%d0,%[vcounterManual]\n"                  // store current value of vcounterManual
+        "   move.w      %[vcounterManual],%%d0\n"                  // d0: vcounterManual
+        "   addq.w      %[i_TITAN_256C_STRIP_HEIGHT],%%d0\n"       // d0: vcounterManual += TITAN_256C_STRIP_HEIGHT
+        "   move.w      %%d0,%[vcounterManual]\n"                  // store current value of vcounterManual
         "   move.b      %[palIdx],%%d1\n"                          // d1: palIdx
         "   eori.b      %[i_TITAN_256C_COLORS_PER_STRIP],%%d1\n"   // d1: palIdx ^= TITAN_256C_COLORS_PER_STRIP // cycles between 0 and 32
         "   move.b      %%d1,%[palIdx]\n"                          // store current value of palIdx
@@ -354,9 +365,10 @@ HINTERRUPT_CALLBACK horizIntOnTitan256cCallback_CPU_EveryN_asm () {
 		"   move.w      %[turnon],(%%a2)\n"     // *(vu16*) VDP_CTRL_PORT = 0x8100 | (reg01 | 0x40);
 
         ".accomodate_vars_B:\n"
-        "   cmp.b       %[applyBlackPalPosY],%%d0\n"   // cmp: vcounterManual - applyBlackPalPosY
+        "   cmp.w       %[applyBlackPalPosY],%%d0\n"   // cmp: vcounterManual - applyBlackPalPosY
         "   blo         .accomodate_vars_C\n"          // branch if (vcounterManual < applyBlackPalPosY)
-        "   move.l      %[palette_black],%%a1\n"       // a1 = palette_black;
+        "   move.w      %[palette_black],%%a1\n"       // a1 = palette_black;
+            // we can use .w in above instruction bc palette_black is located at RAM 0x0000---- (only word part is effectively used)
         "   bra         .fin%=\n"
         ".accomodate_vars_C:\n"
         "   move.l      %%a1,%[titan256cPalsPtr]\n"    // store current value of a1 into variable titan256cPalsPtr
@@ -374,7 +386,8 @@ HINTERRUPT_CALLBACK horizIntOnTitan256cCallback_CPU_EveryN_asm () {
 		[turnoff] "i" (0x8100 | (116 & ~0x40)), // 0x8134
 		[turnon] "i" (0x8100 | (116 | 0x40)), // 0x8174
 		[i_TITAN_256C_COLORS_PER_STRIP] "i" (TITAN_256C_COLORS_PER_STRIP),
-		[i_TITAN_256C_STRIP_HEIGHT] "i" (TITAN_256C_STRIP_HEIGHT)
+		[i_TITAN_256C_STRIP_HEIGHT] "i" (TITAN_256C_STRIP_HEIGHT),
+        [i_TEXT_RAMP_EFFECT_HEIGHT] "i" ((TITAN_256C_TEXT_ENDING_STRIP - TITAN_256C_TEXT_STARTING_STRIP) * TITAN_256C_STRIP_HEIGHT + 2)
 		:
 		"d0","d1","d2","d3","d4","d5","d6","d7","a0","a1","a2","a3","a4","cc"  // backup registers used in the asm implementation
     );
@@ -723,4 +736,31 @@ HINTERRUPT_CALLBACK horizIntOnTitan256cCallback_DMA_OneTime () {
         vcounter += TITAN_256C_STRIP_HEIGHT;
         waitVCounterReg(vcounter);
     }
+}
+
+u16 textColor = 0xEEE;
+u8 textColorIndex = 0;
+s8 textColorDirection = 1;
+
+void vertIntOnDrawTextCallback () {
+    // reset text color to white
+    PAL_setColor(15, 0xEEE);
+
+    if ((vtimer % 4) == 0) {
+        // get next text color value for the HInt
+        textColor = *(getTitanCharsGradientColors() + textColorIndex);
+        textColorIndex += textColorDirection;
+        if (textColorIndex == TITAN_CHARS_GRADIENT_MAX_COLORS) {
+            textColorIndex -= 2;
+            textColorDirection = -1;
+        }
+        else if (textColorIndex == 0) {
+            textColorDirection = 1;
+        }
+    }
+}
+
+HINTERRUPT_CALLBACK horizIntOnDrawTextCallback () {
+    waitHCounter(154);
+    PAL_setColor(15, textColor);
 }

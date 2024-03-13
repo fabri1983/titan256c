@@ -19,4 +19,8 @@ HINTERRUPT_CALLBACK horizIntOnTitan256cCallback_DMA_EveryN ();
 
 HINTERRUPT_CALLBACK horizIntOnTitan256cCallback_DMA_OneTime ();
 
-#endif
+void vertIntOnDrawTextCallback ();
+
+HINTERRUPT_CALLBACK horizIntOnDrawTextCallback ();
+
+#endif // HV_INTERRUPTS_H

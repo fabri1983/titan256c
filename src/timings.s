@@ -73,14 +73,21 @@
     bhi         .color_batch_1_cmd ;// branch if (vcounterManual > textRampEffectLimitBottom) (opposite than vcounterManual <= textRampEffectLimitBottom)
     moveq       #1,d4          ;// d4: setGradColorForText = 1 (TRUE)
 * vs
-    * 58-62 cycles
+    * 44-46 cycles
     move.b      $EEFF0022,d4   ;// vcounterManual
     * translate vcounterManual to base textRampEffectLimitTop:
     sub.b       $EEFF0024,d4   ;// vcounterManual - textRampEffectLimitTop
     * 32 is the amount of scanlines between top and bottom text ramp effect
     cmpi.b      #32,d4         ;// d4 - 32
     scs.b       d4             ;// d4=0xF if d4 >= 0 then d4=0xFF (enable bg color), if d4 < 0 then d4=0x00 (no bg color)
-    bls         .color_batch_1_cmd ;// branch if d4 <= 32 (at this moment d4 is correctly set)
-    moveq       #0,d4          ;// d4=0 (no bg color)
+    *bls         .color_batch_1_cmd ;// branch if d4 <= 32 (at this moment d4 is correctly set)
+    * next instruction ended up being redundant, logic works ok without it
+    *moveq       #0,d4          ;// d4=0 (no bg color)
+.color_batch_1_cmd:
 
+* a4 parity test
+*    move.w a4,d7
+*    andi.b #1,d7
+*    beq    _is_even
+*_is_even:
 

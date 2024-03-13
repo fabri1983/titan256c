@@ -7,7 +7,7 @@
 extern void SaxDec (u8* src, u8* dest);
 
 /// Saxman decompressor with length as parameter
-extern void SaxDec2 (u8* src, u8* dest, u16 length);
+extern void SaxDec2 (u16 length, u8* src, u8* dest);
 
 /// Extracts the length of the data out of from the src
 u16 Sax2_getLength (u8* src);

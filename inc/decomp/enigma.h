@@ -4,6 +4,6 @@
 #include <types.h>
 
 /// Enigma decompressor ASM m68k version.
-extern void EniDec (u8* in, u8* out, u16 mapBaseTileIndex);
+extern void EniDec (u16 mapBaseTileIndex, u8* in, u8* out);
 
 #endif // _ENIGMA_H

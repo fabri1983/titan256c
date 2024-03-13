@@ -35,10 +35,9 @@
 
 * ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
 * ---------------------------------------------------------------------------
-* C prototype: extern void EniDec (u8* in, u8* out, u16 mapBaseTileIndex);
+* C prototype: extern void EniDec (u16 mapBaseTileIndex, u8* in, u8* out);
 func EniDec
-	movem.l	4(%sp), %a0-%a1         	// copy parameters into registers a0-a1
-	movem.l	12(%sp), %d0         		// copy the other parameter into d0
+	movem.l	4(%sp), %d0/%a0-%a1         // copy parameters into registers d0/a0-a1
 	movem.l	%d2-%d7/%a2-%a5,-(%sp)		// save registers (except the scratch pad)
 
 	movea.w	%d0,%a3			// store starting art tile

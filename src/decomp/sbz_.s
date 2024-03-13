@@ -32,7 +32,7 @@
 *======================================================================
 * C prototype: extern void SBZ_decompress (u8* in, u8* out)
 func SBZ_decompress
-	*movem.l 4(%sp), %a0-%a1				// copy parameters into registers a0-a1
+	*movem.l		4(%sp), %a0-%a1				// copy parameters into registers a0-a1
 	*movem.l	%d2-%d3/%a2-%a4, -(%sp)		// save registers (except the scratch pad)
 	moveq	#0,%d2
 	move.w	(%a0)+,%a2

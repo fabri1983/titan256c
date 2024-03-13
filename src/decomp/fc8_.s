@@ -54,10 +54,9 @@ _GetUINT32:
 * d1 = outsize
 * d0 = result (1 if decompression was successful, or 0 upon failure)
 *-------------------------------------------------------------------------------
-* C prototype: extern u16 fc8_decode_block (u8* in, u8* out, u32 outsize)
+* C prototype: extern u16 fc8_decode_block (u32 outsize, u8* in, u8* out)
 func fc8_decode_block
-	movem.l	4(%sp), %a0-%a1				// copy parameters into registers a0-a1
-    move.l	12(%sp), %d1				// copy the other parameter into d1
+	movem.l	4(%sp), %d1/%a0-%a1			// copy parameters into registers d1/a0-a1
 	movem.l	%d2-%d7/%a2-%a6, -(%sp)		// save registers (except the scratch pad)
 
 _Init_Decode:
@@ -104,9 +103,9 @@ _mainloop:
 
 * LIT 00aaaaaa - copy literal string of aaaaaa+1 bytes from input to output	
 _LIT:
-	move.l	%a0, %a4				// a4 = source ptr for copy
-	and.w 	%d4, %d6				// AND with 0x3F, d6 = length-1 word for copy
-	lea		1(%a0,%d6.w), %a0		// advance a0 to the end of the literal string
+	move.l	%a0, %a4			// a4 = source ptr for copy
+	and.w 	%d4, %d6			// AND with 0x3F, d6 = length-1 word for copy
+	lea		1(%a0,%d6.w), %a0	// advance a0 to the end of the literal string
 	bra.s 	_copyLoop
 
 * BR0 01baaaaa - copy b+3 bytes from output backref aaaaa to output
@@ -176,7 +175,8 @@ _copyLoop:
 	* jmp		_copy16orFewer(%d6.w*2)
 	* So here is my workaround:
 	move.w	%d6, %d7
-	lsl.w	#2, %d7		// multiply by 4 because the jump tables use bra.w making the instruction width to be 4
+	add.w	%d7, %d7		// multiply by 4 because the jump tables use bra.w making the instruction width to be 4
+	add.w	%d7, %d7
 	jmp		_copy16orFewer(%pc,%d7.w)  // here we can use a byte jump using d7 because destination label is inside 128 bytes
 
 _copy16orFewer:
@@ -250,7 +250,8 @@ _copy17orFewer:
 	* jmp		_copy16orFewer(%d6.w*2)
 	* So here is my workaround:
 	move.w	%d6, %d7
-	lsl.w	#2, %d7		// multiply by 4 because the jump tables use bra.w making the instruction width to be 4
+	add.w	%d7, %d7		// multiply by 4 because the jump tables use bra.w making the instruction width to be 4
+	add.w	%d7, %d7
 	move.w	%d7, %a6
 	jmp		_copy16orFewer(%a6)	// we can't use _copy16orFewer(%pc,%d7) because destination label is far than 128 bytes
 

@@ -41,7 +41,7 @@ void unpackSelector (u16 compression, u8* src, u8* dest, u16 outSizeInBytes) {
         #endif
         #ifdef USING_ENIGMA
         case ENIGMA:
-            EniDec(src, dest, 0); // 0 acts as a mapBaseTileIndex which we don't use here
+            EniDec(0, src, dest); // 0 acts as a mapBaseTileIndex, which we don't use here
             break;
         #endif
         #ifdef USING_FC8

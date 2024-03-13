@@ -30,11 +30,11 @@ void fc8Decode (u8* inBuf, u8* outBuf, bool onlyOneBlock) {
         // decompressing block format?
         if (blockSize != maxOutSize)
             blockOffset = GetUInt32(&inBuf[FC8_BLOCK_HEADER_SIZE + sizeof(u32) * i]);
-        u16 success = fc8_decode_block(inBuf + blockOffset, outBuf + blockSize * i, maxOutSize - blockSize * i);
+        u16 success = fc8_decode_block(maxOutSize - blockSize * i, inBuf + blockOffset, outBuf + blockSize * i);
         //u16 success = fc8_decode_block_tru(inBuf + blockOffset, outBuf + blockSize * i);
         // error?
         if (success == 0)
-            break;
+            break; // something wrong happened
     }
 }
 
