@@ -782,9 +782,9 @@ MEMORY_BARRIER();
     }
 }
 
-u16 textColor = 0xE00; // initial color is the same than titanCharsGradientColors[0]
-u8 textColorIndex = 0;
-s8 textColorDirection = 1;
+static u16 textColor = 0xE00; // initial color is the same than titanCharsGradientColors[0]
+static u8 textColorIndex = 0;
+static s8 textColorDirection = 1;
 
 void vertIntOnDrawTextCallback () {
     // reset text color to white

@@ -108,7 +108,7 @@ FORCE_INLINE void load2Pals (u16 startingScreenStrip) {
     }
 }
 
-// rmap color effect in VDP format: BGR
+// ramp color effect in VDP format: BGR
 static const u16 titanCharsGradientColors[TITAN_CHARS_GRADIENT_MAX_COLORS + TITAN_CHARS_CURR_GRADIENT_ELEMS] = {
     0xE00, 0xE02, 0xE04, 0xE06, 0xE08, 0xE0A, 0xE0C,
     0xE0E, 0xC0E, 0xA0E, 0x80E, 0x60E, 0x40E, 0x20E, 
