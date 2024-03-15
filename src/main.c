@@ -252,14 +252,18 @@ static void initGameStatus () {
     titan256cHIntMode = 0; // set initial color swap strategy
 }
 
+static void prepareNextHintMode () {
+    titan256cHIntMode = modu(titan256cHIntMode + 1, HINT_MODES);
+}
+
 int main (bool hard) {
 
     if (!hard) SYS_hardReset();
 
-    // displaySegaLogo();
-    // waitMs_(200);
-    // displayTeddyBearLogo();
-    // waitMs_(200);
+    displaySegaLogo();
+    waitMs_(200);
+    displayTeddyBearLogo();
+    waitMs_(200);
 
     basicEngineConfig();
     initGameStatus();
@@ -267,8 +271,7 @@ int main (bool hard) {
     for (;;) {
         showTransitionScreen();
         titan256cDisplay();
-        // move into next Titan256c HInt mode
-        titan256cHIntMode = modu(titan256cHIntMode + 1, HINT_MODES);
+        prepareNextHintMode();
     }
 
     return 0;

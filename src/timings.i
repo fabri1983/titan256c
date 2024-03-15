@@ -85,9 +85,74 @@
     *moveq       #0,d4          ;// d4=0 (no bg color)
 .color_batch_1_cmd:
 
+
 * a4 parity test
 *    move.w a4,d7
 *    andi.b #1,d7
 *    beq    _is_even
 *_is_even:
 
+
+;// Stef's LZ4W copying longs:
+  ;// 127*20 = 2540 cycles
+  .rept  127
+    move.l  (a2)+, (a1)+
+  .endr
+;// vs:
+  ;// 15*152 + 12 + 7*20 = 2432 cycles
+  .irp k,0,32,64,96,128,160,192,224,256,288,320,352,384,416,448
+    movem.l (a2)+, d2-d7/a5-a6      ;// 8 registers
+    movem.l d2-d7/a5-a6, \k(a1)
+  .endr
+    adda    #480, a1
+  .rept  7
+    move.l  (a2)+, (a1)+
+  .endr
+
+;// Stef's LZ4W copying words:
+  ;// 255*12 = 3060 cycles
+  .rept  255
+    move.w  (a2)+, (a1)+
+  .endr
+;// vs:
+  ;// 31*88 + 12 + 7*12 = 2824 cycles
+  .irp k,0,16,32,48,64,80,96,112,128,144,160,176,192,208,224,240,256,272,288,304,320,336,352,368,384,400,416,432,448,464,480
+    movem.w (a2)+, d2-d7/a5-a6      ;// 8 registers
+    movem.w d2-d7/a5-a6, \k(a1)
+  .endr
+    adda    #496, a1
+  .rept  7
+    move.w  (a2)+, (a1)+
+  .endr
+
+;// Stef's COPY_MATCH macro
+  .macro  COPY_MATCH  count
+    add.w  d1, d1
+    neg.w  d1
+    lea  -2(a1,d1.w), a2            ;// a2 = dst - ((match offset + 1) * 2)
+  .rept  ((\count)+1)
+    move.w  (a2)+, (a1)+
+  .endr
+    LZ4W_NEXT
+  .endm
+;// vs:
+  .macro  COPY_MATCH  count
+    add.w  d1, d1
+    neg.w  d1
+    lea  -2(a1,d1.w), a2            ;// a2 = dst - ((match offset + 1) * 2)
+  .if (\count + 1) == 2
+    move.l  (a2)+, (a1)+
+  .else
+  .if ((\count + 1) % 2) == 0
+  .rept ((\count + 1) / 2) 
+    move.l  (a2)+, (a1)+
+  .endr
+  .else
+  .rept ((\count + 1) / 2) 
+    move.l  (a2)+, (a1)+
+  .endr
+    move.w  (a2)+, (a1)+
+  .endif
+  .endif
+    LZ4W_NEXT
+  .endm

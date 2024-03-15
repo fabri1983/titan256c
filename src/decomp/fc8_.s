@@ -57,7 +57,7 @@ _GetUINT32:
 * C prototype: extern u16 fc8_decode_block (u32 outsize, u8* in, u8* out)
 func fc8_decode_block
 	movem.l	4(%sp), %d1/%a0-%a1			// copy parameters into registers d1/a0-a1
-	movem.l	%d2-%d7/%a2-%a6, -(%sp)		// save registers (except the scratch pad)
+	movem.l	%d2-%d7/%a2-%a6, -(%sp)		// save used registers (except the scratch pad)
 
 _Init_Decode:
 #if FC8_CHECK_MAGIC_NUMBER
@@ -296,5 +296,5 @@ _done:
 	moveq.l	#1, %d0				// result = 1
 
 _exit:
-	movem.l	(sp)+, %d2-%d7/%a2-%a6	// restore registers (except the scratch pad)
+	movem.l	(sp)+, %d2-%d7/%a2-%a6	// restore used registers (except the scratch pad)
 	rts

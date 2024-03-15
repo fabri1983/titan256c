@@ -107,15 +107,15 @@ const unsigned char mod_10[262] = {
 		frameTime_##n = 261 - lineStart_##n;\
 		frameTime_##n += lineEnd_##n;\
 		/* Add a 'w' to know this measure has wrapped around at least a display loop */ \
-		*(str_##n + 2) = 'w';\
+		str_##n[2] = 'w';\
 	} else {\
 		frameTime_##n = lineEnd_##n - lineStart_##n;\
 	}\
 	{\
-		*(str_##n + 8) = div_100[frameTime_##n];\
-		*(str_##n + 9) = div_10_mod_10[frameTime_##n];\
-		*(str_##n + 10) = mod_10[frameTime_##n];\
-		*(str_##n + 11) = '\0';\
+		str_##n[8] = div_100[frameTime_##n];\
+		str_##n[9] = div_10_mod_10[frameTime_##n];\
+		str_##n[10] = mod_10[frameTime_##n];\
+		str_##n[11] = '\0';\
 		KLog(str_##n);\
 	}\
 

@@ -30,7 +30,7 @@ func unaplib
     movem.l     4(%sp), %a0-%a1     // copy parameters into registers a0-a1
 
 apl_decompress:
-    movem.l     %a2-%a6/%d2-%d3, -(%sp)
+    movem.l     %a2-%a6/%d2-%d3, -(%sp)   // save used registers (except the scratch pad)
 
     moveq       #-128, %d1      // initialize empty bit queue
                                 // plus bit to roll into carry
@@ -116,7 +116,7 @@ apl_decompress:
 .apl_done:
     move.l      %a1, %d0        // pointer to last decompressed byte + 1
     sub.l       %a6, %d0        // minus start of decompression buffer = size
-    movem.l     (%sp)+, %a2-%a6/%d2-%d3
+    movem.l     (%sp)+, %a2-%a6/%d2-%d3    // restore used registers (except the scratch pad)
     rts
 
 .apl_get_gamma2:
