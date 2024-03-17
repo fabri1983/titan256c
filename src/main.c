@@ -178,6 +178,8 @@ static void titan256cDisplay () {
         // Load 2 strip palettes depending on the Y position (in strips) of the image
         load2Pals(yPos / TITAN_256C_STRIP_HEIGHT);
 
+        updateTextGradientColors();
+
         SYS_doVBlankProcess();
 
         // if bounce effect finished then continue with next game state
@@ -192,6 +194,8 @@ static void titan256cDisplay () {
     for (;;) {
         // Load 1st and 2nd strip's palette
         load2Pals(0);
+
+        updateTextGradientColors();
 
         SYS_doVBlankProcess();
 
@@ -213,6 +217,8 @@ static void titan256cDisplay () {
 
         // enable the fading effect on titan text calculated on VInt
         setCurrentFadingStripForText(currFadingStrip);
+
+        updateTextGradientColors();
 
         if (fadingCycleCurrStrip < FADE_OUT_STRIPS_SPLIT_CYCLES) {
             // apply fade to black from currFadingStrip up to FADE_OUT_STEPS previous strips

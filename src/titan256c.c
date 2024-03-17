@@ -142,7 +142,7 @@ void NO_INLINE updateTextGradientColors () {
     u16 fadeTextAmount = 0;
     if (currFadingStrip >= TITAN_256C_TEXT_STARTING_STRIP) {
         // (ramp colors shown per strip) + (ramp colors shown per strip) * (delta between current strip and 21)
-        innerStripLimit = 4 + 4 * (currFadingStrip - TITAN_256C_TEXT_STARTING_STRIP);
+        innerStripLimit = (4) + (4) * (currFadingStrip - TITAN_256C_TEXT_STARTING_STRIP);
         u16 factor = currFadingStrip - TITAN_256C_TEXT_STARTING_STRIP + 1;
         fadeTextAmount = 0x222 * factor;
     }
@@ -151,8 +151,9 @@ void NO_INLINE updateTextGradientColors () {
     u16 colorIdx = titanCharsCycleCnt / TITAN_CHARS_GRADIENT_SCROLL_FREQ; // advance ramp color every N frames (use divu for divisor non power of 2)
     if (colorIdx > TITAN_CHARS_GRADIENT_MAX_COLORS) colorIdx = 0;
 
+    u16* palsPtr = (u16*)titanCharsGradientColors + colorIdx;
     for (u16 i=0; i < TITAN_CHARS_CURR_GRADIENT_ELEMS; ++i) {
-        u16 d = *(titanCharsGradientColors + colorIdx++);
+        u16 d = *palsPtr++;
         if (i < innerStripLimit) {
             d -= min(0xEEE, fadeTextAmount);
             // diminish the fade out weight every 4 colors (ramp colors shown per strip)
@@ -212,7 +213,7 @@ void NO_INLINE fadingStepToBlack_pals (u16 currFadingStrip, u16 cycle, u16 titan
         // Which is the same than substracting 0x222
 
         // HInt modes 0,1,2 have no issue in finishing on time
-        if (titan256cHIntMode != HINT_STRATEGY_3) {
+        // if (titan256cHIntMode != HINT_STRATEGY_3) {
             for (u16 i=TITAN_256C_COLORS_PER_STRIP; i--;) {
                 // IMPL A:
                 u16 d = *palsPtr - 0x222; // decrement 1 unit in every component
@@ -234,16 +235,16 @@ void NO_INLINE fadingStepToBlack_pals (u16 currFadingStrip, u16 cycle, u16 titan
                 // if (d & 0b1000000000000) d &= ~0b1111000000000; // blue overflows? then zero it
                 // *palsPtr++ = d;
             }
-        }
-        // Only HInt mode 2 has issues to finish on time and makes appear glitches during the fade out.
-        // So this version is speedier but reaches to color black faster.
-        else {
-            for (u16 i=TITAN_256C_COLORS_PER_STRIP; i--;) {
-                u16 d = *palsPtr - 0x222; // decrement 1 unit in every component
-                if (d & 0b1000100010000) d = 0; // if only one color overflows then zero them all
-                *palsPtr++ = d;
-            }
-        }
+        // }
+        // // Only HINT_STRATEGY_3 has issues to finish on time and makes appear glitches during the fade out.
+        // // So this version is speedier but reaches to color black faster.
+        // else {
+        //     for (u16 i=TITAN_256C_COLORS_PER_STRIP; i--;) {
+        //         u16 d = *palsPtr - 0x222; // decrement 1 unit in every component
+        //         if (d & 0b1000100010000) d = 0; // if only one color overflows then zero them all
+        //         *palsPtr++ = d;
+        //     }
+        // }
     }
 }
 

@@ -150,7 +150,6 @@ void vertIntOnTitan256cCallback_HIntEveryN () {
     vcounterManual = TITAN_256C_STRIP_HEIGHT - 1;
     if (vcounterManual >= applyBlackPalPosY)
         titan256cPalsPtr = (u16*) palette_black;
-    updateTextGradientColors();
 }
 
 void vertIntOnTitan256cCallback_HIntOneTime () {
@@ -158,7 +157,6 @@ void vertIntOnTitan256cCallback_HIntOneTime () {
     varsSetup();
     if ((TITAN_256C_STRIP_HEIGHT - 1) >= applyBlackPalPosY)
         titan256cPalsPtr = (u16*) palette_black;
-    updateTextGradientColors();
 }
 
 HINTERRUPT_CALLBACK horizIntOnTitan256cCallback_CPU_EveryN_asm () {
