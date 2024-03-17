@@ -10,7 +10,7 @@
             "request": "launch",
             "type": "cppdbg",
             "program": "${workspaceRoot}\\out\\rom.out",
-            "miDebuggerServerAddress": "localhost:6868",//GensKMod debug port. Change it for use another ports
+            "miDebuggerServerAddress": "localhost:6868",//GensKMod debug port 6868. Change it for use another ports
             "sourceFileMap": {
                 "d:\\apps\\sgdk\\src\\": "${env:GDK}\\src\\",
             },

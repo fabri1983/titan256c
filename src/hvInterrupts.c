@@ -6,6 +6,7 @@
 #include <tools.h> // KLog methods
 #include "hvInterrupts.h"
 #include "titan256c.h"
+#include "font_consts.h"
 
 // u8 reg01; // Holds current VDP register 1 whole value (it holds other bits than VDP ON/OFF status)
 
@@ -788,7 +789,7 @@ static s8 textColorDirection = 1;
 
 void vertIntOnDrawTextCallback () {
     // reset text color to white
-    PAL_setColor(15, 0xEEE);
+    PAL_setColor(FONT_COLOR_TILE_INDEX, 0xEEE);
 
     if ((vtimer % 4) == 0) {
         // get next text color value for the HInt
@@ -806,5 +807,5 @@ void vertIntOnDrawTextCallback () {
 
 HINTERRUPT_CALLBACK horizIntOnDrawTextCallback () {
     waitHCounter(154);
-    PAL_setColor(15, textColor);
+    PAL_setColor(FONT_COLOR_TILE_INDEX, textColor);
 }

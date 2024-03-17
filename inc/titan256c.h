@@ -8,6 +8,12 @@
 #include "compatibilities.h"
 #include "titan256c_consts.h"
 
+#define HINT_STRATEGY_0 0
+#define HINT_STRATEGY_1 1
+#define HINT_STRATEGY_2 2
+#define HINT_STRATEGY_3 3
+#define HINT_STRATEGY_TOTAL 4
+
 const u16* getTitanCharsGradientColors ();
 u16* getGradientColorsBuffer ();
 /// Use 0 if no fading required

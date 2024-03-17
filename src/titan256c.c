@@ -187,20 +187,21 @@ FORCE_INLINE u16* getGradientColorsBuffer () {
 }
 
 void NO_INLINE fadingStepToBlack_pals (u16 currFadingStrip, u16 cycle, u16 titan256cHIntMode) {
-    // No need to fade this strip when it is one of the top strips and we already applied the fade
+    // No need to fade this strip when it is one of the top strips and we have already applied the fade
     if (currFadingStrip < (FADE_OUT_COLOR_STEPS / FADE_OUT_STRIPS_SPLIT_CYCLES) && cycle > 0) {
         return;
     }
 
     // depending on the split cycle value we update the starting strip 
     currFadingStrip = max(0, currFadingStrip - cycle * (FADE_OUT_COLOR_STEPS / FADE_OUT_STRIPS_SPLIT_CYCLES));
-    u16 limit = max(0, currFadingStrip - (FADE_OUT_COLOR_STEPS / FADE_OUT_STRIPS_SPLIT_CYCLES) + 1);
+    // starting strip is above the current strip
+    u16 startingStrip = max(0, currFadingStrip - (FADE_OUT_COLOR_STEPS / FADE_OUT_STRIPS_SPLIT_CYCLES) + 1);
     // No need to fade strips ahead the max strip limit, but we still have to fade previous FADE_OUT_COLOR_STEPS strips
     currFadingStrip = min(currFadingStrip, TITAN_256C_STRIPS_COUNT - 1);
 
-    for (s16 stripN = currFadingStrip; stripN >= limit; --stripN) {
-        // fade the palettes of stripN
-        u16* palsPtr = unpackedData + stripN * TITAN_256C_COLORS_PER_STRIP;
+    // fade the palettes starting at currFadingStrip and moving backwards
+    u16* palsPtr = unpackedData + (startingStrip * TITAN_256C_COLORS_PER_STRIP);
+    for (; startingStrip <= currFadingStrip; ++startingStrip) {
 
         // VDP u16 color is represented as next:
         // F  E  D  C  B  A  9  8  7  6  5  4  3  2  1  0
@@ -210,8 +211,8 @@ void NO_INLINE fadingStepToBlack_pals (u16 currFadingStrip, u16 cycle, u16 titan
         // -  -  -  -  0  0  1  -  0  0  1  -  0  0  1  -
         // Which is the same than substracting 0x222
 
-        // HInt modes 0 and 1 have no issue in finishing on time
-        if (titan256cHIntMode != 2) {
+        // HInt modes 0,1,2 have no issue in finishing on time
+        if (titan256cHIntMode != HINT_STRATEGY_3) {
             for (u16 i=TITAN_256C_COLORS_PER_STRIP; i--;) {
                 // IMPL A:
                 u16 d = *palsPtr - 0x222; // decrement 1 unit in every component
