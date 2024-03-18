@@ -31,4 +31,6 @@
 #define INTERRUPT_ATTRIBUTE void
 #endif
 
+#define MEMORY_BARRIER() ASM_STATEMENT volatile ("" : : : "memory")
+
 #endif // _COMPATIBILITIES_H

@@ -32,7 +32,7 @@ u16 loadTitan256cTileMap (VDPPlane plane, u16 currTileIndex);
 
 void unpackPalettes ();
 void freePalettes ();
-u16* getUnpackedPtr ();
+u16* getPalettesData ();
 
 /// Loads the palettes belonging to strip startingScreenStrip and startingScreenStrip + 1.
 void load2Pals (u16 startingScreenStrip);

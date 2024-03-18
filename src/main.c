@@ -45,22 +45,22 @@ static void showTransitionScreen () {
     u16 screenWidthTiles = screenWidth/8;
     u16 screenHeightTiles = screenHeight/8;
     switch (titan256cHIntMode) {
-        case 0:
+        case HINT_STRATEGY_0:
             VDP_drawText(mode0_textA, (screenWidthTiles - strlen(mode0_textA)) / 2, screenHeightTiles / 2 - 1);
             VDP_drawText(mode0_textB, (screenWidthTiles - strlen(mode0_textB)) / 2, screenHeightTiles / 2 - 0);
             VDP_drawText(mode0_textC, (screenWidthTiles - strlen(mode0_textC)) / 2, screenHeightTiles / 2 + 1);
             break;
-        case 1:
+        case HINT_STRATEGY_1:
             VDP_drawText(mode1_textA, (screenWidthTiles - strlen(mode1_textA)) / 2, screenHeightTiles / 2 - 1);
             VDP_drawText(mode1_textB, (screenWidthTiles - strlen(mode1_textB)) / 2, screenHeightTiles / 2 - 0);
             VDP_drawText(mode1_textC, (screenWidthTiles - strlen(mode1_textC)) / 2, screenHeightTiles / 2 + 1);
             break;
-        case 2:
+        case HINT_STRATEGY_2:
             VDP_drawText(mode2_textA, (screenWidthTiles - strlen(mode2_textA)) / 2, screenHeightTiles / 2 - 1);
             VDP_drawText(mode2_textB, (screenWidthTiles - strlen(mode2_textB)) / 2, screenHeightTiles / 2 - 0);
             VDP_drawText(mode2_textC, (screenWidthTiles - strlen(mode2_textC)) / 2, screenHeightTiles / 2 + 1);
             break;
-        case 3:
+        case HINT_STRATEGY_3:
             VDP_drawText(mode3_textA, (screenWidthTiles - strlen(mode3_textA)) / 2, screenHeightTiles / 2 - 1);
             VDP_drawText(mode3_textB, (screenWidthTiles - strlen(mode3_textB)) / 2, screenHeightTiles / 2 - 0);
             VDP_drawText(mode3_textC, (screenWidthTiles - strlen(mode3_textC)) / 2, screenHeightTiles / 2 + 1);
@@ -78,22 +78,22 @@ static void showTransitionScreen () {
     }
 
     switch (titan256cHIntMode) {
-        case 0:
+        case HINT_STRATEGY_0:
             VDP_clearText((screenWidthTiles - strlen(mode0_textA)) / 2, screenHeightTiles / 2 - 1, strlen(mode0_textA));
             VDP_clearText((screenWidthTiles - strlen(mode0_textB)) / 2, screenHeightTiles / 2 - 0, strlen(mode0_textB));
             VDP_clearText((screenWidthTiles - strlen(mode0_textC)) / 2, screenHeightTiles / 2 + 1, strlen(mode0_textC));
             break;
-        case 1:
+        case HINT_STRATEGY_1:
             VDP_clearText((screenWidthTiles - strlen(mode1_textA)) / 2, screenHeightTiles / 2 - 1, strlen(mode1_textA));
             VDP_clearText((screenWidthTiles - strlen(mode1_textB)) / 2, screenHeightTiles / 2 - 0, strlen(mode1_textB));
             VDP_clearText((screenWidthTiles - strlen(mode1_textC)) / 2, screenHeightTiles / 2 + 1, strlen(mode1_textC));
             break;
-        case 2:
+        case HINT_STRATEGY_2:
             VDP_clearText((screenWidthTiles - strlen(mode2_textA)) / 2, screenHeightTiles / 2 - 1, strlen(mode2_textA));
             VDP_clearText((screenWidthTiles - strlen(mode2_textB)) / 2, screenHeightTiles / 2 - 0, strlen(mode2_textB));
             VDP_clearText((screenWidthTiles - strlen(mode2_textC)) / 2, screenHeightTiles / 2 + 1, strlen(mode2_textC));
             break;
-        case 3:
+        case HINT_STRATEGY_3:
             VDP_clearText((screenWidthTiles - strlen(mode3_textA)) / 2, screenHeightTiles / 2 - 1, strlen(mode3_textA));
             VDP_clearText((screenWidthTiles - strlen(mode3_textB)) / 2, screenHeightTiles / 2 - 0, strlen(mode3_textB));
             VDP_clearText((screenWidthTiles - strlen(mode3_textC)) / 2, screenHeightTiles / 2 + 1, strlen(mode3_textC));
@@ -125,36 +125,39 @@ static void titan256cDisplay () {
     unpackPalettes();
 
     SYS_disableInts();
-        // Call the HInt every N scanlines. Uses CPU for palette swapping
-        if (titan256cHIntMode == HINT_STRATEGY_0) {
-            SYS_setVBlankCallback(vertIntOnTitan256cCallback_HIntEveryN);
-            VDP_setHIntCounter(TITAN_256C_STRIP_HEIGHT - 1);
-            SYS_setHIntCallback(horizIntOnTitan256cCallback_CPU_EveryN_asm);
-        }
-        // Call the HInt every N scanlines. Uses CPU for palette swapping
-        if (titan256cHIntMode == HINT_STRATEGY_1) {
-            SYS_setVBlankCallback(vertIntOnTitan256cCallback_HIntEveryN);
-            VDP_setHIntCounter(TITAN_256C_STRIP_HEIGHT - 1);
-            SYS_setHIntCallback(horizIntOnTitan256cCallback_CPU_EveryN);
-        }
-        // Call the HInt every N scanlines. Uses DMA for palette swapping
-        else if (titan256cHIntMode == HINT_STRATEGY_2) {
-            SYS_setVBlankCallback(vertIntOnTitan256cCallback_HIntEveryN);
-            VDP_setHIntCounter(TITAN_256C_STRIP_HEIGHT - 1);
-            SYS_setHIntCallback(horizIntOnTitan256cCallback_DMA_EveryN);
-        }
-        // Use only one call to HInt to avoid method call overhead. Uses DMA for palette swapping
-        else if (titan256cHIntMode == HINT_STRATEGY_3) {
-            SYS_setVBlankCallback(vertIntOnTitan256cCallback_HIntOneTime);
-            VDP_setHIntCounter(0);
-            SYS_setHIntCallback(horizIntOnTitan256cCallback_DMA_OneTime);
+        switch (titan256cHIntMode) {
+            // Call the HInt every N scanlines. Uses CPU for palette swapping
+            case HINT_STRATEGY_0:
+                SYS_setVBlankCallback(vertIntOnTitan256cCallback_HIntEveryN);
+                VDP_setHIntCounter(TITAN_256C_STRIP_HEIGHT - 1);
+                SYS_setHIntCallback(horizIntOnTitan256cCallback_CPU_EveryN_asm);
+                break;
+            // Call the HInt every N scanlines. Uses CPU for palette swapping
+            case HINT_STRATEGY_1:
+                SYS_setVBlankCallback(vertIntOnTitan256cCallback_HIntEveryN);
+                VDP_setHIntCounter(TITAN_256C_STRIP_HEIGHT - 1);
+                SYS_setHIntCallback(horizIntOnTitan256cCallback_CPU_EveryN);
+                break;
+            // Call the HInt every N scanlines. Uses DMA for palette swapping
+            case HINT_STRATEGY_2:
+                SYS_setVBlankCallback(vertIntOnTitan256cCallback_HIntEveryN);
+                VDP_setHIntCounter(TITAN_256C_STRIP_HEIGHT - 1);
+                SYS_setHIntCallback(horizIntOnTitan256cCallback_DMA_EveryN);
+                break;
+            // Use only one call to HInt to avoid method call overhead. Uses DMA for palette swapping
+            case HINT_STRATEGY_3:
+                SYS_setVBlankCallback(vertIntOnTitan256cCallback_HIntOneTime);
+                VDP_setHIntCounter(0);
+                SYS_setHIntCallback(horizIntOnTitan256cCallback_DMA_OneTime);
+                break;
+            default: break;
         }
         VDP_setHInterrupt(TRUE);
     SYS_enableInts();
 
     VDP_setEnable(TRUE);
 
-    u16 yPos = TITAN_256C_HEIGHT - 1; // initial value, same than set in hvinterrupts.c
+    u16 yPos = TITAN_256C_HEIGHT;
     s16 velocity = 0;
 
     // disable the fading effect on titan text
@@ -162,23 +165,28 @@ static void titan256cDisplay () {
 
     // Fall and bounce effect
     for (;;) {
-        // update bouncing effect every 4 frames
+        // update bouncing velocity every 4 frames
         if ((vtimer % 4) == 0) {
-            velocity -= 1;
+            velocity -= TITAN_256C_STRIP_HEIGHT;
+            // when touching floor then decay velocity just a bit
+            if ((yPos + velocity) <= 0) {
+                yPos = 0;
+                // decay in velocity as it bounces off the ground
+                velocity = ((-velocity - 1) / TITAN_256C_STRIP_HEIGHT) * TITAN_256C_STRIP_HEIGHT;
+            }
+            // while in the mid air apply translation
+            else {
+                yPos += velocity;
+            }
         }
-        if ((yPos + velocity) <= 0) {
-            yPos = 0;
-            velocity = -(velocity * 6) / 10; // decay in velocity as it bounces off the ground
-        }
-        else yPos += velocity;
 
         setYPosFalling(yPos);
         VDP_setVerticalScrollVSync(BG_B, yPos);
 
+        updateTextGradientColors();
+
         // Load 2 strip palettes depending on the Y position (in strips) of the image
         load2Pals(yPos / TITAN_256C_STRIP_HEIGHT);
-
-        updateTextGradientColors();
 
         SYS_doVBlankProcess();
 

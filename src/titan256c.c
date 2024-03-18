@@ -67,44 +67,42 @@ u16 loadTitan256cTileMap (VDPPlane plane, u16 currTileIndex) {
     return currTileIndex;
 }
 
-u16* unpackedData;
+u16* palettesData;
 
 void unpackPalettes () {
-    unpackedData = (u16*) MEM_alloc(TITAN_256C_STRIPS_COUNT * TITAN_256C_COLORS_PER_STRIP * sizeof(u16));
+    palettesData = (u16*) MEM_alloc(TITAN_256C_STRIPS_COUNT * TITAN_256C_COLORS_PER_STRIP * sizeof(u16));
     if (palTitanRGB.compression != COMPRESSION_NONE) {
         // No FAR_SAFE() macro needed here. Palette data is always stored at near region.
-        unpackSelector(palTitanRGB.compression, (u8*) palTitanRGB.data, (u8*) unpackedData, TITAN_256C_STRIPS_COUNT * TITAN_256C_COLORS_PER_STRIP);
+        unpackSelector(palTitanRGB.compression, (u8*) palTitanRGB.data, (u8*) palettesData, TITAN_256C_STRIPS_COUNT * TITAN_256C_COLORS_PER_STRIP);
     }
     else {
         // Copy the palette data. It is modified later on fading out effect.
         const u16 size = (TITAN_256C_STRIPS_COUNT * TITAN_256C_COLORS_PER_STRIP) * 2;
         // No FAR_SAFE() macro needed here. Palette data is always stored at near region.
-        memcpy((u8*) unpackedData, palTitanRGB.data, size);
+        memcpy((u8*) palettesData, palTitanRGB.data, size);
     }
 }
 
 void freePalettes () {
-    MEM_free((void*) unpackedData);
-    unpackedData = NULL;
+    MEM_free((void*) palettesData);
+    palettesData = NULL;
 }
 
-FORCE_INLINE u16* getUnpackedPtr () {
-    return unpackedData;
+FORCE_INLINE u16* getPalettesData () {
+    return palettesData;
 }
 
 FORCE_INLINE void load2Pals (u16 startingScreenStrip) {
-    // if current starting strip is at the top of the screen (0 based) we move one strip backwards so we can correctly load startingScreenStrip and startingScreenStrip + 1
-    if (startingScreenStrip == (TITAN_256C_HEIGHT/TITAN_256C_STRIP_HEIGHT - 1))
-        --startingScreenStrip;
-
-    // if current strip is even then nest strip is odd, so we can just load PAL0,PAL1 followed by PAL2,PAL3
-    if ((startingScreenStrip % 2) == 0) {
-        PAL_setColors(0, unpackedData + TITAN_256C_COLORS_PER_STRIP * startingScreenStrip, TITAN_256C_COLORS_PER_STRIP * 2, DMA_QUEUE);
-    }
-    // if current strip is odd then next strip is even, so we first load next strip PAL0,PAL1 and then PAL2,PAL3
+    // if current starting strip is at the top of the screen (0 based) we only need to load the palette of that strip
+    if (startingScreenStrip >= (TITAN_256C_HEIGHT/TITAN_256C_STRIP_HEIGHT - 1))
+        PAL_setColors(TITAN_256C_COLORS_PER_STRIP, palettesData + TITAN_256C_COLORS_PER_STRIP * (TITAN_256C_HEIGHT/TITAN_256C_STRIP_HEIGHT - 1), TITAN_256C_COLORS_PER_STRIP, DMA_QUEUE);
+    // if current strip is even then next strip is odd, so we can just load PAL0,PAL1 followed by PAL2,PAL3
+    else if ((startingScreenStrip % 2) == 0)
+        PAL_setColors(0, palettesData + TITAN_256C_COLORS_PER_STRIP * startingScreenStrip, TITAN_256C_COLORS_PER_STRIP * 2, DMA_QUEUE);
+    // if current strip is odd then its palettes go into PAL2,PAL3 and next strip's palettes go into PAL0,PAL1
     else {
-        PAL_setColors(0, unpackedData + TITAN_256C_COLORS_PER_STRIP * (startingScreenStrip + 1), TITAN_256C_COLORS_PER_STRIP, DMA_QUEUE);
-        PAL_setColors(TITAN_256C_COLORS_PER_STRIP, unpackedData + TITAN_256C_COLORS_PER_STRIP * startingScreenStrip, TITAN_256C_COLORS_PER_STRIP, DMA_QUEUE);
+        PAL_setColors(TITAN_256C_COLORS_PER_STRIP, palettesData + TITAN_256C_COLORS_PER_STRIP * startingScreenStrip, TITAN_256C_COLORS_PER_STRIP, DMA_QUEUE);
+        PAL_setColors(0, palettesData + TITAN_256C_COLORS_PER_STRIP * (startingScreenStrip + 1), TITAN_256C_COLORS_PER_STRIP, DMA_QUEUE);
     }
 }
 
@@ -128,13 +126,17 @@ const u16* getTitanCharsGradientColors () {
 
 u16 gradColorsBuffer[TITAN_CHARS_CURR_GRADIENT_ELEMS];
 
-static u8 titanCharsCycleCnt = 0;
+FORCE_INLINE u16* getGradientColorsBuffer () {
+    return gradColorsBuffer;
+}
 
 static u16 currFadingStrip = 0;
 
 void setCurrentFadingStripForText (u16 currFadingStrip_) {
     currFadingStrip = currFadingStrip_;
 }
+
+static u8 titanCharsCycleCnt = 0;
 
 void NO_INLINE updateTextGradientColors () {
     // Strips [21,25] (0 based) renders the letters using transparent color, and we want to use a gradient scrolling over time. So 5 strips.
@@ -183,10 +185,6 @@ void NO_INLINE updateTextGradientColors () {
         titanCharsCycleCnt = 0;
 }
 
-FORCE_INLINE u16* getGradientColorsBuffer () {
-    return gradColorsBuffer;
-}
-
 void NO_INLINE fadingStepToBlack_pals (u16 currFadingStrip, u16 cycle, u16 titan256cHIntMode) {
     // No need to fade this strip when it is one of the top strips and we have already applied the fade
     if (currFadingStrip < (FADE_OUT_COLOR_STEPS / FADE_OUT_STRIPS_SPLIT_CYCLES) && cycle > 0) {
@@ -201,7 +199,7 @@ void NO_INLINE fadingStepToBlack_pals (u16 currFadingStrip, u16 cycle, u16 titan
     currFadingStrip = min(currFadingStrip, TITAN_256C_STRIPS_COUNT - 1);
 
     // fade the palettes starting at currFadingStrip and moving backwards
-    u16* palsPtr = unpackedData + (startingStrip * TITAN_256C_COLORS_PER_STRIP);
+    u16* palsPtr = palettesData + (startingStrip * TITAN_256C_COLORS_PER_STRIP);
     for (; startingStrip <= currFadingStrip; ++startingStrip) {
 
         // VDP u16 color is represented as next:
@@ -251,7 +249,7 @@ void NO_INLINE fadingStepToBlack_pals (u16 currFadingStrip, u16 cycle, u16 titan
 // void NO_INLINE fadingStepToBlack_pals (u16 currFadingStrip, u16 cycle, u16 titan256cHIntMode) {
 //     for (s16 stripN=currFadingStrip; stripN >= max(currFadingStrip - FADE_OUT_STEPS, 0); --stripN) {
 //         // fade the palettes of stripN
-//         u16* palsPtr = unpackedData + stripN * TITAN_256C_COLORS_PER_STRIP;
+//         u16* palsPtr = palettesData + stripN * TITAN_256C_COLORS_PER_STRIP;
 //         for (s16 i=TITAN_256C_COLORS_PER_STRIP; i > 0; --i) {
 //             const u16 s = *palsPtr;
 //             if (s == 0) {

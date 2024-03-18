@@ -3,6 +3,10 @@
 
 #include <types.h>
 
+/// Blastem-nightly supports KDebug integration and there's a built-in 68K cycle counter. Just write to unused to VDP register to start/stop this counter
+#define STOPWATCH_68K_CYCLES_START() ASM_STATEMENT volatile ("move.w  #0x9FC0, (0xC00004).l\n" :::"memory")
+#define STOPWATCH_68K_CYCLES_STOP() ASM_STATEMENT volatile ("move.w  #0x9F00, (0xC00004).l\n" :::"memory")
+
 const unsigned char div_100[] = {
     '0','0','0','0','0','0','0','0','0','0',
     '0','0','0','0','0','0','0','0','0','0',

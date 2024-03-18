@@ -5,8 +5,6 @@
 #include <sys.h>
 #include "compatibilities.h"
 
-#define MEMORY_BARRIER() ASM_STATEMENT volatile ("" : : : "memory")
-
 void blackCurrentGradientPtr ();
 
 void vertIntOnTitan256cCallback_HIntEveryN ();

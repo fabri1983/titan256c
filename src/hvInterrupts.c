@@ -121,7 +121,7 @@ void NO_INLINE setupDMAForPals (u16 len, u32 fromAddr) {
 u16* titan256cPalsPtr; // 1st and 2nd strip's palette are loaded at the beginning of the display loop, so this ptr starts at 3rd strip
 u8 palIdx; // 3rd strip starts with palettes at [PAL0,PAL1]
 u16* currGradPtr;
-u16 applyBlackPalPosY = TITAN_256C_HEIGHT - 1; // initial value, same than the one set in varsSetup() and in main.c
+u16 applyBlackPalPosY;
 u16 vcounterManual;
 u16 textRampEffectLimitTop;
 u16 textRampEffectLimitBottom;
@@ -136,8 +136,8 @@ FORCE_INLINE void varsSetup () {
 
     u16 posYFalling = getYPosFalling();
     u16 stripN = min(TITAN_256C_HEIGHT/TITAN_256C_STRIP_HEIGHT - 1, (posYFalling / TITAN_256C_STRIP_HEIGHT) + 2);
-    titan256cPalsPtr = getUnpackedPtr() + stripN * TITAN_256C_COLORS_PER_STRIP;
-    applyBlackPalPosY = (TITAN_256C_HEIGHT - 1) - posYFalling;
+    titan256cPalsPtr = getPalettesData() + stripN * TITAN_256C_COLORS_PER_STRIP;
+    applyBlackPalPosY = TITAN_256C_HEIGHT - posYFalling;
     // On even strips we know we use [PAL0,PAL1] so starts with palIdx=0. On odd strips is [PAL1,PAL2] so starts with palIdx=32.
     palIdx = ((posYFalling / TITAN_256C_STRIP_HEIGHT) % 2) == 0 ? 0 : TITAN_256C_COLORS_PER_STRIP;
     currGradPtr = getGradientColorsBuffer();
@@ -168,7 +168,7 @@ HINTERRUPT_CALLBACK horizIntOnTitan256cCallback_CPU_EveryN_asm () {
         "   movea.l     #0xC00004,%%a2\n"              // a2: VDP_CTRL_PORT 0xC00004
         "   movea.l     #0xC00000,%%a3\n"              // a3: VDP_DATA_PORT 0xC00000
         "   movea.l     #0xC00009,%%a4\n"              // a4: HCounter address 0xC00009
-        "   move.b      #150,%%d7\n"                   // d7: 150 is the HCounter limit
+        "   move.b      #154,%%d7\n"                   // d7: 154 is the HCounter limit
 
         // ".setGradColorForText_flag_%=:\n"
         // "   moveq       #0,%%d4\n"                            // d4: setGradColorForText = 0 (FALSE)
