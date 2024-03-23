@@ -35,21 +35,21 @@ typedef struct {
     TileSetOriginalCustom* tileset1;
     TileSetOriginalCustom* tileset2;
     TileMapCustom* tilemap1;
-} ImageNoPalsTilesetSplit21;
+} ImageNoPalsSplit21;
 
 typedef struct {
     TileSet* tileset1;
     TileSet* tileset2;
     TileMapCustom* tilemap1;
     TileMapCustom* tilemap2;
-} ImageNoPalsTilesetSplit22;
+} ImageNoPalsSplit22;
 
 typedef struct {
     TileSetOriginalCustom* tileset1;
     TileSetOriginalCustom* tileset2;
     TileSetOriginalCustom* tileset3;
     TileMapCustom* tilemap1;
-} ImageNoPalsTilesetSplit31;
+} ImageNoPalsSplit31;
 
 typedef struct {
     TileSetOriginalCustom* tileset1;
@@ -57,7 +57,7 @@ typedef struct {
     TileSetOriginalCustom* tileset3;
     TileMapCustom* tilemap1;
     TileMapCustom* tilemap2;
-} ImageNoPalsTilesetSplit32;
+} ImageNoPalsSplit32;
 
 typedef struct {
     TileSet* tileset1;
@@ -66,27 +66,27 @@ typedef struct {
     TileMapCustom* tilemap1;
     TileMapCustom* tilemap2;
     TileMapCustom* tilemap3;
-} ImageNoPalsTilesetSplit33;
+} ImageNoPalsSplit33;
 
 typedef struct {
     TileSet* tileset1;
     TileSet* tileset2;
     TileMapCustom* tilemap1;
-} ImageNoPalsTilesetSplit21CompField;
+} ImageNoPalsSplit21CompField;
 
 typedef struct {
     TileSet* tileset1;
     TileSet* tileset2;
     TileMapCustomCompField* tilemap1;
     TileMapCustomCompField* tilemap2;
-} ImageNoPalsTilesetSplit22CompField;
+} ImageNoPalsSplit22CompField;
 
 typedef struct {
     TileSet* tileset1;
     TileSet* tileset2;
     TileSet* tileset3;
     TileMapCustomCompField* tilemap1;
-} ImageNoPalsTilesetSplit31CompField;
+} ImageNoPalsSplit31CompField;
 
 typedef struct {
     TileSet* tileset1;
@@ -94,7 +94,7 @@ typedef struct {
     TileSet* tileset3;
     TileMapCustomCompField* tilemap1;
     TileMapCustomCompField* tilemap2;
-} ImageNoPalsTilesetSplit32CompField;
+} ImageNoPalsSplit32CompField;
 
 typedef struct {
     TileSet* tileset1;
@@ -103,7 +103,7 @@ typedef struct {
     TileMapCustomCompField* tilemap1;
     TileMapCustomCompField* tilemap2;
     TileMapCustomCompField* tilemap3;
-} ImageNoPalsTilesetSplit33CompField;
+} ImageNoPalsSplit33CompField;
 
 typedef struct {
     u16* data;

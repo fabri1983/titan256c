@@ -125,68 +125,43 @@ static void titan256cDisplay () {
     unpackPalettes();
 
     SYS_disableInts();
-        switch (titan256cHIntMode) {
-            // Call the HInt every N scanlines. Uses CPU for palette swapping
-            case HINT_STRATEGY_0:
-                SYS_setVBlankCallback(vertIntOnTitan256cCallback_HIntEveryN);
-                VDP_setHIntCounter(TITAN_256C_STRIP_HEIGHT - 1);
-                SYS_setHIntCallback(horizIntOnTitan256cCallback_CPU_EveryN_asm);
-                break;
-            // Call the HInt every N scanlines. Uses CPU for palette swapping
-            case HINT_STRATEGY_1:
-                SYS_setVBlankCallback(vertIntOnTitan256cCallback_HIntEveryN);
-                VDP_setHIntCounter(TITAN_256C_STRIP_HEIGHT - 1);
-                SYS_setHIntCallback(horizIntOnTitan256cCallback_CPU_EveryN);
-                break;
-            // Call the HInt every N scanlines. Uses DMA for palette swapping
-            case HINT_STRATEGY_2:
-                SYS_setVBlankCallback(vertIntOnTitan256cCallback_HIntEveryN);
-                VDP_setHIntCounter(TITAN_256C_STRIP_HEIGHT - 1);
-                SYS_setHIntCallback(horizIntOnTitan256cCallback_DMA_EveryN);
-                break;
-            // Use only one call to HInt to avoid method call overhead. Uses DMA for palette swapping
-            case HINT_STRATEGY_3:
-                SYS_setVBlankCallback(vertIntOnTitan256cCallback_HIntOneTime);
-                VDP_setHIntCounter(0);
-                SYS_setHIntCallback(horizIntOnTitan256cCallback_DMA_OneTime);
-                break;
-            default: break;
-        }
+        setHVCallbacks(titan256cHIntMode);
         VDP_setHInterrupt(TRUE);
     SYS_enableInts();
 
     VDP_setEnable(TRUE);
 
-    u16 yPos = TITAN_256C_HEIGHT;
-    s16 velocity = 0;
-
     // disable the fading effect on titan text
     setCurrentFadingStripForText(0);
+
+    u16 yPos = TITAN_256C_HEIGHT;
+    s16 velocity = 0;
 
     // Fall and bounce effect
     for (;;) {
         // update bouncing velocity every 4 frames
         if ((vtimer % 4) == 0) {
-            velocity -= TITAN_256C_STRIP_HEIGHT;
-            // when touching floor then decay velocity just a bit
-            if ((yPos + velocity) <= 0) {
-                yPos = 0;
-                // decay in velocity as it bounces off the ground
-                velocity = ((-velocity - 1) / TITAN_256C_STRIP_HEIGHT) * TITAN_256C_STRIP_HEIGHT;
-            }
-            // while in the mid air apply translation
-            else {
-                yPos += velocity;
-            }
+            velocity -= 1;
         }
+        // Do this due to signed type of velocity. When touching floor then decay velocity just a bit
+        if ((yPos + velocity) <= 0) {
+            yPos = 0;
+            velocity = (-velocity * 6) / 10; // decay in velocity as it bounces off the ground
+        }
+        // while in the mid air apply translation
+        else yPos += velocity;
+
+        // The bouncing effect has the side effect of offseting strips into scanlines not alligned with expected strips distribution,
+        // hence we need to "offset" the scanline at which the HInt gets into action.
+        //setHIntScanlineStarterForBounceEffect(yPos, titan256cHIntMode);
 
         setYPosFalling(yPos);
         VDP_setVerticalScrollVSync(BG_B, yPos);
 
         updateTextGradientColors();
 
-        // Load 2 strip palettes depending on the Y position (in strips) of the image
-        load2Pals(yPos / TITAN_256C_STRIP_HEIGHT);
+        // Enqueue 2 strips palettes depending on the Y position (in strips) of the image
+        enqueue2Pals(yPos / TITAN_256C_STRIP_HEIGHT);
 
         SYS_doVBlankProcess();
 
@@ -201,7 +176,7 @@ static void titan256cDisplay () {
     // Titan display
     for (;;) {
         // Load 1st and 2nd strip's palette
-        load2Pals(0);
+        enqueue2Pals(0);
 
         updateTextGradientColors();
 
@@ -221,7 +196,7 @@ static void titan256cDisplay () {
         }
 
         // Load 1st and 2nd strip's palettes
-        load2Pals(0);
+        enqueue2Pals(0);
 
         // enable the fading effect on titan text calculated on VInt
         setCurrentFadingStripForText(currFadingStrip);

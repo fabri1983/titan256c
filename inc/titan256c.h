@@ -35,6 +35,6 @@ void freePalettes ();
 u16* getPalettesData ();
 
 /// Loads the palettes belonging to strip startingScreenStrip and startingScreenStrip + 1.
-void load2Pals (u16 startingScreenStrip);
+void enqueue2Pals (u16 startingScreenStrip);
 
 #endif // TITAN_256C_H

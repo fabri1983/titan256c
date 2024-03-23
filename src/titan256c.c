@@ -48,22 +48,53 @@ void loadTitan256cTileSet (u16 currTileIndex) {
         VDP_loadTileData(FAR_SAFE(tileset->tiles, tileset->numTile * 32), currTileIndex, tileset->numTile, DMA);
 }
 
-u16 yPosFalling = 0;
-
-FORCE_INLINE void setYPosFalling (u16 value) {
-    yPosFalling = value;
+static TileMap* allocateTileMapInternal (VOID_OR_CHAR* adr) {
+    TileMap *result = (TileMap*) adr;
+    if (result != NULL) {
+        result->compression = COMPRESSION_NONE;
+        result->tilemap = (u16*) (adr + sizeof(TileMap));
+    }
+    return result;
 }
 
-FORCE_INLINE u16 getYPosFalling () {
-    return yPosFalling;
+static TileMap* unpackTileMap_custom(const TileMap *src, TileMap *dest) {
+    TileMap *result;
+    if (dest) result = dest;
+    else result = allocateTileMapInternal(MEM_alloc((src->w * src->h * 2) + sizeof(TileMap)));
+
+    if (result != NULL) {
+        result->w = src->w;
+        result->h = src->h;
+        result->compression = COMPRESSION_NONE;
+        if (src->compression != COMPRESSION_NONE)
+            unpackSelector(src->compression, (u8*) FAR_SAFE(src->tilemap, (src->w * src->h) * 2), (u8*) result->tilemap, src->w * src->h * 2);
+        else if (src->tilemap != result->tilemap) {
+            const u16 size = (src->w * src->h) * 2;
+            memcpy((u8*) result->tilemap, FAR_SAFE(src->tilemap, size), size);
+        }
+    }
+
+    return result;
 }
 
 u16 loadTitan256cTileMap (VDPPlane plane, u16 currTileIndex) {
     u16 baseTileAttribs = TILE_ATTR_FULL(PAL0, 0, FALSE, FALSE, currTileIndex);
     currTileIndex += titanRGB.tileset->numTile;
     const TileMap* tilemap = titanRGB.tilemap;
-    // only DMA or DMA_QUEUE_COPY (if tilemap is compressed) to avoid glitches
-    VDP_setTileMapEx(plane, tilemap, baseTileAttribs, 0, 0, 0, 0, TITAN_256C_WIDTH/8, (TITAN_256C_HEIGHT/8), DMA_QUEUE_COPY);
+
+    const u32 offset = 0;//mulu(y, tilemap->w) + x;
+    if (tilemap->compression != COMPRESSION_NONE) {
+        // unpack first
+        TileMap *unpacked = unpackTileMap_custom(tilemap, NULL);
+        VDP_setTileMapDataRectEx(plane, unpacked->tilemap + offset, baseTileAttribs, 0, 0, TITAN_256C_WIDTH/8, TITAN_256C_HEIGHT/8, 
+            TITAN_256C_WIDTH/8, DMA_QUEUE_COPY);
+        // be careful, we are releasing buffer here so DMA_QUEUE transfer isn't safe here, use DMA_QUEUE_COPY instead for safe operation
+        MEM_free(unpacked);
+    }
+    else
+        VDP_setTileMapDataRectEx(plane, (u16*) FAR_SAFE(tilemap->tilemap + offset, (TITAN_256C_WIDTH/8) * (TITAN_256C_HEIGHT/8) * 2), 
+            baseTileAttribs, 0, 0, TITAN_256C_WIDTH/8, TITAN_256C_HEIGHT/8, TITAN_256C_WIDTH/8, DMA_QUEUE_COPY);
+
     return currTileIndex;
 }
 
@@ -92,7 +123,17 @@ FORCE_INLINE u16* getPalettesData () {
     return palettesData;
 }
 
-FORCE_INLINE void load2Pals (u16 startingScreenStrip) {
+u16 yPosFalling = 0;
+
+FORCE_INLINE void setYPosFalling (u16 value) {
+    yPosFalling = value;
+}
+
+FORCE_INLINE u16 getYPosFalling () {
+    return yPosFalling;
+}
+
+FORCE_INLINE void enqueue2Pals (u16 startingScreenStrip) {
     // if current starting strip is at the top of the screen (0 based) we only need to load the palette of that strip
     if (startingScreenStrip >= (TITAN_256C_HEIGHT/TITAN_256C_STRIP_HEIGHT - 1))
         PAL_setColors(TITAN_256C_COLORS_PER_STRIP, palettesData + TITAN_256C_COLORS_PER_STRIP * (TITAN_256C_HEIGHT/TITAN_256C_STRIP_HEIGHT - 1), TITAN_256C_COLORS_PER_STRIP, DMA_QUEUE);

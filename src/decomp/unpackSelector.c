@@ -6,7 +6,7 @@
 static bool megainitCalled = FALSE;
 #endif
 
-void unpackSelector (u16 compression, u8* src, u8* dest, u16 outSizeInBytes) {
+FORCE_INLINE void unpackSelector (u16 compression, u8* src, u8* dest, u16 outSizeInBytes) {
     switch(compression) {
         case COMPRESSION_APLIB:
             aplib_unpack(src, dest); // SGDK

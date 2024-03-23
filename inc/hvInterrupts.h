@@ -7,6 +7,10 @@
 
 void blackCurrentGradientPtr ();
 
+void setHVCallbacks (u16 titan256cHIntMode);
+
+void setHIntScanlineStarterForBounceEffect (u16 yPos, u16 hintMode);
+
 void vertIntOnTitan256cCallback_HIntEveryN ();
 
 void vertIntOnTitan256cCallback_HIntOneTime ();

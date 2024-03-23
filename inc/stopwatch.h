@@ -3,7 +3,9 @@
 
 #include <types.h>
 
-/// Blastem-nightly supports KDebug integration and there's a built-in 68K cycle counter. Just write to unused to VDP register to start/stop this counter
+/// Blastem-nightly builds supports KDebug integration and there's a built-in 68K cycle counter. 
+/// Just write to unused to VDP register to start/stop this counter.
+/// See also Stef's tools.h BLASTEM_PROFIL_START and BLASTEM_PROFIL_END.
 #define STOPWATCH_68K_CYCLES_START() ASM_STATEMENT volatile ("move.w  #0x9FC0, (0xC00004).l\n" :::"memory")
 #define STOPWATCH_68K_CYCLES_STOP() ASM_STATEMENT volatile ("move.w  #0x9F00, (0xC00004).l\n" :::"memory")
 
