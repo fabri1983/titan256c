@@ -251,9 +251,13 @@ static void prepareNextHintMode () {
     titan256cHIntMode = modu(titan256cHIntMode + 1, HINT_STRATEGY_TOTAL);
 }
 
-int main (bool hard) {
+int main (bool hardReset) {
 
-    if (!hard) SYS_hardReset();
+	// on soft reset do like a hard reset
+	if (!hardReset) {
+		VDP_waitDMACompletion(); // avoids some glitches as per Genesis Manual's Addendum section
+		SYS_hardReset();
+	}
 
     displaySegaLogo();
     waitMs_(200);

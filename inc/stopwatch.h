@@ -2,6 +2,7 @@
 #define _STOPWATCH_H
 
 #include <types.h>
+#include "compatibilities.h"
 
 /// Blastem-nightly builds supports KDebug integration and there's a built-in 68K cycle counter. 
 /// Just write to unused to VDP register to start/stop this counter.

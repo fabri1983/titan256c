@@ -42,7 +42,7 @@ FORCE_INLINE void waitHCounter_old (u16 n) {
             // blo is for unsigned comparisons, same than bcs
         :
         : [hcLimit] "i" (n)
-        :
+        : "cc"
     );
 }
 
@@ -59,7 +59,7 @@ FORCE_INLINE void waitHCounter (u16 n) {
             // bhi is for unsigned comparisons
         : "+a" (regA)
         : "d" (n)
-        :
+        : "cc"
     );
 }
 
@@ -76,7 +76,7 @@ FORCE_INLINE void waitVCounterConst (u16 n) {
             // blo is for unsigned comparisons, same than bcs
         : "+a" (regA)
         : [vcLimit] "i" (n << 8) // (n << 8) | 0xFF
-        :
+        : "cc"
     );
 }
 
@@ -93,7 +93,7 @@ FORCE_INLINE void waitVCounterReg (u16 n) {
             // bhi is for unsigned comparisons
         : "+a" (regA)
         : "d" (n << 8) // (n << 8) | 0xFF
-        :
+        : "cc"
     );
 }
 

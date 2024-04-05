@@ -1,5 +1,5 @@
 :: create_palettes_executor.bat titan_0.png <num_perm_instances>
-:: open new cmd and run: taskkill /f /fi "imagename eq aseprite.exe"
+:: Kill them all: open new cmd and run: taskkill /f /fi "imagename eq aseprite.exe"
 @ECHO OFF
 SETLOCAL enabledelayedexpansion
 
@@ -18,9 +18,12 @@ SET N=%NUMBER_OF_PROCESSORS%
 IF %N% GTR 16 SET N=16
 IF %N% GTR %M% SET N=%M%
 
-echo Using batches of %N% processes each.
+ECHO 222222222222222222222222222222222222222222222
+ECHO Using batches of %N% processes each.
+ECHO 222222222222222222222222222222222222222222222
+ECHO:
 
-SET /a "rand=%RANDOM% %% 100000 + 1"
+SET /A "rand=%RANDOM% %% 100000 + 1"
 SET tempFileExt=creatorTMP_%rand%
 IF "%tempFileExt%" == "" (
   ECHO No temp file extension could be created
@@ -60,5 +63,10 @@ FOR /L %%i IN (1,1,%NUM_BATCHES%) DO (
 DEL /F /Q %tmpDir%\* >NUL 2>&1
 RMDIR %tmpDir% >NUL 2>&1
 
+ECHO:
+ECHO 222222222222222222222222222222222222222222222
 ECHO All batches complete.
+ECHO 222222222222222222222222222222222222222222222
+ECHO:
+
 EXIT /B 0

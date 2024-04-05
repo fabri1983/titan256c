@@ -60,8 +60,8 @@
 *	all other registers are preserved
 *------------------------------------------------------------------------------
 
-* C prototype: extern u32 rnc2_Unpack (u8 *src, u8 *dest);
-func rnc2_Unpack
+* C prototype: extern u32 rnc2c_Unpack (u8 *src, u8 *dest);
+func rnc2c_Unpack
 		movem.l 4(%sp), %a0-%a1		// copy parameters into registers a0-a1
 		movem.l	%d2/%a2,-(%sp)		// save registers (except the scratch pad)
 		lea		18(input),input

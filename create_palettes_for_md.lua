@@ -35,8 +35,10 @@ if app.params["SINGLE_INSTANCE"] == "true" then
   SINGLE_INSTANCE = true
 end
 
-local MAX_COLORS_PALETTE = 16 -- max is 60 because each first palette color is the transparent color
-local MAX_COLORS_PALETTE_FOR_MD_RGB = 16 -- DO NOT MODIFY
+local TARGET_PALETTES = 2
+
+local MAX_COLORS_PER_PALETTE = 16 -- first color is the transparent one
+local MAX_COLORS_PER_PALETTE_FOR_MD_RGB = 16 -- DO NOT MODIFY
 
 -- In each iteration it tries to add colors in one or more palettes in such a way other palettes end up being fully contained 
 -- by any other, thus removing them from the total of palettes used for the permutation algorithm.
@@ -154,7 +156,7 @@ local function containsColorSinceIndex (colors, cc, ind)
 end
 
 ----------------------------------------------------------------------------------------------------
-local function sortColorsRGB_ASC_func (c1, c2)
+local function sortColorsBy_RGB_ASC_func (c1, c2)
    if c1.red < c2.red then
       return true
    elseif c1.red == c2.red then
@@ -165,6 +167,17 @@ local function sortColorsRGB_ASC_func (c1, c2)
       end
    end
    return false
+end
+
+local function calculateLuminance(c)
+   return 0.2126 * c.red + 0.7152 * c.green + 0.0722 * c.blue
+end
+
+local function sortColorsBy_LUMINANCE_DESC_func (c1, c2)
+   local luminance1 = calculateLuminance(c1)
+   local luminance2 = calculateLuminance(c2)
+   -- luminance close to 0 is darker, luminance close to 1 is brighter, so we invert the comparison
+   return luminance1 < luminance2
 end
 
 ----------------------------------------------------------------------------------------------------
@@ -178,8 +191,8 @@ local function sortPaletteColors (palette)
     table.insert(colors, color)
   end
 
-  -- Sort colors by RGB (ASC)
-  _sort(colors, sortColorsRGB_ASC_func)
+  -- Sort colors
+  _sort(colors, sortColorsBy_LUMINANCE_DESC_func)
 
   -- Set the sorted colors back to the palette
   for i = 0, colorCount - 1 do -- Palette is 0-based internally
@@ -280,8 +293,8 @@ local function getUniqueColorsArray (palettes)
       end
     end
   end
-  -- sort unique colors by RGB (ASC)
-  _sort(unique, sortColorsRGB_ASC_func)
+  -- sort unique colors
+  _sort(unique, sortColorsBy_LUMINANCE_DESC_func)
   return unique
 end
 
@@ -296,10 +309,10 @@ local function getColorIndex (color, colorsArr)
 end
 
 ----------------------------------------------------------------------------------------------------
--- If colors array has more than MAX_COLORS_PALETTE - 1 colors (transparent color is mandatory for MD) then remove 
+-- If colors array has more than MAX_COLORS_PER_PALETTE - 1 colors (transparent color is mandatory for MD) then remove 
 -- the less used colors with help of occurrences map.
 local function trimColorsIfExceeded (colors, occurrencesMap, colorsTrimmedMap, tileKey)
-   if #colors <= (MAX_COLORS_PALETTE - 1) then
+   if #colors <= (MAX_COLORS_PER_PALETTE - 1) then
       return colors
    end
    -- copy the colors of the array in a new one
@@ -318,7 +331,7 @@ local function trimColorsIfExceeded (colors, occurrencesMap, colorsTrimmedMap, t
    local t = 1
    for i=1, #colors do
       local c = colors[i]
-      if not containsColorSinceIndex(colorsSorted, c, MAX_COLORS_PALETTE) then
+      if not containsColorSinceIndex(colorsSorted, c, MAX_COLORS_PER_PALETTE) then
          colorsFinal[t] = c
 		 t = t + 1
       else
@@ -784,10 +797,10 @@ end
 -- ###########################################################################################################
 if ID_PROC == 0 then
   print(string.format("-- STEP 2: Iterate over all %dx%d tile and generates one palette (max size %d) per tile. Total tiles in Sprite: %d", 
-     tileWidthMD, tileHeightMD, MAX_COLORS_PALETTE, (spriteWidth*spriteHeight)/(tileWidthMD*tileHeightMD)))
+     tileWidthMD, tileHeightMD, MAX_COLORS_PER_PALETTE, (spriteWidth*spriteHeight)/(tileWidthMD*tileHeightMD)))
 end
 
--- 2: iterate all tiles in the sprite and generates non repeated and trimmed (MAX_COLORS_PALETTE colors max) Palettes
+-- 2: iterate all tiles in the sprite and generates non repeated and trimmed (MAX_COLORS_PER_PALETTE colors max) Palettes
 
 -- keep track of discarded colors so they can be replaced by a similar one in the current tile
 local colorsTrimmedMap = {}
@@ -828,10 +841,10 @@ for y = 0, spriteHeight - 1, tileHeightMD do
          end
       end
 
-      -- sort unique colors by RGB (ASC)
-      _sort(uniqueColors, sortColorsRGB_ASC_func)
+      -- sort unique colors
+      _sort(uniqueColors, sortColorsBy_LUMINANCE_DESC_func)
 
-      -- If uniqueColors has more than MAX_COLORS_PALETTE - 1 colors then trim the less used colors.
+      -- If uniqueColors has more than MAX_COLORS_PER_PALETTE - 1 colors then trim the less used colors.
       -- Might use occurrs instead of occurrencesByColor as occurs counts on local context
       local finalUniqueColors = trimColorsIfExceeded(uniqueColors, occurrencesByColor, colorsTrimmedMap, tileKey) 
 
@@ -879,13 +892,13 @@ palettesAllUnique = removeFullyContainedPalettes(palettesAllUnique)
 
 -- APPROXIMATION ALGORITHM 1
 -- -------------------------
--- The goal of this algorithm is to grow in size some palettes to remove other palettes fully contained buy the extended palette, 
+-- The goal of this algorithm is to grow in size some palettes to remove other palettes fully contained by the extended palette, 
 -- thus diminishing the total number of palettes used in the permutation algorithm.
 -- 1) For every palette smaller or same size than other, build a map counting the occurrences for every color that is not contained.
--- 2) Using that occurrences map, then traverse the palettes and for each palette not contained into another because of 1 
--- missing color, add it to the target palette being tested against (keeping MAX_COLORS_PALETTE restriction) if the missing 
+-- 2) Using that occurrences map, traverse the palettes and for each palette not contained into another because of 1 missing 
+-- color, add it to the target palette being tested against to (keeping MAX_COLORS_PER_PALETTE restriction) if the missing 
 -- color is in the top N colors with bigger occurrences (from the occurrences map mentioned before). 
--- 3) After this, remove palettes fully contained in other palette, traverse the palettesAllUnique pals, sort colors again, and 
+-- 3) After this remove palettes fully contained in other palette, traverse the palettesAllUnique pals, sort colors again, and 
 -- sort the palettesAllUnique again
 -- 4) Repeat the entire process from step 1 as many times you want to run.
 
@@ -919,10 +932,10 @@ if APPROXIMATION_ITERS > 0 then
                      local colorKey = getColorKey(missingColor)
                      -- check if it's one of the top N missing colors
                      if containsString(missingColorKeysTopN, colorKey) then
-                        -- check that targetPal size is smaller than (MAX_COLORS_PALETTE - 1) - 1:
+                        -- check that targetPal size is smaller than (MAX_COLORS_PER_PALETTE - 1) - 1:
                         --  -1: transparent color is added further in the process of buckets generation
                         --  -1: the missing color from pal we want to add into targetPal
-                        if #targetPal < ((MAX_COLORS_PALETTE - 1) - 1) then
+                        if #targetPal < ((MAX_COLORS_PER_PALETTE - 1) - 1) then
                            -- add the color into targetPal
                            local newOtherPal = addColorToPalette(targetPal, missingColor)
 						   targetPal = newOtherPal
@@ -961,7 +974,7 @@ if APPROXIMATION_ITERS > 0 then
    end
 end
 
--- print palettes sizes
+-- print total palettes sizes
 print(string.format("Palettes generated: %d", #palettesAllUnique))
 if PRINT_PALETTES_SIZE then
   for i=1, #palettesAllUnique do
@@ -972,7 +985,7 @@ end
 
 -- save all palettes from palettesAllUnique in a PNG RGB file
 if SAVE_HELPER_FILES then
-   local widthImgAllPalsUniq = MAX_COLORS_PALETTE - 1
+   local widthImgAllPalsUniq = MAX_COLORS_PER_PALETTE - 1
    local imgPalettesAllUnique = Image(widthImgAllPalsUniq, #palettesAllUnique, ColorMode.RGB)
    for y=0, imgPalettesAllUnique.height - 1 do
      for x=0, imgPalettesAllUnique.width - 1 do
@@ -992,6 +1005,7 @@ end
 --  save an image which will help to visualize the colors used by each palette from palettesAllUnique
 if SAVE_HELPER_FILES then
    local uniqueColorsArray = getUniqueColorsArray(palettesAllUnique)
+   _sort(uniqueColorsArray, sortColorsBy_LUMINANCE_DESC_func)
    local imgMatrix = Image(#uniqueColorsArray, #palettesAllUnique, ColorMode.RGB)
    for y=0, imgMatrix.height - 1 do
      for x=0, imgMatrix.width - 1 do
@@ -1011,7 +1025,7 @@ end
 
 -- ###########################################################################################################
 if ID_PROC == 0 then
-  print("-- STEP 4.a: Computes how many permutations we need to try in order to find the 4 palettes.")
+  print(string.format("-- STEP 4.a: Computes how many permutations we need to itereate in order to find the %d palettes.", TARGET_PALETTES))
 end
 
 -- create an array of sizes per palette, which will be used as grouping for the permutation algorithm
@@ -1023,7 +1037,7 @@ if ID_PROC == 0 then
   if totalPerms < 0 then -- in case the compute of total permutations exceeds the biggest supported integer
     totalPerms = math.maxinteger -- 9223372036854775807 in 64bits systems
   end
-  print(string.format("Total Number of permutations as Brute Force (with grouping): %d", totalPerms))
+  print(string.format("Total number of permutations by Brute Force (with grouping): %d", totalPerms))
   if SINGLE_INSTANCE == false then
     -- if #palettesAllUnique >= 3 then 2 first elements will be fixed, else no element is fixed
     local startCalcPermAt = ternary(#palettesAllUnique >= 3, 3, 1)
@@ -1042,7 +1056,7 @@ if ID_PROC == 0 then
   end
 end
 
-print(string.format("%02d: -- STEP 4.b: Create up to 4 buckets of colors acting as palettes.", ID_PROC))
+print(string.format("%02d: -- STEP 4.b: Create up to %d buckets of colors acting as palettes.", ID_PROC, TARGET_PALETTES))
 
 -- 4: I have 4 buckets (arrays) named bucket1, bucket2, bucket3, and bucket4. Given the array palettesAllUnique which contains 
 -- Palette objects, where each Palette object contains colors and the size of each palette is given by #palette, and each color 
@@ -1099,12 +1113,12 @@ generatePermutationsByGroup(accesses, fromIndex, toIndex, sizesGrouping, firstGr
    -- Loop through each palette object in the palettesAllUnique array given the current permutation of accessArr   
    for i=1, #palettesAllUnique do
       local pal = palettesAllUnique[accessArr[i]]
-      local minOccupancy = MAX_COLORS_PALETTE + 1 -- high starting value
+      local minOccupancy = MAX_COLORS_PER_PALETTE + 1 -- high starting value
       local minBucketIndex = 1
       local colorsToAdd = nil
 
       -- Find the bucket with the minimum occupancy so current palette can fit in it
-      for j=1, #allBucketsPerm do
+      for j=1, TARGET_PALETTES do
         local bucket = allBucketsPerm[j]
         local occupancy = #bucket -- current bucket's occupancy
         local colorsToAddInLoop = {}
@@ -1119,7 +1133,7 @@ generatePermutationsByGroup(accesses, fromIndex, toIndex, sizesGrouping, firstGr
               toAddIndex = toAddIndex + 1
            end
            -- if we exceeded the max occupancy allowed then stop trying
-           if occupancy > MAX_COLORS_PALETTE then
+           if occupancy > MAX_COLORS_PER_PALETTE then
               break -- try next bucket
            end
         end
@@ -1132,8 +1146,8 @@ generatePermutationsByGroup(accesses, fromIndex, toIndex, sizesGrouping, firstGr
          end
       end
 
-      -- If current palette's colors (except those already in the bucket) fits in minBucket, add the missing colors
-      if minOccupancy <= MAX_COLORS_PALETTE then
+      -- If current palette's colors (except those already in the bucket) fit in minBucket, add the missing colors
+      if minOccupancy <= MAX_COLORS_PER_PALETTE then
          local minBucket = allBucketsPerm[minBucketIndex]
          for k=1, #colorsToAdd do
             local color = colorsToAdd[k]
@@ -1172,12 +1186,12 @@ end)
 print(string.format("%02d: %s finished permutations", ID_PROC, os.date("%c")))
 
 if allBuckets == nil then
-   print(string.format("%02d: NO PERMUTATION SUCCEEDED. TOO MUCH DIFFERENT PALETTES TO FIT INTO 4 BUCKETS.", ID_PROC))
+   print(string.format("%02d: NO PERMUTATION SUCCEEDED. TOO MUCH DIFFERENT PALETTES TO FIT INTO %d BUCKETS.", ID_PROC, TARGET_PALETTES))
    goto _done -- terminates the script immediately and without warning
 end
 
 -- Print size of each bucket only those having more than 1 palette
-for i=1, #allBuckets do
+for i=1, TARGET_PALETTES do
    local bucket = allBuckets[i]
    if #bucket > 1 then
       print(string.format("%02d: Bucket %d: %d", ID_PROC, i, #bucket))
@@ -1185,7 +1199,7 @@ for i=1, #allBuckets do
 end
 
 -- Sort each bucket by color in ASC order
-for i=1, #allBuckets do
+for i=1, TARGET_PALETTES do
    local bucket = allBuckets[i]
    -- only buckets having more than the transparent color
    if #bucket > 1 then
@@ -1227,23 +1241,29 @@ local function sliceAndAddFirst (tbl, first, last, elem)
   return sliced
 end
 
--- if MAX_COLORS_PALETTE > 16 then we need to split first bucket into 4 bucket
--- NOTE: only tested with MAX_COLORS_PALETTE = 60
-if MAX_COLORS_PALETTE > MAX_COLORS_PALETTE_FOR_MD_RGB then
+-- if MAX_COLORS_PER_PALETTE > 16 then we need to split first bucket into TARGET_PALETTES buckets
+-- NOTE: only tested with MAX_COLORS_PER_PALETTE = 60
+if MAX_COLORS_PER_PALETTE > MAX_COLORS_PER_PALETTE_FOR_MD_RGB then
    local pivotBucket = allBuckets[1]
-   if #pivotBucket > MAX_COLORS_PALETTE_FOR_MD_RGB then
+   if #pivotBucket > MAX_COLORS_PER_PALETTE_FOR_MD_RGB then
       -- first bucket will always have colorTransparent as first element
-      bucket1 = slice(pivotBucket, 1, MAX_COLORS_PALETTE_FOR_MD_RGB)
-      if #pivotBucket < (MAX_COLORS_PALETTE_FOR_MD_RGB * 2) then
-         bucket2 = sliceAndAddFirst(pivotBucket, MAX_COLORS_PALETTE_FOR_MD_RGB + 1, #pivotBucket, colorTransparent)
-      else
-         bucket2 = sliceAndAddFirst(pivotBucket, MAX_COLORS_PALETTE_FOR_MD_RGB + 1, (MAX_COLORS_PALETTE_FOR_MD_RGB * 2) - 1, colorTransparent)
-         if #pivotBucket < (MAX_COLORS_PALETTE_FOR_MD_RGB * 3) then
-            bucket3 = sliceAndAddFirst(pivotBucket, (MAX_COLORS_PALETTE_FOR_MD_RGB * 2), #pivotBucket, colorTransparent)
-         else
-            bucket3 = sliceAndAddFirst(pivotBucket, (MAX_COLORS_PALETTE_FOR_MD_RGB * 2), (MAX_COLORS_PALETTE_FOR_MD_RGB * 3) - 2, colorTransparent)
-            bucket4 = sliceAndAddFirst(pivotBucket, (MAX_COLORS_PALETTE_FOR_MD_RGB * 3) - 1, #pivotBucket, colorTransparent)
-         end
+      bucket1 = slice(pivotBucket, 1, MAX_COLORS_PER_PALETTE_FOR_MD_RGB)
+      if TARGET_PALETTES > 1 then
+        if #pivotBucket < (MAX_COLORS_PER_PALETTE_FOR_MD_RGB * 2) then
+      	  bucket2 = sliceAndAddFirst(pivotBucket, MAX_COLORS_PER_PALETTE_FOR_MD_RGB + 1, #pivotBucket, colorTransparent)
+        else
+          bucket2 = sliceAndAddFirst(pivotBucket, MAX_COLORS_PER_PALETTE_FOR_MD_RGB + 1, (MAX_COLORS_PER_PALETTE_FOR_MD_RGB * 2) - 1, colorTransparent)
+          if TARGET_PALETTES > 2 then
+            if #pivotBucket < (MAX_COLORS_PER_PALETTE_FOR_MD_RGB * 3) then
+      	      bucket3 = sliceAndAddFirst(pivotBucket, (MAX_COLORS_PER_PALETTE_FOR_MD_RGB * 2), #pivotBucket, colorTransparent)
+      	    else
+      	      bucket3 = sliceAndAddFirst(pivotBucket, (MAX_COLORS_PER_PALETTE_FOR_MD_RGB * 2), (MAX_COLORS_PER_PALETTE_FOR_MD_RGB * 3) - 2, colorTransparent)
+              if TARGET_PALETTES > 3 then
+      	        bucket4 = sliceAndAddFirst(pivotBucket, (MAX_COLORS_PER_PALETTE_FOR_MD_RGB * 3) - 1, #pivotBucket, colorTransparent)
+              end
+      	    end
+          end
+        end
       end
    end
    allBuckets = {bucket1, bucket2, bucket3, bucket4}
@@ -1254,7 +1274,7 @@ print(string.format("%02d: -- STEP 5: Generate Final Palette.", ID_PROC))
 
 -- 5: Generate the final Palette
 local finalPaletteSize = 0
-for i=1, #allBuckets do
+for i=1, TARGET_PALETTES do
    local bucket = allBuckets[i]
    -- only buckets having more than the transparent color
    if #bucket > 1 then
@@ -1263,7 +1283,7 @@ for i=1, #allBuckets do
 end
 local finalPalette = Palette(finalPaletteSize)
 local iForFinalPal = 0 -- Palettes are 0-based internally
-for i=1, #allBuckets do
+for i=1, TARGET_PALETTES do
    local bucket = allBuckets[i]
    -- only buckets having more than the transparent color
    if #bucket > 1 then
@@ -1283,13 +1303,13 @@ end
 
 -- save the final Palette as a PNG RGB image
 if SAVE_PALETTE_FILES then
-   local imgFinalPal = Image(MAX_COLORS_PALETTE_FOR_MD_RGB, 4, ColorMode.RGB)
+   local imgFinalPal = Image(MAX_COLORS_PER_PALETTE_FOR_MD_RGB, 4, ColorMode.RGB)
    for y=0, 4-1 do
-     for x=0, MAX_COLORS_PALETTE_FOR_MD_RGB - 1 do
+     for x=0, MAX_COLORS_PER_PALETTE_FOR_MD_RGB - 1 do
        imgFinalPal:drawPixel(x, y, colorTransparent)
      end
    end
-   for i=1, #allBuckets do
+   for i=1, TARGET_PALETTES do
       local bucket = allBuckets[i]
       -- only buckets having more than the transparent color
       if #bucket > 1 then
@@ -1321,7 +1341,7 @@ end
 
 -- Add the palettes as 8x8 rows
 local currentY = 0
-for i=1, #allBuckets do
+for i=1, TARGET_PALETTES do
   local currentX = 0
   local bucket = allBuckets[i]
   if #bucket > 1 then -- only buckets having more than the transparent color

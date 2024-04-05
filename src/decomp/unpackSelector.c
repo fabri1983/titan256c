@@ -100,7 +100,8 @@ FORCE_INLINE void unpackSelector (u16 compression, u8* src, u8* dest, u16 outSiz
         #endif
         #ifdef USING_RNC2
         case RNC2:
-            rnc2_Unpack(src, dest);
+            // rnc2_Unpack(0, src, dest);
+            rnc2c_Unpack(src, dest);
             break;
         #endif
         #ifdef USING_ROCKET
