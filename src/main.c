@@ -185,10 +185,6 @@ static void titan256cDisplay () {
         if (yPos == 0 && velocity == 0) break;
     }
 
-    u16 fadingStripCnt = 0;
-    u16 prevFadingStrip = 0;
-    u16 fadingCycleCurrStrip = 0; // use to split the fading to black into N cycles, due to its lenghty execution
-
     // Titan display
     for (;;) {
         // Load 1st and 2nd strip's palette
@@ -203,10 +199,14 @@ static void titan256cDisplay () {
         if (joyState & BUTTON_START) break;
     }
 
+    u8 fadingStripCnt = 0;
+    u8 prevFadingStrip = 0;
+    u8 fadingCycleCurrStrip = 0; // use to split the fading to black into N cycles, due to its lenghty execution
+
     // Fade to black effect
     for (;;) {
-        // advance 1 strip every N frames. N >= FADE_OUT_STRIPS_SPLIT_CYCLES (used to execute the fading for current strip)
-        u16 currFadingStrip = fadingStripCnt++ / max(4, FADE_OUT_STRIPS_SPLIT_CYCLES); // Use divu() for N non power of 2
+        // advance 1 strip every N frames. N = FADE_OUT_STRIPS_SPLIT_CYCLES (used to execute the fading for current strip)
+        u8 currFadingStrip = fadingStripCnt++ / FADE_OUT_STRIPS_SPLIT_CYCLES; // Use divu() for N non power of 2
         // already passed last strip? then fading is finished
         if (currFadingStrip == (TITAN_256C_STRIPS_COUNT + FADE_OUT_COLOR_STEPS)) {
             break;
@@ -220,11 +220,9 @@ static void titan256cDisplay () {
 
         updateTextGradientColors();
 
-        if (fadingCycleCurrStrip < FADE_OUT_STRIPS_SPLIT_CYCLES) {
-            // apply fade to black from currFadingStrip up to FADE_OUT_STEPS previous strips
-            fadingStepToBlack_pals(currFadingStrip, fadingCycleCurrStrip, titan256cHIntMode);
-            ++fadingCycleCurrStrip;
-        }
+        // apply fade to black from currFadingStrip up to FADE_OUT_STEPS previous strips
+        fadingStepToBlack_pals(currFadingStrip, fadingCycleCurrStrip);
+        ++fadingCycleCurrStrip;
 
         if (currFadingStrip != prevFadingStrip) {
             prevFadingStrip = currFadingStrip;
@@ -280,10 +278,10 @@ int main (bool hardReset) {
 		SYS_hardReset();
 	}
 
-    // displaySegaLogo();
-    // waitMs_(200);
-    // displayTeddyBearLogo();
-    // waitMs_(200);
+    displaySegaLogo();
+    waitMs_(200);
+    displayTeddyBearLogo();
+    waitMs_(200);
 
     basicEngineConfig();
     initGameStatus();

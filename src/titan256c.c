@@ -148,14 +148,14 @@ FORCE_INLINE void enqueue2Pals (u16 startingScreenStrip) {
 }
 
 // ramp color effect in VDP format: BGR
-static const u16 titanCharsGradientColors[TITAN_CHARS_GRADIENT_MAX_COLORS + TITAN_CHARS_CURR_GRADIENT_ELEMS] = {
+static const u16 titanCharsGradientColors[TITAN_TEXT_GRADIENT_MAX_COLORS + TITAN_TEXT_CURR_GRADIENT_ELEMS] = {
     0xE00, 0xE02, 0xE04, 0xE06, 0xE08, 0xE0A, 0xE0C,
     0xE0E, 0xC0E, 0xA0E, 0x80E, 0x60E, 0x40E, 0x20E, 
     0x00E, 0x02E, 0x04E, 0x06E, 0x08E, 0x0AE, 0x0CE, 
     0x0EE, 0x0EC, 0x0EA, 0x0E8, 0x0E6, 0x0E4, 0x0E2,
     0x0E0, 0x2E0, 0x4E0, 0x6E0, 0x8E0, 0xAE0, 0xCE0, 
     0xEE0, 0xEC0, 0xEA0, 0xE80, 0xE60, 0xE40, 0xE20,
-    // next TITAN_CHARS_CURR_GRADIENT_ELEMS colors are repeated from the start of the array to help cycling the ramp colors without using mod operand
+    // next TITAN_TEXT_CURR_GRADIENT_ELEMS colors are repeated from the start of the array to help cycling the ramp colors without using mod operand
     0xE00, 0xE02, 0xE04, 0xE06, 0xE08, 0xE0A, 0xE0C,
     0xE0E, 0xC0E, 0xA0E, 0x80E, 0x60E, 0x40E, 0x20E, 
     0x00E, 0x02E
@@ -165,15 +165,15 @@ const u16* getTitanCharsGradientColors () {
     return titanCharsGradientColors;
 }
 
-u16 gradColorsBuffer[TITAN_CHARS_CURR_GRADIENT_ELEMS];
+static u16 gradColorsBuffer[TITAN_TEXT_CURR_GRADIENT_ELEMS];
 
 FORCE_INLINE u16* getGradientColorsBuffer () {
     return gradColorsBuffer;
 }
 
-static u16 currFadingStrip = 0;
+static u8 currFadingStrip = 0;
 
-void setCurrentFadingStripForText (u16 currFadingStrip_) {
+void setCurrentFadingStripForText (u8 currFadingStrip_) {
     currFadingStrip = currFadingStrip_;
 }
 
@@ -181,7 +181,7 @@ static u8 titanCharsCycleCnt = 0;
 
 void NO_INLINE updateTextGradientColors () {
     // Strips [21,25] (0 based) renders the letters using transparent color, and we want to use a gradient scrolling over time. So 5 strips.
-    u16 innerStripLimit = 0;
+    u8 innerStripLimit = 0;
     u16 fadeTextAmount = 0;
     if (currFadingStrip >= TITAN_256C_TEXT_STARTING_STRIP) {
         // (ramp colors shown per strip) + (ramp colors shown per strip) * (delta between current strip and 21)
@@ -191,12 +191,12 @@ void NO_INLINE updateTextGradientColors () {
     }
 
     u16* rampBufPtr = gradColorsBuffer;
-    u16 colorIdx = titanCharsCycleCnt / TITAN_CHARS_GRADIENT_SCROLL_FREQ; // advance ramp color every N frames (use divu for divisor non power of 2)
-    if (colorIdx > TITAN_CHARS_GRADIENT_MAX_COLORS) colorIdx = 0;
+    u8 colorIdx = titanCharsCycleCnt / TITAN_TEXT_GRADIENT_SCROLL_FREQ; // advance ramp color every N frames (use divu for divisor non power of 2)
+    if (colorIdx > TITAN_TEXT_GRADIENT_MAX_COLORS) colorIdx = 0;
 
     // Traverse titanCharsGradientColors from colorIdx position and copy the colors into gradColorsBuffer
     u16* palsPtr = (u16*)titanCharsGradientColors + colorIdx;
-    for (u16 i=0; i < TITAN_CHARS_CURR_GRADIENT_ELEMS; ++i) {
+    for (u8 i=0; i < TITAN_TEXT_CURR_GRADIENT_ELEMS; ++i) {
         u16 d = *palsPtr++;
         // if innerStripLimit > 0 it means we want to apply fade out effect
         if (i < innerStripLimit) {
@@ -204,48 +204,47 @@ void NO_INLINE updateTextGradientColors () {
             // diminish the fade out weight every 4 colors (amount of ramp colors per strip)
             if ((i % 4) == 0) fadeTextAmount -= 0x222;
         }
+
+        #if TITAN_TEXT_GRADIENT_FADE_TO_BLACK_STRATEGY == 0
         // IMPL A:
-        // switch (d & 0b1000100010000) {
-        //     case 0b0000000010000: d &= ~0b0000000011110; break; // red overflows? then zero it
-        //     case 0b0000100010000: d &= ~0b0000111111110; break; // red and green overflow? then zero them
-        //     case 0b0000100000000: d &= ~0b0000111100000; break; // green overflows? then zero it
-        //     case 0b1000000010000: d &= ~0b1111000011110; break; // red and blue overflow? then zero them
-        //     case 0b1000000000000: d &= ~0b1111000000000; break; // blue overflows? then zero it
-        //     case 0b1000100000000: d &= ~0b1111111100000; break; // green and blue overflow? then zero them
-        //     case 0b1000100010000: d = 0; break; // all colors overflow, then zero them
-        //     default: break;
-        // }
-        // *rampBufPtr++ = d;
+        switch (d & 0b1000100010000) {
+            case 0b0000000010000: d &= ~0b0000000011110; break; // red overflows? then zero it
+            case 0b0000100010000: d &= ~0b0000111111110; break; // red and green overflow? then zero them
+            case 0b0000100000000: d &= ~0b0000111100000; break; // green overflows? then zero it
+            case 0b1000000010000: d &= ~0b1111000011110; break; // red and blue overflow? then zero them
+            case 0b1000000000000: d &= ~0b1111000000000; break; // blue overflows? then zero it
+            case 0b1000100000000: d &= ~0b1111111100000; break; // green and blue overflow? then zero them
+            case 0b1000100010000: d = 0; break; // all colors overflow, then zero them
+            default: break;
+        }
+        #elif TITAN_TEXT_GRADIENT_FADE_TO_BLACK_STRATEGY == 1
         // IMPL B:
         if (d & 0b0000000010000) d &= ~0b0000000011110; // red overflows? then zero it
         if (d & 0b0000100000000) d &= ~0b0000111100000; // green overflows? then zero it
         if (d & 0b1000000000000) d &= ~0b1111000000000; // blue overflows? then zero it
-        *rampBufPtr++ = d;
+        #elif TITAN_TEXT_GRADIENT_FADE_TO_BLACK_STRATEGY == 2
         // IMPL C:
-        // if (d & 0b1000100010000) d = 0; // if only one color overflows then zero them all
-        // *rampBufPtr++ = d;
+        if (d & 0b1000100010000) d = 0; // if only one color overflows then zero them all
+        #endif
+        
+        *rampBufPtr++ = d;
     }
 
     ++titanCharsCycleCnt;
-    if (titanCharsCycleCnt == TITAN_CHARS_GRADIENT_SCROLL_FREQ * TITAN_CHARS_GRADIENT_MAX_COLORS)
+    if (titanCharsCycleCnt == TITAN_TEXT_GRADIENT_SCROLL_FREQ * TITAN_TEXT_GRADIENT_MAX_COLORS)
         titanCharsCycleCnt = 0;
 }
 
-void NO_INLINE fadingStepToBlack_pals (u16 currFadingStrip, u16 cycle, u16 titan256cHIntMode) {
-    // No need to fade this strip when it is one of the top strips and we have already applied the fade
-    if (currFadingStrip < (FADE_OUT_COLOR_STEPS / FADE_OUT_STRIPS_SPLIT_CYCLES) && cycle > 0) {
-        return;
-    }
-
+void NO_INLINE fadingStepToBlack_pals (u8 currFadingStrip, u8 cycle) {
     // depending on the split cycle value we update the starting strip 
     currFadingStrip = max(0, currFadingStrip - cycle * (FADE_OUT_COLOR_STEPS / FADE_OUT_STRIPS_SPLIT_CYCLES));
     // starting strip is above the current strip
-    u16 startingStrip = max(0, currFadingStrip - (FADE_OUT_COLOR_STEPS / FADE_OUT_STRIPS_SPLIT_CYCLES) + 1);
+    u8 startingStrip = max(0, currFadingStrip - (FADE_OUT_COLOR_STEPS / FADE_OUT_STRIPS_SPLIT_CYCLES) + 1);
     // No need to fade strips ahead the max strip limit, but we still have to fade previous FADE_OUT_COLOR_STEPS strips
     currFadingStrip = min(currFadingStrip, TITAN_256C_STRIPS_COUNT - 1);
 
     // fade the palettes starting at currFadingStrip and moving backwards
-    u16* palsPtr = palettesData + (startingStrip * TITAN_256C_COLORS_PER_STRIP);
+    u32* palsPtr = (u32*)(palettesData + (startingStrip * TITAN_256C_COLORS_PER_STRIP));
     for (; startingStrip <= currFadingStrip; ++startingStrip) {
 
         // VDP u16 color is represented as next:
@@ -254,29 +253,34 @@ void NO_INLINE fadingStepToBlack_pals (u16 currFadingStrip, u16 cycle, u16 titan
         // Fading to black in 7 steps is just decrementing a color by 1 unit until reaching 0 for each color component
         // F  E  D  C  B  A  9  8  7  6  5  4  3  2  1  0
         // -  -  -  -  0  0  1  -  0  0  1  -  0  0  1  -
-        // Which is the same than substracting 0x222
+        // Which is the same than substracting 0x222 (0b001000100010)
 
-        for (u16 i=TITAN_256C_COLORS_PER_STRIP; i--;) {
-            u16 d = *palsPtr - 0x222; // decrement 1 unit in every component
+        for (u8 i=TITAN_256C_COLORS_PER_STRIP/2; i--;) {
+            // NOTE: here we decrement 2 colors at a time, hence the u32 type
+            u32 d = *palsPtr - 0b00000010001000100000001000100010; // decrement 1 unit in every component
+
+            #if TITAN_256C_FADE_TO_BLACK_STRATEGY == 0
             // IMPL A:
-            // switch (d & 0b1000100010000) {
-            //        case 0b0000000010000: d &= ~0b0000000011110; break; // red overflows? then zero it
-            //        case 0b0000100010000: d &= ~0b0000111111110; break; // red and green overflow? then zero them
-            //        case 0b0000100000000: d &= ~0b0000111100000; break; // green overflows? then zero it
-            //        case 0b1000000010000: d &= ~0b1111000011110; break; // red and blue overflow? then zero them
-            //        case 0b1000000000000: d &= ~0b1111000000000; break; // blue overflows? then zero it
-            //        case 0b1000100000000: d &= ~0b1111111100000; break; // green and blue overflow? then zero them
-            //        case 0b1000100010000: d = 0; break; // all colors overflow, then zero them
-            //        default: break;
-            // }
-            // *palsPtr++ = d;
+            switch (d & 0b1000100010000) {
+                case 0b0000000010000: d &= ~0b0000000011110; break; // red overflows? then zero it
+                case 0b0000100010000: d &= ~0b0000111111110; break; // red and green overflow? then zero them
+                case 0b0000100000000: d &= ~0b0000111100000; break; // green overflows? then zero it
+                case 0b1000000010000: d &= ~0b1111000011110; break; // red and blue overflow? then zero them
+                case 0b1000000000000: d &= ~0b1111000000000; break; // blue overflows? then zero it
+                case 0b1000100000000: d &= ~0b1111111100000; break; // green and blue overflow? then zero them
+                case 0b1000100010000: d = 0; break; // all colors overflow, then zero them
+                default: break;
+            }
+            #elif TITAN_256C_FADE_TO_BLACK_STRATEGY == 1
             // IMPL B:
-            // if (d & 0b0000000010000) d &= ~0b0000000011110; // red overflows? then zero it
-            // if (d & 0b0000100000000) d &= ~0b0000111100000; // green overflows? then zero it
-            // if (d & 0b1000000000000) d &= ~0b1111000000000; // blue overflows? then zero it
-            // *palsPtr++ = d;
+            if (d & 0b00000000000100000000000000010000) d &= ~0b00000000000111100000000000011110; // red overflows? then zero it
+            if (d & 0b00000001000000000000000100000000) d &= ~0b00000001111000000000000111100000; // green overflows? then zero it
+            if (d & 0b00010000000000000001000000000000) d &= ~0b00011110000000000001111000000000; // blue overflows? then zero it
+            #elif TITAN_256C_FADE_TO_BLACK_STRATEGY == 2            
             // IMPL C:
-            if (d & 0b1000100010000) d = 0; // if only one color overflows then zero them all
+            if (d & 0b00010001000100000001000100010000) d = 0; // if only one color overflows then zero them all
+            #endif
+
             *palsPtr++ = d;
         }
     }

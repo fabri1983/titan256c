@@ -878,7 +878,7 @@ void vertIntOnDrawTextCallback () {
         // get next text color value for the HInt
         textColor = *(getTitanCharsGradientColors() + textColorIndex);
         textColorIndex += textColorDirection;
-        if (textColorIndex == TITAN_CHARS_GRADIENT_MAX_COLORS) {
+        if (textColorIndex == TITAN_TEXT_GRADIENT_MAX_COLORS) {
             textColorIndex -= 2;
             textColorDirection = -1;
         }
