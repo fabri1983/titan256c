@@ -1,0 +1,1 @@
+SPRITE  sprDefTitanSphereTextAnim  "sprites/titan_sphere_text_anim-sheet.png"  22  13  NONE  4  NONE  SPRITE  SLOW  TRUE

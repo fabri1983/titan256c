@@ -194,31 +194,36 @@ void NO_INLINE updateTextGradientColors () {
     u16 colorIdx = titanCharsCycleCnt / TITAN_CHARS_GRADIENT_SCROLL_FREQ; // advance ramp color every N frames (use divu for divisor non power of 2)
     if (colorIdx > TITAN_CHARS_GRADIENT_MAX_COLORS) colorIdx = 0;
 
+    // Traverse titanCharsGradientColors from colorIdx position and copy the colors into gradColorsBuffer
     u16* palsPtr = (u16*)titanCharsGradientColors + colorIdx;
     for (u16 i=0; i < TITAN_CHARS_CURR_GRADIENT_ELEMS; ++i) {
         u16 d = *palsPtr++;
+        // if innerStripLimit > 0 it means we want to apply fade out effect
         if (i < innerStripLimit) {
             d -= min(0xEEE, fadeTextAmount);
-            // diminish the fade out weight every 4 colors (ramp colors shown per strip)
+            // diminish the fade out weight every 4 colors (amount of ramp colors per strip)
             if ((i % 4) == 0) fadeTextAmount -= 0x222;
         }
         // IMPL A:
-        switch (d & 0b1000100010000) {
-               case 0b0000000010000: d &= ~0b0000000011110; break; // red overflows? then zero it
-               case 0b0000100010000: d &= ~0b0000111111110; break; // red and green overflow? then zero them
-               case 0b0000100000000: d &= ~0b0000111100000; break; // green overflows? then zero it
-               case 0b1000000010000: d &= ~0b1111000011110; break; // red and blue overflow? then zero them
-               case 0b1000000000000: d &= ~0b1111000000000; break; // blue overflows? then zero it
-               case 0b1000100000000: d &= ~0b1111111100000; break; // green and blue overflow? then zero them
-               case 0b1000100010000: d = 0; break; // all colors overflow, then zero them
-               default: break;
-        }
-        *rampBufPtr++ = d;
+        // switch (d & 0b1000100010000) {
+        //     case 0b0000000010000: d &= ~0b0000000011110; break; // red overflows? then zero it
+        //     case 0b0000100010000: d &= ~0b0000111111110; break; // red and green overflow? then zero them
+        //     case 0b0000100000000: d &= ~0b0000111100000; break; // green overflows? then zero it
+        //     case 0b1000000010000: d &= ~0b1111000011110; break; // red and blue overflow? then zero them
+        //     case 0b1000000000000: d &= ~0b1111000000000; break; // blue overflows? then zero it
+        //     case 0b1000100000000: d &= ~0b1111111100000; break; // green and blue overflow? then zero them
+        //     case 0b1000100010000: d = 0; break; // all colors overflow, then zero them
+        //     default: break;
+        // }
+        // *rampBufPtr++ = d;
         // IMPL B:
-        // if (d & 0b0000000010000) d &= ~0b0000000011110; // red overflows? then zero it
-        // if (d & 0b0000100000000) d &= ~0b0000111100000; // green overflows? then zero it
-        // if (d & 0b1000000000000) d &= ~0b1111000000000; // blue overflows? then zero it
-        //*rampBufPtr++ = d;
+        if (d & 0b0000000010000) d &= ~0b0000000011110; // red overflows? then zero it
+        if (d & 0b0000100000000) d &= ~0b0000111100000; // green overflows? then zero it
+        if (d & 0b1000000000000) d &= ~0b1111000000000; // blue overflows? then zero it
+        *rampBufPtr++ = d;
+        // IMPL C:
+        // if (d & 0b1000100010000) d = 0; // if only one color overflows then zero them all
+        // *rampBufPtr++ = d;
     }
 
     ++titanCharsCycleCnt;
@@ -251,39 +256,29 @@ void NO_INLINE fadingStepToBlack_pals (u16 currFadingStrip, u16 cycle, u16 titan
         // -  -  -  -  0  0  1  -  0  0  1  -  0  0  1  -
         // Which is the same than substracting 0x222
 
-        // HInt modes 0,1,2 have no issue in finishing on time
-        // if (titan256cHIntMode != HINT_STRATEGY_3) {
-            for (u16 i=TITAN_256C_COLORS_PER_STRIP; i--;) {
-                // IMPL A:
-                u16 d = *palsPtr - 0x222; // decrement 1 unit in every component
-                switch (d & 0b1000100010000) {
-                       case 0b0000000010000: d &= ~0b0000000011110; break; // red overflows? then zero it
-                       case 0b0000100010000: d &= ~0b0000111111110; break; // red and green overflow? then zero them
-                       case 0b0000100000000: d &= ~0b0000111100000; break; // green overflows? then zero it
-                       case 0b1000000010000: d &= ~0b1111000011110; break; // red and blue overflow? then zero them
-                       case 0b1000000000000: d &= ~0b1111000000000; break; // blue overflows? then zero it
-                       case 0b1000100000000: d &= ~0b1111111100000; break; // green and blue overflow? then zero them
-                       case 0b1000100010000: d = 0; break; // all colors overflow, then zero them
-                       default: break;
-                }
-                *palsPtr++ = d;
-                // IMPL B:
-                // u16 d = *palsPtr - 0x222; // decrement 1 unit in every component
-                // if (d & 0b0000000010000) d &= ~0b0000000011110; // red overflows? then zero it
-                // if (d & 0b0000100000000) d &= ~0b0000111100000; // green overflows? then zero it
-                // if (d & 0b1000000000000) d &= ~0b1111000000000; // blue overflows? then zero it
-                // *palsPtr++ = d;
-            }
-        // }
-        // // Only HINT_STRATEGY_3 has issues to finish on time and makes appear glitches during the fade out.
-        // // So this version is speedier but reaches to color black faster.
-        // else {
-        //     for (u16 i=TITAN_256C_COLORS_PER_STRIP; i--;) {
-        //         u16 d = *palsPtr - 0x222; // decrement 1 unit in every component
-        //         if (d & 0b1000100010000) d = 0; // if only one color overflows then zero them all
-        //         *palsPtr++ = d;
-        //     }
-        // }
+        for (u16 i=TITAN_256C_COLORS_PER_STRIP; i--;) {
+            u16 d = *palsPtr - 0x222; // decrement 1 unit in every component
+            // IMPL A:
+            // switch (d & 0b1000100010000) {
+            //        case 0b0000000010000: d &= ~0b0000000011110; break; // red overflows? then zero it
+            //        case 0b0000100010000: d &= ~0b0000111111110; break; // red and green overflow? then zero them
+            //        case 0b0000100000000: d &= ~0b0000111100000; break; // green overflows? then zero it
+            //        case 0b1000000010000: d &= ~0b1111000011110; break; // red and blue overflow? then zero them
+            //        case 0b1000000000000: d &= ~0b1111000000000; break; // blue overflows? then zero it
+            //        case 0b1000100000000: d &= ~0b1111111100000; break; // green and blue overflow? then zero them
+            //        case 0b1000100010000: d = 0; break; // all colors overflow, then zero them
+            //        default: break;
+            // }
+            // *palsPtr++ = d;
+            // IMPL B:
+            // if (d & 0b0000000010000) d &= ~0b0000000011110; // red overflows? then zero it
+            // if (d & 0b0000100000000) d &= ~0b0000111100000; // green overflows? then zero it
+            // if (d & 0b1000000000000) d &= ~0b1111000000000; // blue overflows? then zero it
+            // *palsPtr++ = d;
+            // IMPL C:
+            if (d & 0b1000100010000) d = 0; // if only one color overflows then zero them all
+            *palsPtr++ = d;
+        }
     }
 }
 

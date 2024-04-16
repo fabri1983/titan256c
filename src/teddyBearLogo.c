@@ -33,10 +33,8 @@ void displayTeddyBearLogo ()
     Sprite* teddyBearAnimSpr = SPR_addSpriteSafe(&sprDefTeddyBearAnim, sprX, sprY, teddyBearAnimTileAttribsBase);
     tileIndexNext += sprDefTeddyBearAnim.maxNumTile;
     
-    // Draw first sprite with only black palette to later do the fade in
-    Sprite* firstFrameTeddyBear = teddyBearAnimSpr->next;
+    // Draw first frame with only black palette to later do the fade in
     PAL_setPalette(PAL3, palette_black, DMA);
-    SPR_setPosition(firstFrameTeddyBear, 216, 56);
     SPR_update();
 
     //
@@ -62,7 +60,7 @@ void displayTeddyBearLogo ()
     // Display loop for SGDK Teddy Bear animation
     //
 
-    // Start animation 0 (is the only one though)
+    // Set animation 0 (is the only one though)
     SPR_setAnim(teddyBearAnimSpr, 0);
 
     u8 frameCnt = 0;

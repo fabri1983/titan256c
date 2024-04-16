@@ -17,4 +17,13 @@
 #define TITAN_CHARS_GRADIENT_MAX_COLORS 42
 #define TITAN_CHARS_CURR_GRADIENT_ELEMS 16
 
+// Sphere tilemap width in tiles
+#define TITAN_SPHERE_TILEMAP_WIDTH 22
+// Sphere tilemap height in tiles
+#define TITAN_SPHERE_TILEMAP_HEIGHT 13
+// Sphere tilemap starting y position (in tiles)
+#define TITAN_SPHERE_TILEMAP_START_Y_POS 4
+// Sphere tilemap starting x position (in tiles)
+#define TITAN_SPHERE_TILEMAP_START_X_POS 10
+
 #endif // TITAN_256C_CONSTS_H

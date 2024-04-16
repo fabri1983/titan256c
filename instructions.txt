@@ -7,6 +7,7 @@ This is what I finally used.
 And then use custom implementation of tiledpalettequant for generating RGB images with palettes ready to be consumed by SGDK's rescomp.
 
 
+
 STRIPS OF 4 ROWS
 ----------------
 Strips of 4 rows of valid content, so each final 8x8 tile will have half content as transparent pixels.

@@ -4,6 +4,7 @@
 #include "teddyBearLogo.h"
 #include "font_res.h"
 #include "titan256c.h"
+#include "titan_sphere_res.h"
 #include "hvInterrupts.h"
 #include "font_consts.h"
 
@@ -124,6 +125,15 @@ static void titan256cDisplay () {
     currTileIndex = loadTitan256cTileMap(BG_B, currTileIndex);
     unpackPalettes();
 
+    SPR_initEx(sprDefTitanSphereTextAnim.maxNumTile); // 137 tiles
+    Sprite* titanSphereTextAnimSpr = SPR_addSpriteEx(&sprDefTitanSphereTextAnim, 
+        TITAN_SPHERE_TILEMAP_START_X_POS * 8, TITAN_SPHERE_TILEMAP_START_Y_POS * 8, 
+        TILE_ATTR_FULL(PAL0, 0, FALSE, FALSE, currTileIndex),
+        SPR_FLAG_AUTO_TILE_UPLOAD | SPR_FLAG_AUTO_VRAM_ALLOC);
+    SPR_setVisibility(titanSphereTextAnimSpr, VISIBLE); // Sprite is always visible along the three effects of the scene
+    currTileIndex += sprDefTitanSphereTextAnim.maxNumTile;
+    SPR_setAnim(titanSphereTextAnimSpr, 0); // set animation 0 (is the only one though)
+
     SYS_disableInts();
         setHVCallbacks(titan256cHIntMode);
         VDP_setHInterrupt(TRUE);
@@ -136,6 +146,8 @@ static void titan256cDisplay () {
 
     u16 yPos = TITAN_256C_HEIGHT;
     s16 velocity = 0;
+
+    SPR_setPosition(titanSphereTextAnimSpr, TITAN_SPHERE_TILEMAP_START_X_POS * 8, TITAN_SPHERE_TILEMAP_START_Y_POS * 8 - yPos);
 
     // Fall and bounce effect
     for (;;) {
@@ -163,6 +175,10 @@ static void titan256cDisplay () {
         // Enqueue 2 strips palettes depending on the Y position (in strips) of the image
         enqueue2Pals(yPos / TITAN_256C_STRIP_HEIGHT);
 
+        SPR_setPosition(titanSphereTextAnimSpr, TITAN_SPHERE_TILEMAP_START_X_POS * 8, 
+            TITAN_SPHERE_TILEMAP_START_Y_POS * 8 - yPos);
+        SPR_update();
+
         SYS_doVBlankProcess();
 
         // if bounce effect finished then continue with next game state
@@ -180,6 +196,7 @@ static void titan256cDisplay () {
 
         updateTextGradientColors();
 
+        SPR_update();
         SYS_doVBlankProcess();
 
         u16 joyState = JOY_readJoypad(JOY_1);
@@ -214,6 +231,7 @@ static void titan256cDisplay () {
             fadingCycleCurrStrip = 0;
         }
 
+        SPR_update();
         SYS_doVBlankProcess();
     }
 
@@ -225,6 +243,9 @@ static void titan256cDisplay () {
 
     VDP_clearPlane(BG_B, TRUE);
     PAL_setColor(0, 0x000); // Set BG color as Black
+
+    SPR_end();
+
     SYS_doVBlankProcess();
 
     freePalettes();
@@ -259,10 +280,10 @@ int main (bool hardReset) {
 		SYS_hardReset();
 	}
 
-    displaySegaLogo();
-    waitMs_(200);
-    displayTeddyBearLogo();
-    waitMs_(200);
+    // displaySegaLogo();
+    // waitMs_(200);
+    // displayTeddyBearLogo();
+    // waitMs_(200);
 
     basicEngineConfig();
     initGameStatus();

@@ -9,7 +9,7 @@ SET numColors=%2
 
 ECHO Running mogrify for color reduction: %numColors% ...
 
-mogrify -path %TARGET_FOLDER% -colors %numColors% -quality 95 -format PNG8 %IMAGES_PATTERN%
+mogrify -path %TARGET_FOLDER% -colors %numColors% -quantize YIQ -quality 100 -format PNG8 %IMAGES_PATTERN%
 
 :: rename PNG8 files into png, removing first the old ones
 RMDIR /S /Q %TARGET_FOLDER%\PNG8s 2>NUL
