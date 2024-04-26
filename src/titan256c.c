@@ -77,9 +77,8 @@ static TileMap* unpackTileMap_custom(const TileMap *src, TileMap *dest) {
     return result;
 }
 
-u16 loadTitan256cTileMap (VDPPlane plane, u16 currTileIndex) {
+void loadTitan256cTileMap (VDPPlane plane, u16 currTileIndex) {
     u16 baseTileAttribs = TILE_ATTR_FULL(PAL0, 0, FALSE, FALSE, currTileIndex);
-    currTileIndex += titanRGB.tileset->numTile;
     const TileMap* tilemap = titanRGB.tilemap;
 
     const u32 offset = 0;//mulu(y, tilemap->w) + x;
@@ -94,11 +93,9 @@ u16 loadTitan256cTileMap (VDPPlane plane, u16 currTileIndex) {
     else
         VDP_setTileMapDataRectEx(plane, (u16*) FAR_SAFE(tilemap->tilemap + offset, (TITAN_256C_WIDTH/8) * (TITAN_256C_HEIGHT/8) * 2), 
             baseTileAttribs, 0, 0, TITAN_256C_WIDTH/8, TITAN_256C_HEIGHT/8, TITAN_256C_WIDTH/8, DMA_QUEUE_COPY);
-
-    return currTileIndex;
 }
 
-u16* palettesData;
+static u16* palettesData;
 
 void unpackPalettes () {
     palettesData = (u16*) MEM_alloc(TITAN_256C_STRIPS_COUNT * TITAN_256C_COLORS_PER_STRIP * sizeof(u16));
@@ -123,7 +120,7 @@ FORCE_INLINE u16* getPalettesData () {
     return palettesData;
 }
 
-u16 yPosFalling = 0;
+static u16 yPosFalling = 0;
 
 FORCE_INLINE void setYPosFalling (u16 value) {
     yPosFalling = value;
@@ -177,15 +174,37 @@ void setCurrentFadingStripForText (u8 currFadingStrip_) {
     currFadingStrip = currFadingStrip_;
 }
 
+void NO_INLINE updateSphereTextColor () {
+    // Every other strip inside range [4,17] contains the color used by the sprite text surrounding the sphere.
+    // at position 15th. So we are jumping every 2 pals in order to set its color.
+    u16* palsPtr = palettesData + (TITAN_SPHERE_1_TILEMAP_START_Y_POS * TITAN_256C_COLORS_PER_STRIP + 15);
+
+    u16 fadeAmount = 0;
+    if (currFadingStrip >= TITAN_SPHERE_1_TILEMAP_START_Y_POS) {
+        u16 factor = currFadingStrip - TITAN_SPHERE_1_TILEMAP_START_Y_POS + 1;
+        fadeAmount = 0x222 * factor;
+    }
+    
+    for (u8 i=(TITAN_SPHERE_1_TILEMAP_HEIGHT+1)/2; i--; ) {
+        u16 d = gradColorsBuffer[0] - min(0xEEE, fadeAmount);
+        fadeAmount = max(0, fadeAmount - 0x222); // diminish the fade out weight
+
+        // IMPL B:
+        if (d & 0b0000000010000) d &= ~0b0000000011110; // red overflows? then zero it
+        if (d & 0b0000100000000) d &= ~0b0000111100000; // green overflows? then zero it
+        if (d & 0b1000000000000) d &= ~0b1111000000000; // blue overflows? then zero it
+
+        *palsPtr = d;
+        palsPtr += (2 * TITAN_256C_COLORS_PER_STRIP);
+    }
+}
+
 static u8 titanCharsCycleCnt = 0;
 
 void NO_INLINE updateTextGradientColors () {
     // Strips [21,25] (0 based) renders the letters using transparent color, and we want to use a gradient scrolling over time. So 5 strips.
-    u8 innerStripLimit = 0;
     u16 fadeTextAmount = 0;
     if (currFadingStrip >= TITAN_256C_TEXT_STARTING_STRIP) {
-        // (ramp colors shown per strip) + (ramp colors shown per strip) * (delta between current strip and 21)
-        innerStripLimit = (4) + (4) * (currFadingStrip - TITAN_256C_TEXT_STARTING_STRIP);
         u16 factor = currFadingStrip - TITAN_256C_TEXT_STARTING_STRIP + 1;
         fadeTextAmount = 0x222 * factor;
     }
@@ -198,12 +217,10 @@ void NO_INLINE updateTextGradientColors () {
     u16* palsPtr = (u16*)titanCharsGradientColors + colorIdx;
     for (u8 i=0; i < TITAN_TEXT_CURR_GRADIENT_ELEMS; ++i) {
         u16 d = *palsPtr++;
-        // if innerStripLimit > 0 it means we want to apply fade out effect
-        if (i < innerStripLimit) {
-            d -= min(0xEEE, fadeTextAmount);
-            // diminish the fade out weight every 4 colors (amount of ramp colors per strip)
-            if ((i % 4) == 0) fadeTextAmount -= 0x222;
-        }
+        d -= min(0xEEE, fadeTextAmount); // fadeTextAmount is 0 when is not in fading to black animation
+        // Diminish the fade out weight every 4 colors (amount of ramp colors per strip)
+        if ((i % 4) == 0)
+            fadeTextAmount = max(0, fadeTextAmount - 0x222);
 
         #if TITAN_TEXT_GRADIENT_FADE_TO_BLACK_STRATEGY == 0
         // IMPL A:
@@ -240,8 +257,6 @@ void NO_INLINE fadingStepToBlack_pals (u8 currFadingStrip, u8 cycle) {
     currFadingStrip = max(0, currFadingStrip - cycle * (FADE_OUT_COLOR_STEPS / FADE_OUT_STRIPS_SPLIT_CYCLES));
     // starting strip is above the current strip
     u8 startingStrip = max(0, currFadingStrip - (FADE_OUT_COLOR_STEPS / FADE_OUT_STRIPS_SPLIT_CYCLES) + 1);
-    // No need to fade strips ahead the max strip limit, but we still have to fade previous FADE_OUT_COLOR_STEPS strips
-    currFadingStrip = min(currFadingStrip, TITAN_256C_STRIPS_COUNT - 1);
 
     // fade the palettes starting at currFadingStrip and moving backwards
     u32* palsPtr = (u32*)(palettesData + (startingStrip * TITAN_256C_COLORS_PER_STRIP));
@@ -253,7 +268,8 @@ void NO_INLINE fadingStepToBlack_pals (u8 currFadingStrip, u8 cycle) {
         // Fading to black in 7 steps is just decrementing a color by 1 unit until reaching 0 for each color component
         // F  E  D  C  B  A  9  8  7  6  5  4  3  2  1  0
         // -  -  -  -  0  0  1  -  0  0  1  -  0  0  1  -
-        // Which is the same than substracting 0x222 (0b001000100010)
+        // Which is the same than substracting 0x222 (0b001000100010) in 16 bits (1 color)
+        // or 0x2220222 (0b00000010001000100000001000100010) in 32 bits (2 colors)
 
         for (u8 i=TITAN_256C_COLORS_PER_STRIP/2; i--;) {
             // NOTE: here we decrement 2 colors at a time, hence the u32 type
@@ -261,14 +277,14 @@ void NO_INLINE fadingStepToBlack_pals (u8 currFadingStrip, u8 cycle) {
 
             #if TITAN_256C_FADE_TO_BLACK_STRATEGY == 0
             // IMPL A:
-            switch (d & 0b1000100010000) {
-                case 0b0000000010000: d &= ~0b0000000011110; break; // red overflows? then zero it
-                case 0b0000100010000: d &= ~0b0000111111110; break; // red and green overflow? then zero them
-                case 0b0000100000000: d &= ~0b0000111100000; break; // green overflows? then zero it
-                case 0b1000000010000: d &= ~0b1111000011110; break; // red and blue overflow? then zero them
-                case 0b1000000000000: d &= ~0b1111000000000; break; // blue overflows? then zero it
-                case 0b1000100000000: d &= ~0b1111111100000; break; // green and blue overflow? then zero them
-                case 0b1000100010000: d = 0; break; // all colors overflow, then zero them
+            switch (d & 0b0001000100010000) {
+                case 0b00000000000100000000000000010000: d &= ~0b00000000000111100000000000011110; break; // red overflows? then zero it
+                case 0b00000001000100000000000100010000: d &= ~0b00000001111111100000000111111110; break; // red and green overflow? then zero them
+                case 0b00000001000000000000000100000000: d &= ~0b00000001111000000000000111100000; break; // green overflows? then zero it
+                case 0b00010000000100000001000000010000: d &= ~0b00011110000111100001111000011110; break; // red and blue overflow? then zero them
+                case 0b00010000000000000001000000000000: d &= ~0b00011110000000000001111000000000; break; // blue overflows? then zero it
+                case 0b00010001000000000001000100000000: d &= ~0b00011111111000000001111111100000; break; // green and blue overflow? then zero them
+                case 0b00010001000100000001000100010000: d = 0; break; // all colors overflow, then zero them
                 default: break;
             }
             #elif TITAN_256C_FADE_TO_BLACK_STRATEGY == 1
@@ -276,7 +292,7 @@ void NO_INLINE fadingStepToBlack_pals (u8 currFadingStrip, u8 cycle) {
             if (d & 0b00000000000100000000000000010000) d &= ~0b00000000000111100000000000011110; // red overflows? then zero it
             if (d & 0b00000001000000000000000100000000) d &= ~0b00000001111000000000000111100000; // green overflows? then zero it
             if (d & 0b00010000000000000001000000000000) d &= ~0b00011110000000000001111000000000; // blue overflows? then zero it
-            #elif TITAN_256C_FADE_TO_BLACK_STRATEGY == 2            
+            #elif TITAN_256C_FADE_TO_BLACK_STRATEGY == 2
             // IMPL C:
             if (d & 0b00010001000100000001000100010000) d = 0; // if only one color overflows then zero them all
             #endif

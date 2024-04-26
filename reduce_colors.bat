@@ -1,5 +1,5 @@
 :: Example:
-::   reduce_colors.bat tmpmv_test\frame_*.png 14
+::   reduce_colors.bat tmpmv\frame_*.png 14
 @ECHO OFF
 
 SET "IMAGES_PATTERN=%1"

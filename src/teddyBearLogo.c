@@ -83,7 +83,7 @@ void displayTeddyBearLogo ()
         SPR_update();
         SYS_doVBlankProcess();
 
-        // Reaching 1 is the last animation frame. The sprite has only one animation so we are ok checking for the sprite's timer.
+        // Reaching 1 means the waiting time for current animation frame is done
         if (teddyBearAnimSpr->timer == 1)
             ++frameCnt;
     }

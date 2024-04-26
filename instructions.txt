@@ -4,7 +4,7 @@ This is what I finally used.
 ```sh
 	magick titan256c_indexed.png -unique -depth 8 -colors 256 -crop x8 -define png:format=png8 -define histogram:unique-colors=false titan_0_%d.png
 ```
-And then use custom implementation of tiledpalettequant for generating RGB images with palettes ready to be consumed by SGDK's rescomp.
+And then use custom implementation of `tiledpalettequant` tool to generate RGB images with palettes ready to be consumed by SGDK's rescomp.
 
 
 

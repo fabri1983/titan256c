@@ -20,6 +20,8 @@ u16* getGradientColorsBuffer ();
 void setCurrentFadingStripForText (u8 currFadingStrip_);
 void updateTextGradientColors ();
 
+void updateSphereTextColor ();
+
 #define FADE_OUT_COLOR_STEPS 8 // Changing this value will affect assumptions made in fadingStepToBlack_pals() method for fading color calculations
 #define FADE_OUT_STRIPS_SPLIT_CYCLES 4 // How many parts do we split the strips visited for fading calculation to aliviate lenghty execution
 
@@ -29,7 +31,7 @@ void setYPosFalling (u16 value);
 u16 getYPosFalling ();
 
 void loadTitan256cTileSet (u16 currTileIndex);
-u16 loadTitan256cTileMap (VDPPlane plane, u16 currTileIndex);
+void loadTitan256cTileMap (VDPPlane plane, u16 currTileIndex);
 
 void unpackPalettes ();
 void freePalettes ();

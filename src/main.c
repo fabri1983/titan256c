@@ -111,6 +111,26 @@ static void showTransitionScreen () {
     SYS_enableInts();
 }
 
+static void toggleSphereTextAnimations (Sprite* titanSphereText_1_AnimSpr, Sprite* titanSphereText_2_AnimSpr) {
+    // we directly checking against VISIBLE because sprites setting are only VISIBLE or HIDDEN as per their creation
+    if (SPR_getVisibility(titanSphereText_1_AnimSpr) == VISIBLE) {
+        if (SPR_getAnimationDone(titanSphereText_1_AnimSpr)) {
+            SPR_setVisibility(titanSphereText_1_AnimSpr, HIDDEN);
+            SPR_setVisibility(titanSphereText_2_AnimSpr, VISIBLE);
+            SPR_setAnimAndFrame(titanSphereText_2_AnimSpr, 0, 0); // reset animation 0 to first frame
+            titanSphereText_2_AnimSpr->status &= ~0x0010; // set NOT STATE_ANIMATION_DONE from sprite_eng.c
+        }
+    }
+    else {
+        if (SPR_getAnimationDone(titanSphereText_2_AnimSpr)) {
+            SPR_setVisibility(titanSphereText_2_AnimSpr, HIDDEN);
+            SPR_setVisibility(titanSphereText_1_AnimSpr, VISIBLE);
+            SPR_setAnimAndFrame(titanSphereText_1_AnimSpr, 0, 0); // reset animation 0 to first frame
+            titanSphereText_1_AnimSpr->status &= ~0x0010; // set NOT STATE_ANIMATION_DONE from sprite_eng.c
+        }
+    }
+}
+
 static void titan256cDisplay () {
 
     PAL_setColors(0, palette_black, 64, DMA); // palette_black is an array of 64
@@ -122,17 +142,29 @@ static void titan256cDisplay () {
 
     currTileIndex = TILE_USER_INDEX;
     loadTitan256cTileSet(currTileIndex);
-    currTileIndex = loadTitan256cTileMap(BG_B, currTileIndex);
+    loadTitan256cTileMap(BG_B, currTileIndex);
+    currTileIndex += titanRGB.tileset->numTile;
     unpackPalettes();
 
-    SPR_initEx(sprDefTitanSphereTextAnim.maxNumTile); // 137 tiles
-    Sprite* titanSphereTextAnimSpr = SPR_addSpriteEx(&sprDefTitanSphereTextAnim, 
-        TITAN_SPHERE_TILEMAP_START_X_POS * 8, TITAN_SPHERE_TILEMAP_START_Y_POS * 8, 
+    SPR_initEx(sprDefTitanSphereText_1_Anim.maxNumTile + sprDefTitanSphereText_2_Anim.maxNumTile); // 137 + 127 tiles
+
+    Sprite* titanSphereText_1_AnimSpr = SPR_addSpriteEx(&sprDefTitanSphereText_1_Anim, 
+        TITAN_SPHERE_1_TILEMAP_START_X_POS * 8, TITAN_SPHERE_1_TILEMAP_START_Y_POS * 8, 
         TILE_ATTR_FULL(PAL0, 0, FALSE, FALSE, currTileIndex),
         SPR_FLAG_AUTO_TILE_UPLOAD | SPR_FLAG_AUTO_VRAM_ALLOC);
-    SPR_setVisibility(titanSphereTextAnimSpr, VISIBLE); // Sprite is always visible along the three effects of the scene
-    currTileIndex += sprDefTitanSphereTextAnim.maxNumTile;
-    SPR_setAnim(titanSphereTextAnimSpr, 0); // set animation 0 (is the only one though)
+    SPR_setAnim(titanSphereText_1_AnimSpr, 0); // set animation 0 (is the only one though)
+    // always visible or always hidden along the three effects of the scene
+    SPR_setVisibility(titanSphereText_1_AnimSpr, HIDDEN);
+    currTileIndex += sprDefTitanSphereText_1_Anim.maxNumTile;
+
+    Sprite* titanSphereText_2_AnimSpr = SPR_addSpriteEx(&sprDefTitanSphereText_2_Anim, 
+        TITAN_SPHERE_2_TILEMAP_START_X_POS * 8, TITAN_SPHERE_2_TILEMAP_START_Y_POS * 8, 
+        TILE_ATTR_FULL(PAL0, 0, FALSE, FALSE, currTileIndex),
+        SPR_FLAG_AUTO_TILE_UPLOAD | SPR_FLAG_AUTO_VRAM_ALLOC);
+    SPR_setAnim(titanSphereText_2_AnimSpr, 0); // set animation 0 (is the only one though)
+    // always visible or always hidden along the three effects of the scene
+    SPR_setVisibility(titanSphereText_2_AnimSpr, VISIBLE);
+    currTileIndex += sprDefTitanSphereText_2_Anim.maxNumTile;
 
     SYS_disableInts();
         setHVCallbacks(titan256cHIntMode);
@@ -147,7 +179,8 @@ static void titan256cDisplay () {
     u16 yPos = TITAN_256C_HEIGHT;
     s16 velocity = 0;
 
-    SPR_setPosition(titanSphereTextAnimSpr, TITAN_SPHERE_TILEMAP_START_X_POS * 8, TITAN_SPHERE_TILEMAP_START_Y_POS * 8 - yPos);
+    SPR_setPosition(titanSphereText_1_AnimSpr, TITAN_SPHERE_1_TILEMAP_START_X_POS * 8, TITAN_SPHERE_1_TILEMAP_START_Y_POS * 8 - yPos);
+    SPR_setPosition(titanSphereText_2_AnimSpr, TITAN_SPHERE_2_TILEMAP_START_X_POS * 8, TITAN_SPHERE_2_TILEMAP_START_Y_POS * 8 - yPos);
 
     // Fall and bounce effect
     for (;;) {
@@ -170,13 +203,16 @@ static void titan256cDisplay () {
         setYPosFalling(yPos);
         VDP_setVerticalScrollVSync(BG_B, yPos);
 
+        // updateSphereTextColor();
+
         updateTextGradientColors();
 
         // Enqueue 2 strips palettes depending on the Y position (in strips) of the image
         enqueue2Pals(yPos / TITAN_256C_STRIP_HEIGHT);
 
-        SPR_setPosition(titanSphereTextAnimSpr, TITAN_SPHERE_TILEMAP_START_X_POS * 8, 
-            TITAN_SPHERE_TILEMAP_START_Y_POS * 8 - yPos);
+        SPR_setPosition(titanSphereText_1_AnimSpr, TITAN_SPHERE_1_TILEMAP_START_X_POS * 8, TITAN_SPHERE_1_TILEMAP_START_Y_POS * 8 - yPos);
+        SPR_setPosition(titanSphereText_2_AnimSpr, TITAN_SPHERE_2_TILEMAP_START_X_POS * 8, TITAN_SPHERE_2_TILEMAP_START_Y_POS * 8 - yPos);
+        toggleSphereTextAnimations(titanSphereText_1_AnimSpr, titanSphereText_2_AnimSpr);
         SPR_update();
 
         SYS_doVBlankProcess();
@@ -187,12 +223,16 @@ static void titan256cDisplay () {
 
     // Titan display
     for (;;) {
-        // Load 1st and 2nd strip's palette
-        enqueue2Pals(0);
+        // updateSphereTextColor();
 
         updateTextGradientColors();
 
+        // Load 1st and 2nd strip's palette
+        enqueue2Pals(0);
+
+        toggleSphereTextAnimations(titanSphereText_1_AnimSpr, titanSphereText_2_AnimSpr);
         SPR_update();
+
         SYS_doVBlankProcess();
 
         u16 joyState = JOY_readJoypad(JOY_1);
@@ -206,19 +246,22 @@ static void titan256cDisplay () {
     // Fade to black effect
     for (;;) {
         // advance 1 strip every N frames. N = FADE_OUT_STRIPS_SPLIT_CYCLES (used to execute the fading for current strip)
-        u8 currFadingStrip = fadingStripCnt++ / FADE_OUT_STRIPS_SPLIT_CYCLES; // Use divu() for N non power of 2
+        u8 currFadingStrip = fadingStripCnt / FADE_OUT_STRIPS_SPLIT_CYCLES; // Use divu() for N non power of 2
+        ++fadingStripCnt;
         // already passed last strip? then fading is finished
         if (currFadingStrip == (TITAN_256C_STRIPS_COUNT + FADE_OUT_COLOR_STEPS)) {
             break;
         }
 
-        // Load 1st and 2nd strip's palettes
-        enqueue2Pals(0);
-
-        // enable the fading effect on titan text calculated on VInt
+        // Enable the fading effect on titan text calculated on VInt
         setCurrentFadingStripForText(currFadingStrip);
 
+        // updateSphereTextColor();
+
         updateTextGradientColors();
+
+        // Load 1st and 2nd strip's palettes
+        enqueue2Pals(0);
 
         // apply fade to black from currFadingStrip up to FADE_OUT_STEPS previous strips
         fadingStepToBlack_pals(currFadingStrip, fadingCycleCurrStrip);
@@ -229,7 +272,9 @@ static void titan256cDisplay () {
             fadingCycleCurrStrip = 0;
         }
 
+        toggleSphereTextAnimations(titanSphereText_1_AnimSpr, titanSphereText_2_AnimSpr);
         SPR_update();
+
         SYS_doVBlankProcess();
     }
 
@@ -278,8 +323,8 @@ int main (bool hardReset) {
 		SYS_hardReset();
 	}
 
-    displaySegaLogo();
-    waitMs_(200);
+    // displaySegaLogo();
+    // waitMs_(200);
     displayTeddyBearLogo();
     waitMs_(200);
 
