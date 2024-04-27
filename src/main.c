@@ -134,7 +134,7 @@ static void toggleSphereTextAnimations (Sprite* titanSphereText_1_AnimSpr, Sprit
 static void titan256cDisplay () {
 
     PAL_setColors(0, palette_black, 64, DMA); // palette_black is an array of 64
-    blackCurrentGradientPtr();
+    setBlackCurrentGradientPtr();
 
     SYS_doVBlankProcess();
 
@@ -178,9 +178,6 @@ static void titan256cDisplay () {
 
     u16 yPos = TITAN_256C_HEIGHT;
     s16 velocity = 0;
-
-    SPR_setPosition(titanSphereText_1_AnimSpr, TITAN_SPHERE_1_TILEMAP_START_X_POS * 8, TITAN_SPHERE_1_TILEMAP_START_Y_POS * 8 - yPos);
-    SPR_setPosition(titanSphereText_2_AnimSpr, TITAN_SPHERE_2_TILEMAP_START_X_POS * 8, TITAN_SPHERE_2_TILEMAP_START_Y_POS * 8 - yPos);
 
     // Fall and bounce effect
     for (;;) {

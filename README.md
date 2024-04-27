@@ -47,7 +47,8 @@ All done inside the duration of 8 scanlines.
 
 
 ### TODO:
-- Fix black BG color lines over text in approaches B and C.
+- Fix incorrect set of black palette below the image when on bouncing effect.
+- Fix black BG color lines over text in approaches using DMA. Check if they appear in Nuked-MD.
 - Add DMA command buffering as Stef does. See dma.c.
 - Try to use titan256c_rgb.png as input and do the color ramp effect over the white color.
-- Add a new version of the algorithm in which it split the image in 4 rows of pixels, hence forcing the HInt color swap to be executed every 4 scanlines.
+- Add a new version of the algorithm in which it splits the image in 4 rows of pixels, hence forcing the HInt color swap to be executed every 4 scanlines.
