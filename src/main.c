@@ -32,6 +32,8 @@ static const char* mode3_textC = "Uses DMA to move colors into VDP CRAM";
 
 static void showTransitionScreen () {
 
+    VDP_setEnable(FALSE);
+
     VDP_loadFont(&font_round_tileset, CPU);
     // skip the color at 0th position and load the rest of them
     PAL_setColors(FONT_COLOR_TILE_INDEX, font_round_pal.data + 1, font_round_pal.length - 1, CPU);
@@ -42,6 +44,8 @@ static void showTransitionScreen () {
         SYS_setHIntCallback(horizIntOnDrawTextCallback);
         VDP_setHInterrupt(TRUE);
     SYS_enableInts();
+
+    VDP_setEnable(TRUE);
 
     u16 screenWidthTiles = screenWidth/8;
     u16 screenHeightTiles = screenHeight/8;

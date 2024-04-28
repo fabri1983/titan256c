@@ -13,7 +13,7 @@ void elektro_unpack_caller (u8* src, u8* dest) {
     u8* a2 = dest;
 #endif
 	ASM_STATEMENT __volatile__ (
-		"jsr elektro_unpack;"
+		"jsr elektro_unpack\n"
 		: "+a" (a2)
 		: "a" (a1)
 		: "cc"   // Registers are already saved in the asm implementaiton and can't be modified without affecting the jump index tables

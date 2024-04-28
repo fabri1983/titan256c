@@ -35,6 +35,7 @@
     moveq   #127,d0
     move    #$EEFF,d0       ;// load a constant into d0
     move.l  $EEFF0022,d0    ;// move memory content into d0
+    move.l  d0,$EEFF0026    ;// move d0 into memory
     move.l  $EEFF0022,$EEFF0026  ;// memory to memory
 
 * MOVE.l between memory locations vs LEA then MOVE.l to An

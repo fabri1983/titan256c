@@ -13,7 +13,7 @@ void bytekiller_depack_caller (u8* src, u8* dest) {
     u8* a1 = dest;
 #endif
 	ASM_STATEMENT __volatile__ (
-		"jsr bytekiller_depack;"
+		"jsr bytekiller_depack\n"
 		: "+a" (a1)
 		: "a" (a0)
 		: "a2","d2","d3","cc"  // backup registers used in the asm implementation, except scratch pad
