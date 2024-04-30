@@ -10,7 +10,7 @@ This version displays up to **256 colors**.
 **Work In Progress. Only tested with Blastem and Nuked-MD.**
 
 
-For convenience test you can directly try the last compiled rom `titan256c_rom.bin`.
+For convenience testing you can directly try the last compiled rom [titan256c_rom.bin](titan256c_rom.bin?raw=true "titan256c_rom.bin").
 
 
 ### 4 Approaches:  
@@ -52,4 +52,3 @@ All done inside the duration of 8 scanlines.
 - Fix TITAN_256C_FADE_TO_BLACK_STRATEGY 0 and 1.
 - Add DMA command buffering as Stef does to avoid error in some MD consoles. See dma.c.
 - Try to use titan256c_rgb.png as input and do the color ramp effect over the white color.
-- Add a new version of the algorithm in which it splits the image in 4 rows of pixels, hence forcing the HInt color swap to be executed every 4 scanlines.
