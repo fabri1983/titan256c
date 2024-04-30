@@ -104,7 +104,7 @@ FORCE_INLINE void waitVCounterReg (u16 n) {
  * \param fromAddr Must be >> 1 (shifted to right).
 */
 void NO_INLINE setupDMAForPals (u16 len, u32 fromAddr) {
-    // Uncomment if you previously change it to 1 (CPU access to VRAM is 1 byte lenght, and 2 bytes length for CRAM and VSRAM)
+    // Uncomment if you previously change it to 1 (CPU access to VRAM is 1 byte length, and 2 bytes length for CRAM and VSRAM)
     //VDP_setAutoInc(2);
 
     vu16* palDmaPtr = (vu16*) VDP_CTRL_PORT;
@@ -213,8 +213,8 @@ void setBlackCurrentGradientPtr () {
 }
 
 FORCE_INLINE void varsSetup () {
-    // Needed for DMA of colors in u32 type, and it seems is neeed for CPU too (had some black screen flickering if not set)
-	*((vu16*) VDP_CTRL_PORT) = 0x8F00 | 2; // instead of VDP_setAutoInc(2) due to additionals read and write from/to internal regValues[]
+    // Needed for sending colors in u32 type
+	//*((vu16*) VDP_CTRL_PORT) = 0x8F00 | 2; // instead of VDP_setAutoInc(2) due to additionals read and write from/to internal regValues[]
     
     u16 posYFalling = getYPosFalling();
     u16 stripN = min(TITAN_256C_HEIGHT/TITAN_256C_STRIP_HEIGHT - 1, (posYFalling / TITAN_256C_STRIP_HEIGHT) + 2);
@@ -641,13 +641,13 @@ HINTERRUPT_CALLBACK horizIntOnTitan256cCallback_DMA_EveryN_asm () {
 		"   beq         .dma_address_1_%=\n"
 		"   move.w      (%%a0)+,%%d5\n"         // d5: bgColor = *(currGradPtr + 0);
         ".dma_address_1_%=:\n"
-        "   move.w      %%a1,%%d3\n"            // d3: titan256cPalsPtr
+        "   move.l      %%a1,%%d3\n"            // d3: titan256cPalsPtr
         "   lsr.w       #1,%%d3\n"              // d3: fromAddrForDMA = (u32) titan256cPalsPtr >> 1;
         "   move.w      #0x9500,%%d0\n"         // d0: 0x9500
         "   or.b        %%d3,%%d0\n"            // d0: 0x9500 | (fromAddrForDMA & 0xff)
         //"   lsr.w       #8,%%d3\n"              // d3: fromAddrForDMA >> 8
-        "   move.w	    %%d3,-(%%sp)\n"
-        "   move.b	    (%%sp)+,%%d3\n"         // d3: fromAddrForDMA >> 8
+        "   move.w      %%d3,-(%%sp)\n"
+        "   move.b      (%%sp)+,%%d3\n"         // d3: fromAddrForDMA >> 8
         "   move.w      #0x9600,%%d1\n"         // d1: 0x9600
         "   or.b        %%d3,%%d1\n"            // d1: 0x9600 | ((fromAddrForDMA >> 8) & 0xff)
         // wait HCounter
@@ -663,6 +663,7 @@ HINTERRUPT_CALLBACK horizIntOnTitan256cCallback_DMA_EveryN_asm () {
         "   move.w      %%d0,(%%a2)\n"          // *((vu16*) VDP_CTRL_PORT) = 0x9500 | (fromAddrForDMA & 0xff);
         "   move.w      %%d1,(%%a2)\n"          // *((vu16*) VDP_CTRL_PORT) = 0x9600 | ((fromAddrForDMA >> 8) & 0xff);
         "   lea         (%c[i_TITAN_256C_COLORS_PER_STRIP_DIV_3]*2,%%a1),%%a1\n"  // titan256cPalsPtr += TITAN_256C_COLORS_PER_STRIP/3;
+        
 		".set_pal_cmd_for_dma_1_%=:\n"
             // palCmdForDMA = palIdx == 0 ? 0xC0000080 : 0xC0400080;
             // set base command address once and then we'll add the right offset in next sets
@@ -686,13 +687,13 @@ HINTERRUPT_CALLBACK horizIntOnTitan256cCallback_DMA_EveryN_asm () {
 		"   beq         .dma_address_2_%=\n"
 		"   move.w      (%%a0)+,%%d5\n"         // d5: bgColor = *(currGradPtr + 1);
         ".dma_address_2_%=:\n"
-        "   move.w      %%a1,%%d3\n"            // d3: titan256cPalsPtr
+        "   move.l      %%a1,%%d3\n"            // d3: titan256cPalsPtr
         "   lsr.w       #1,%%d3\n"              // d3: fromAddrForDMA = (u32) titan256cPalsPtr >> 1;
         "   move.w      #0x9500,%%d0\n"         // d0: 0x9500
         "   or.b        %%d3,%%d0\n"            // d0: 0x9500 | (fromAddrForDMA & 0xff)
         //"   lsr.w       #8,%%d3\n"              // d3: fromAddrForDMA >> 8
-        "   move.w	    %%d3,-(%%sp)\n"
-        "   move.b	    (%%sp)+,%%d3\n"         // d3: fromAddrForDMA >> 8
+        "   move.w      %%d3,-(%%sp)\n"
+        "   move.b      (%%sp)+,%%d3\n"         // d3: fromAddrForDMA >> 8
         "   move.w      #0x9600,%%d1\n"         // d1: 0x9600
         "   or.b        %%d3,%%d1\n"            // d1: 0x9600 | ((fromAddrForDMA >> 8) & 0xff)
         // wait HCounter
@@ -727,13 +728,13 @@ HINTERRUPT_CALLBACK horizIntOnTitan256cCallback_DMA_EveryN_asm () {
 		"   beq         .dma_address_3_%=\n"
 		"   move.w      (%%a0)+,%%d5\n"         // d5: bgColor = *(currGradPtr + 1);
         ".dma_address_3_%=:\n"
-        "   move.w      %%a1,%%d3\n"            // d3: titan256cPalsPtr
+        "   move.l      %%a1,%%d3\n"            // d3: titan256cPalsPtr
         "   lsr.w       #1,%%d3\n"              // d3: fromAddrForDMA = (u32) titan256cPalsPtr >> 1;
         "   move.w      #0x9500,%%d0\n"         // d0: 0x9500
         "   or.b        %%d3,%%d0\n"            // d0: 0x9500 | (fromAddrForDMA & 0xff)
         //"   lsr.w       #8,%%d3\n"              // d3: fromAddrForDMA >> 8
-        "   move.w	    %%d3,-(%%sp)\n"
-        "   move.b	    (%%sp)+,%%d3\n"         // d3: fromAddrForDMA >> 8
+        "   move.w      %%d3,-(%%sp)\n"
+        "   move.b      (%%sp)+,%%d3\n"         // d3: fromAddrForDMA >> 8
         "   move.w      #0x9600,%%d1\n"         // d1: 0x9600
         "   or.b        %%d3,%%d1\n"            // d1: 0x9600 | ((fromAddrForDMA >> 8) & 0xff)
         // wait HCounter

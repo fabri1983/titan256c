@@ -17,12 +17,12 @@
 #define TITAN_TEXT_GRADIENT_MAX_COLORS 42
 #define TITAN_TEXT_CURR_GRADIENT_ELEMS 16
 
-#define TITAN_256C_FADE_TO_BLACK_STRATEGY 2 // 0, 1, 2
-#define TITAN_TEXT_GRADIENT_FADE_TO_BLACK_STRATEGY 1 // 0, 1, 2
+#define TITAN_256C_FADE_TO_BLACK_STRATEGY 2 // 0, 1, 2. From slowest to fastest (in cpu usage)
+#define TITAN_TEXT_GRADIENT_FADE_TO_BLACK_STRATEGY 1 // 0, 1, 2. From slowest to fastest (in cpu usage)
 
+#define SPHERE_TEXT_ANIMATION TRUE // enable or disable the sphere wrapping text animation
 #define TITAN_SPHERE_TILEMAP_WIDTH 22 // Sphere tilemap width in tiles
 #define TITAN_SPHERE_TILEMAP_HEIGHT 11 // Sphere tilemap height in tiles
-
 #define TITAN_SPHERE_TILEMAP_START_X_POS 10 // Sphere tilemap starting x position (in tiles)
 #define TITAN_SPHERE_TILEMAP_START_Y_POS 5 // Sphere tilemap starting y position (in tiles)
 

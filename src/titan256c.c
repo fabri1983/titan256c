@@ -175,29 +175,36 @@ void setCurrentFadingStripForText (u8 currFadingStrip_) {
 }
 
 void NO_INLINE setSphereTextColorsIntoTitanPalettes (const SpriteDefinition sprDef) {
-    u16 colorAt14 = sprDef.palette->data[14];
-    u16 colorAt15 = sprDef.palette->data[15];
+    // The animation sprite expect color to be in PAL0, and we only use PAL0 at even strips
+    u8 startingStrip = TITAN_SPHERE_TILEMAP_START_Y_POS - (TITAN_SPHERE_TILEMAP_START_Y_POS % 2);
+    // Every other strip inside range [5,16] contains the color used by the sprite text surrounding the sphere.
+    // at position 15th. So we are jumping every 2 pals in order to set its color.
+    u16* palsPtr = palettesData + (startingStrip * TITAN_256C_COLORS_PER_STRIP);
 
-    u16* palsPtr = palettesData + (TITAN_SPHERE_TILEMAP_START_Y_POS * TITAN_256C_COLORS_PER_STRIP);
-    for (u8 i=TITAN_SPHERE_TILEMAP_HEIGHT; i--; ) {
-        *(palsPtr + 15) = colorAt14;
-        *(palsPtr + 16) = colorAt15;
-        palsPtr += TITAN_256C_COLORS_PER_STRIP;
+    //u16 colorAt15 = sprDef.palette->data[14];
+    u16 colorAt16 = sprDef.palette->data[15];
+
+    for (u8 i=(TITAN_SPHERE_TILEMAP_HEIGHT+1)/2 + + (TITAN_SPHERE_TILEMAP_START_Y_POS % 2); i--; ) {
+        //*(palsPtr + 14) = colorAt15;
+        *(palsPtr + 15) = colorAt16;
+        palsPtr += 2 * TITAN_256C_COLORS_PER_STRIP;
     }
 }
 
 void NO_INLINE updateSphereTextColor () {
-    // Every other strip inside range [4,17] contains the color used by the sprite text surrounding the sphere.
+    // The animation sprite expect color to be in PAL0, and we only use PAL0 at even strips
+    u8 startingStrip = TITAN_SPHERE_TILEMAP_START_Y_POS - (TITAN_SPHERE_TILEMAP_START_Y_POS % 2);
+    // Every other strip inside range [5,16] contains the color used by the sprite text surrounding the sphere.
     // at position 15th. So we are jumping every 2 pals in order to set its color.
-    u16* palsPtr = palettesData + (TITAN_SPHERE_TILEMAP_START_Y_POS * TITAN_256C_COLORS_PER_STRIP + 15);
+    u16* palsPtr = palettesData + (startingStrip * TITAN_256C_COLORS_PER_STRIP + 15);
 
     u16 fadeAmount = 0;
-    if (currFadingStrip >= TITAN_SPHERE_TILEMAP_START_Y_POS) {
-        u16 factor = currFadingStrip - TITAN_SPHERE_TILEMAP_START_Y_POS + 1;
+    if (currFadingStrip >= startingStrip) {
+        u16 factor = currFadingStrip - startingStrip + 1;
         fadeAmount = 0x222 * factor;
     }
     
-    for (u8 i=(TITAN_SPHERE_TILEMAP_HEIGHT+1)/2; i--; ) {
+    for (u8 i=(TITAN_SPHERE_TILEMAP_HEIGHT+1)/2 + (TITAN_SPHERE_TILEMAP_START_Y_POS % 2); i--; ) {
         u16 d = gradColorsBuffer[0] - min(0xEEE, fadeAmount);
         fadeAmount = max(0, fadeAmount - 0x222); // diminish the fade out weight
 
@@ -207,7 +214,7 @@ void NO_INLINE updateSphereTextColor () {
         if (d & 0b1000000000000) d &= ~0b1111000000000; // blue overflows? then zero it
 
         *palsPtr = d;
-        palsPtr += (2 * TITAN_256C_COLORS_PER_STRIP);
+        palsPtr += 2 * TITAN_256C_COLORS_PER_STRIP;
     }
 }
 

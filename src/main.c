@@ -129,8 +129,9 @@ static void showTransitionScreen () {
     SYS_enableInts();
 }
 
+#if SPHERE_TEXT_ANIMATION == TRUE
 static void toggleSphereTextAnimations (Sprite* titanSphereText_1_AnimSpr, Sprite* titanSphereText_2_AnimSpr) {
-    // we directly checking against VISIBLE because sprites setting are only VISIBLE or HIDDEN as per their creation
+    // we check directly against VISIBLE because sprites settings are only VISIBLE or HIDDEN since their creation
     if (SPR_getVisibility(titanSphereText_1_AnimSpr) == VISIBLE) {
         if (SPR_getAnimationDone(titanSphereText_1_AnimSpr)) {
             SPR_setVisibility(titanSphereText_1_AnimSpr, HIDDEN);
@@ -148,6 +149,7 @@ static void toggleSphereTextAnimations (Sprite* titanSphereText_1_AnimSpr, Sprit
         }
     }
 }
+#endif
 
 static void titan256cDisplay () {
 
@@ -164,7 +166,7 @@ static void titan256cDisplay () {
     currTileIndex += titanRGB.tileset->numTile;
     unpackPalettes();
 
-    //setSphereTextColorsIntoTitanPalettes(sprDefTitanSphereText_1_Anim);
+    setSphereTextColorsIntoTitanPalettes(sprDefTitanSphereText_1_Anim);
 
     SPR_initEx(sprDefTitanSphereText_1_Anim.maxNumTile + sprDefTitanSphereText_2_Anim.maxNumTile); // 137 + 127 tiles
 
@@ -220,17 +222,21 @@ static void titan256cDisplay () {
         setYPosFalling(yPos);
         VDP_setVerticalScrollVSync(BG_B, yPos);
 
-        // updateSphereTextColor();
+        #if SPHERE_TEXT_ANIMATION == TRUE
+        //updateSphereTextColor();
+        #endif
 
         updateTextGradientColors();
 
         // Enqueue 2 strips palettes depending on the Y position (in strips) of the image
         enqueue2Pals(yPos / TITAN_256C_STRIP_HEIGHT);
 
+        #if SPHERE_TEXT_ANIMATION == TRUE
         SPR_setPosition(titanSphereText_1_AnimSpr, TITAN_SPHERE_TILEMAP_START_X_POS * 8, TITAN_SPHERE_TILEMAP_START_Y_POS * 8 - yPos);
         SPR_setPosition(titanSphereText_2_AnimSpr, TITAN_SPHERE_TILEMAP_START_X_POS * 8, TITAN_SPHERE_TILEMAP_START_Y_POS * 8 - yPos);
         toggleSphereTextAnimations(titanSphereText_1_AnimSpr, titanSphereText_2_AnimSpr);
         SPR_update();
+        #endif
 
         SYS_doVBlankProcess();
 
@@ -240,15 +246,19 @@ static void titan256cDisplay () {
 
     // Titan display
     for (;;) {
-        // updateSphereTextColor();
+        #if SPHERE_TEXT_ANIMATION == TRUE
+        //updateSphereTextColor();
+        #endif
 
         updateTextGradientColors();
 
         // Load 1st and 2nd strip's palette
         enqueue2Pals(0);
 
+        #if SPHERE_TEXT_ANIMATION == TRUE
         toggleSphereTextAnimations(titanSphereText_1_AnimSpr, titanSphereText_2_AnimSpr);
         SPR_update();
+        #endif
 
         SYS_doVBlankProcess();
 
@@ -273,7 +283,9 @@ static void titan256cDisplay () {
         // Enable the fading effect on titan text calculated on VInt
         setCurrentFadingStripForText(currFadingStrip);
 
+        #if SPHERE_TEXT_ANIMATION == TRUE
         //updateSphereTextColor();
+        #endif
 
         updateTextGradientColors();
 
@@ -289,8 +301,10 @@ static void titan256cDisplay () {
             fadingCycleCurrStrip = 0;
         }
 
+        #if SPHERE_TEXT_ANIMATION == TRUE
         toggleSphereTextAnimations(titanSphereText_1_AnimSpr, titanSphereText_2_AnimSpr);
         SPR_update();
+        #endif
 
         SYS_doVBlankProcess();
     }
@@ -309,7 +323,6 @@ static void titan256cDisplay () {
     SYS_doVBlankProcess();
 
     freePalettes();
-    MEM_pack();
     currTileIndex = TILE_USER_INDEX;
 }
 
