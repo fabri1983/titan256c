@@ -16,8 +16,8 @@ const ROMHeader rom_header = {
     "SEGA MEGA DRIVE ",
 #endif
     "(C)SGDK 2024    ",
-    "SAMPLE PROGRAM                                  ",
-    "SAMPLE PROGRAM                                  ",
+    "SGDK TITAN 256C FOREVER                         ",
+    "SGDK TITAN 256C FOREVER                         ",
     "GM 00000000-00",
     0x000,
     "JD              ",
@@ -34,6 +34,6 @@ const ROMHeader rom_header = {
     0x00200000,
     0x0020FFFF,
     "            ",
-    "DEMONSTRATION PROGRAM                   ",
+    "DEMO PROGRAM - SGDK TITAN 256C FOREVER  ",
     "JUE             "
 };

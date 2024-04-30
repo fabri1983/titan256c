@@ -174,18 +174,30 @@ void setCurrentFadingStripForText (u8 currFadingStrip_) {
     currFadingStrip = currFadingStrip_;
 }
 
+void NO_INLINE setSphereTextColorsIntoTitanPalettes (const SpriteDefinition sprDef) {
+    u16 colorAt14 = sprDef.palette->data[14];
+    u16 colorAt15 = sprDef.palette->data[15];
+
+    u16* palsPtr = palettesData + (TITAN_SPHERE_TILEMAP_START_Y_POS * TITAN_256C_COLORS_PER_STRIP);
+    for (u8 i=TITAN_SPHERE_TILEMAP_HEIGHT; i--; ) {
+        *(palsPtr + 15) = colorAt14;
+        *(palsPtr + 16) = colorAt15;
+        palsPtr += TITAN_256C_COLORS_PER_STRIP;
+    }
+}
+
 void NO_INLINE updateSphereTextColor () {
     // Every other strip inside range [4,17] contains the color used by the sprite text surrounding the sphere.
     // at position 15th. So we are jumping every 2 pals in order to set its color.
-    u16* palsPtr = palettesData + (TITAN_SPHERE_1_TILEMAP_START_Y_POS * TITAN_256C_COLORS_PER_STRIP + 15);
+    u16* palsPtr = palettesData + (TITAN_SPHERE_TILEMAP_START_Y_POS * TITAN_256C_COLORS_PER_STRIP + 15);
 
     u16 fadeAmount = 0;
-    if (currFadingStrip >= TITAN_SPHERE_1_TILEMAP_START_Y_POS) {
-        u16 factor = currFadingStrip - TITAN_SPHERE_1_TILEMAP_START_Y_POS + 1;
+    if (currFadingStrip >= TITAN_SPHERE_TILEMAP_START_Y_POS) {
+        u16 factor = currFadingStrip - TITAN_SPHERE_TILEMAP_START_Y_POS + 1;
         fadeAmount = 0x222 * factor;
     }
     
-    for (u8 i=(TITAN_SPHERE_1_TILEMAP_HEIGHT+1)/2; i--; ) {
+    for (u8 i=(TITAN_SPHERE_TILEMAP_HEIGHT+1)/2; i--; ) {
         u16 d = gradColorsBuffer[0] - min(0xEEE, fadeAmount);
         fadeAmount = max(0, fadeAmount - 0x222); // diminish the fade out weight
 

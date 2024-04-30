@@ -22,13 +22,17 @@ static const char* mode1_textA = "HInt in C";
 static const char* mode1_textB = "Called every 8 scanlines";
 static const char* mode1_textC = "Uses CPU to move colors into VDP CRAM";
 
-static const char* mode2_textA = "HInt in C";
+static const char* mode2_textA = "HInt in ASM";
 static const char* mode2_textB = "Called every 8 scanlines";
 static const char* mode2_textC = "Uses DMA to move colors into VDP CRAM";
 
 static const char* mode3_textA = "HInt in C";
-static const char* mode3_textB = "Called only once";
+static const char* mode3_textB = "Called every 8 scanlines";
 static const char* mode3_textC = "Uses DMA to move colors into VDP CRAM";
+
+static const char* mode4_textA = "HInt in C";
+static const char* mode4_textB = "Called only once";
+static const char* mode4_textC = "Uses DMA to move colors into VDP CRAM";
 
 static void showTransitionScreen () {
 
@@ -70,6 +74,11 @@ static void showTransitionScreen () {
             VDP_drawText(mode3_textB, (screenWidthTiles - strlen(mode3_textB)) / 2, screenHeightTiles / 2 - 0);
             VDP_drawText(mode3_textC, (screenWidthTiles - strlen(mode3_textC)) / 2, screenHeightTiles / 2 + 1);
             break;
+        case HINT_STRATEGY_4:
+            VDP_drawText(mode4_textA, (screenWidthTiles - strlen(mode4_textA)) / 2, screenHeightTiles / 2 - 1);
+            VDP_drawText(mode4_textB, (screenWidthTiles - strlen(mode4_textB)) / 2, screenHeightTiles / 2 - 0);
+            VDP_drawText(mode4_textC, (screenWidthTiles - strlen(mode4_textC)) / 2, screenHeightTiles / 2 + 1);
+            break;
         default: break;
     }
     VDP_drawText(startText, (screenWidthTiles - strlen(startText)) / 2, screenHeightTiles / 2 + 2);
@@ -102,6 +111,11 @@ static void showTransitionScreen () {
             VDP_clearText((screenWidthTiles - strlen(mode3_textA)) / 2, screenHeightTiles / 2 - 1, strlen(mode3_textA));
             VDP_clearText((screenWidthTiles - strlen(mode3_textB)) / 2, screenHeightTiles / 2 - 0, strlen(mode3_textB));
             VDP_clearText((screenWidthTiles - strlen(mode3_textC)) / 2, screenHeightTiles / 2 + 1, strlen(mode3_textC));
+            break;
+        case HINT_STRATEGY_4:
+            VDP_clearText((screenWidthTiles - strlen(mode4_textA)) / 2, screenHeightTiles / 2 - 1, strlen(mode4_textA));
+            VDP_clearText((screenWidthTiles - strlen(mode4_textB)) / 2, screenHeightTiles / 2 - 0, strlen(mode4_textB));
+            VDP_clearText((screenWidthTiles - strlen(mode4_textC)) / 2, screenHeightTiles / 2 + 1, strlen(mode4_textC));
             break;
         default: break;
     }
@@ -150,10 +164,12 @@ static void titan256cDisplay () {
     currTileIndex += titanRGB.tileset->numTile;
     unpackPalettes();
 
+    //setSphereTextColorsIntoTitanPalettes(sprDefTitanSphereText_1_Anim);
+
     SPR_initEx(sprDefTitanSphereText_1_Anim.maxNumTile + sprDefTitanSphereText_2_Anim.maxNumTile); // 137 + 127 tiles
 
     Sprite* titanSphereText_1_AnimSpr = SPR_addSpriteEx(&sprDefTitanSphereText_1_Anim, 
-        TITAN_SPHERE_1_TILEMAP_START_X_POS * 8, TITAN_SPHERE_1_TILEMAP_START_Y_POS * 8, 
+        TITAN_SPHERE_TILEMAP_START_X_POS * 8, TITAN_SPHERE_TILEMAP_START_Y_POS * 8, 
         TILE_ATTR_FULL(PAL0, 0, FALSE, FALSE, currTileIndex),
         SPR_FLAG_AUTO_TILE_UPLOAD | SPR_FLAG_AUTO_VRAM_ALLOC);
     SPR_setAnim(titanSphereText_1_AnimSpr, 0); // set animation 0 (is the only one though)
@@ -162,7 +178,7 @@ static void titan256cDisplay () {
     currTileIndex += sprDefTitanSphereText_1_Anim.maxNumTile;
 
     Sprite* titanSphereText_2_AnimSpr = SPR_addSpriteEx(&sprDefTitanSphereText_2_Anim, 
-        TITAN_SPHERE_2_TILEMAP_START_X_POS * 8, TITAN_SPHERE_2_TILEMAP_START_Y_POS * 8, 
+        TITAN_SPHERE_TILEMAP_START_X_POS * 8, TITAN_SPHERE_TILEMAP_START_Y_POS * 8, 
         TILE_ATTR_FULL(PAL0, 0, FALSE, FALSE, currTileIndex),
         SPR_FLAG_AUTO_TILE_UPLOAD | SPR_FLAG_AUTO_VRAM_ALLOC);
     SPR_setAnim(titanSphereText_2_AnimSpr, 0); // set animation 0 (is the only one though)
@@ -211,8 +227,8 @@ static void titan256cDisplay () {
         // Enqueue 2 strips palettes depending on the Y position (in strips) of the image
         enqueue2Pals(yPos / TITAN_256C_STRIP_HEIGHT);
 
-        SPR_setPosition(titanSphereText_1_AnimSpr, TITAN_SPHERE_1_TILEMAP_START_X_POS * 8, TITAN_SPHERE_1_TILEMAP_START_Y_POS * 8 - yPos);
-        SPR_setPosition(titanSphereText_2_AnimSpr, TITAN_SPHERE_2_TILEMAP_START_X_POS * 8, TITAN_SPHERE_2_TILEMAP_START_Y_POS * 8 - yPos);
+        SPR_setPosition(titanSphereText_1_AnimSpr, TITAN_SPHERE_TILEMAP_START_X_POS * 8, TITAN_SPHERE_TILEMAP_START_Y_POS * 8 - yPos);
+        SPR_setPosition(titanSphereText_2_AnimSpr, TITAN_SPHERE_TILEMAP_START_X_POS * 8, TITAN_SPHERE_TILEMAP_START_Y_POS * 8 - yPos);
         toggleSphereTextAnimations(titanSphereText_1_AnimSpr, titanSphereText_2_AnimSpr);
         SPR_update();
 
@@ -257,7 +273,7 @@ static void titan256cDisplay () {
         // Enable the fading effect on titan text calculated on VInt
         setCurrentFadingStripForText(currFadingStrip);
 
-        // updateSphereTextColor();
+        //updateSphereTextColor();
 
         updateTextGradientColors();
 

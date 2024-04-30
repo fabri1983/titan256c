@@ -7,6 +7,15 @@ This is what I finally used.
 And then use custom implementation of `tiledpalettequant` tool to generate RGB images with palettes ready to be consumed by SGDK's rescomp.
 
 
+Titan text sphere wraping animation
+-----------------------------------
+This command reduces colors and convert the image as indexed:
+	convert animation.gif -background white -depth 8 -colors 4 titan_sphere_text_anim.gif
+Then use Aseprite to clean frames and remove repeated colors.
+Then reduce to 2 or 3 colors depending on how many colors you expect to leave in the animation
+	convert titan_sphere_text_anim.gif -background white -depth 8 -colors 3 titan_sphere_text_anim.gif
+Then use Aseprite to edit each color position in the palette.
+
 
 STRIPS OF 4 ROWS
 ----------------

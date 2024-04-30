@@ -19,6 +19,8 @@ HINTERRUPT_CALLBACK horizIntOnTitan256cCallback_CPU_EveryN_asm ();
 
 HINTERRUPT_CALLBACK horizIntOnTitan256cCallback_CPU_EveryN ();
 
+HINTERRUPT_CALLBACK horizIntOnTitan256cCallback_DMA_EveryN_asm ();
+
 HINTERRUPT_CALLBACK horizIntOnTitan256cCallback_DMA_EveryN ();
 
 HINTERRUPT_CALLBACK horizIntOnTitan256cCallback_DMA_OneTime ();

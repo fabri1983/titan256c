@@ -12,7 +12,8 @@
 #define HINT_STRATEGY_1 1
 #define HINT_STRATEGY_2 2
 #define HINT_STRATEGY_3 3
-#define HINT_STRATEGY_TOTAL 4
+#define HINT_STRATEGY_4 4
+#define HINT_STRATEGY_TOTAL 5
 
 const u16* getTitanCharsGradientColors ();
 u16* getGradientColorsBuffer ();
@@ -20,6 +21,7 @@ u16* getGradientColorsBuffer ();
 void setCurrentFadingStripForText (u8 currFadingStrip_);
 void updateTextGradientColors ();
 
+void setSphereTextColorsIntoTitanPalettes (const SpriteDefinition sprDef);
 void updateSphereTextColor ();
 
 #define FADE_OUT_COLOR_STEPS 8 // Changing this value will affect assumptions made in fadingStepToBlack_pals() method for fading color calculations
