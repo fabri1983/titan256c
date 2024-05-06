@@ -28,6 +28,7 @@
 #define UFTC 34
 #define UFTC15 35
 #define UNAPLIB 36
+#define ZX0 37
 
 
 #endif // _RES_COMPRESSIONTYPES_RES_H_

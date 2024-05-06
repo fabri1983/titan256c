@@ -25,6 +25,7 @@
 #include "decomp/snkrle.h"
 #include "decomp/uftc.h"
 #include "decomp/unaplib.h"
+#include "decomp/zx0.h"
 
 void unpackSelector (u16 compression, u8* src, u8* dest, u16 outSizeInBytes);
 

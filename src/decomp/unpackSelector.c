@@ -140,6 +140,11 @@ FORCE_INLINE void unpackSelector (u16 compression, u8* src, u8* dest, u16 outSiz
             unaplib(src, dest);
             break;
         #endif
+        #ifdef USING_ZX0
+        case ZX0:
+            zx0Dec(src, dest);
+            break;
+        #endif
         default:
             break;
     }
