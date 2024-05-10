@@ -2,11 +2,11 @@
 #include "utils.h"
 #include "segaLogo.h"
 #include "teddyBearLogo.h"
-#include "font_res.h"
 #include "titan256c.h"
 #include "titan_sphere_res.h"
 #include "hvInterrupts.h"
-#include "font_consts.h"
+#include "custom_font_res.h"
+#include "customFont_consts.h"
 
 static u16 titan256cHIntMode;
 
@@ -14,37 +14,84 @@ static u16 currTileIndex;
 
 static const char* startText = "(press START to continue)";
 
+static const char* mode0_strat = "STRATEGY 0";
 static const char* mode0_textA = "HInt in ASM";
 static const char* mode0_textB = "Called every 8 scanlines";
 static const char* mode0_textC = "Uses CPU to move colors into VDP CRAM";
 
+static const char* mode1_strat = "STRATEGY 1";
 static const char* mode1_textA = "HInt in C";
 static const char* mode1_textB = "Called every 8 scanlines";
 static const char* mode1_textC = "Uses CPU to move colors into VDP CRAM";
 
+static const char* mode2_strat = "STRATEGY 2";
 static const char* mode2_textA = "HInt in ASM";
 static const char* mode2_textB = "Called every 8 scanlines";
 static const char* mode2_textC = "Uses DMA to move colors into VDP CRAM";
 
+static const char* mode3_strat = "STRATEGY 3";
 static const char* mode3_textA = "HInt in C";
 static const char* mode3_textB = "Called every 8 scanlines";
 static const char* mode3_textC = "Uses DMA to move colors into VDP CRAM";
 
+static const char* mode4_strat = "STRATEGY 4";
 static const char* mode4_textA = "HInt in C";
 static const char* mode4_textB = "Called only once";
 static const char* mode4_textC = "Uses DMA to move colors into VDP CRAM";
+
+/// @brief Replacement for VDP_drawText(). This version uses the custom font.
+/// @param str 
+/// @param x 
+/// @param y 
+static void drawText (const char *str, u16 x, u16 y) {
+    u16 basetile = TILE_ATTR_FULL(PAL0, 0, FALSE, FALSE, CUSTOM_TILE_FONT_INDEX);
+    VDPPlane plane = VDP_getTextPlane();
+
+    u16 data[128];
+    const u8 *s;
+    u16 *d;
+    u16 i, pw, ph, len;
+
+    // get the horizontal plane size (in cell)
+    pw = (plane == WINDOW)?windowWidth:planeWidth;
+    ph = (plane == WINDOW)?32:planeHeight;
+
+    // string outside plane --> exit
+    if ((x >= pw) || (y >= ph))
+        return;
+
+    // get string len
+    len = strlen(str);
+    // if string don't fit in plane, we cut it
+    if (len > (pw - x))
+        len = pw - x;
+
+    // prepare the data
+    s = (const u8*) str;
+    d = data;
+    i = len;
+    while(i--)
+        *d++ = (*s++ - 32);
+
+    // VDP_setTileMapDataRowEx(..) take care of using temporary buffer to build the data so we are ok here
+    VDP_setTileMapDataRowEx(plane, data, basetile, y, x, len, CPU);
+}
 
 static void showTransitionScreen () {
 
     VDP_setEnable(FALSE);
 
-    VDP_loadFont(&font_round_tileset, CPU);
-    // skip the color at 0th position and load the rest of them
-    PAL_setColors(FONT_COLOR_TILE_INDEX, font_round_pal.data + 1, font_round_pal.length - 1, CPU);
+    // SGDK's font uses color index 15th to colorize its font, so we set it with the color used by our custom font
+    PAL_setColor(15, custom_font_round_pal.data[1]);
+
+    // Add the new font tiles after the SGDK's current font tiles
+    VDP_loadTileSet(&custom_font_round_tileset, CUSTOM_TILE_FONT_INDEX, CPU);
+    // Load the palette used by the custom font
+    PAL_setColors(0, custom_font_round_pal.data, CUSTOM_FONT_PAL_COLORS_COUNT, CPU);
 
     SYS_disableInts();
         SYS_setVBlankCallback(vertIntOnDrawTextCallback);
-        VDP_setHIntCounter(screenHeight/2 + 16 - 1); // scanline location for startText
+        VDP_setHIntCounter(screenHeight/2 + (4*8) - 1); // scanline location for startText
         SYS_setHIntCallback(horizIntOnDrawTextCallback);
         VDP_setHInterrupt(TRUE);
     SYS_enableInts();
@@ -55,33 +102,38 @@ static void showTransitionScreen () {
     u16 screenHeightTiles = screenHeight/8;
     switch (titan256cHIntMode) {
         case HINT_STRATEGY_0:
-            VDP_drawText(mode0_textA, (screenWidthTiles - strlen(mode0_textA)) / 2, screenHeightTiles / 2 - 1);
-            VDP_drawText(mode0_textB, (screenWidthTiles - strlen(mode0_textB)) / 2, screenHeightTiles / 2 - 0);
-            VDP_drawText(mode0_textC, (screenWidthTiles - strlen(mode0_textC)) / 2, screenHeightTiles / 2 + 1);
+            VDP_drawText(mode0_strat, (screenWidthTiles - strlen(mode0_textA)) / 2, screenHeightTiles / 2 - 5);
+            drawText(mode0_textA, (screenWidthTiles - strlen(mode0_textA)) / 2, screenHeightTiles / 2 - 1);
+            drawText(mode0_textB, (screenWidthTiles - strlen(mode0_textB)) / 2, screenHeightTiles / 2 - 0);
+            drawText(mode0_textC, (screenWidthTiles - strlen(mode0_textC)) / 2, screenHeightTiles / 2 + 1);
             break;
         case HINT_STRATEGY_1:
-            VDP_drawText(mode1_textA, (screenWidthTiles - strlen(mode1_textA)) / 2, screenHeightTiles / 2 - 1);
-            VDP_drawText(mode1_textB, (screenWidthTiles - strlen(mode1_textB)) / 2, screenHeightTiles / 2 - 0);
-            VDP_drawText(mode1_textC, (screenWidthTiles - strlen(mode1_textC)) / 2, screenHeightTiles / 2 + 1);
+            VDP_drawText(mode1_strat, (screenWidthTiles - strlen(mode1_textA)) / 2, screenHeightTiles / 2 - 5);
+            drawText(mode1_textA, (screenWidthTiles - strlen(mode1_textA)) / 2, screenHeightTiles / 2 - 1);
+            drawText(mode1_textB, (screenWidthTiles - strlen(mode1_textB)) / 2, screenHeightTiles / 2 - 0);
+            drawText(mode1_textC, (screenWidthTiles - strlen(mode1_textC)) / 2, screenHeightTiles / 2 + 1);
             break;
         case HINT_STRATEGY_2:
-            VDP_drawText(mode2_textA, (screenWidthTiles - strlen(mode2_textA)) / 2, screenHeightTiles / 2 - 1);
-            VDP_drawText(mode2_textB, (screenWidthTiles - strlen(mode2_textB)) / 2, screenHeightTiles / 2 - 0);
-            VDP_drawText(mode2_textC, (screenWidthTiles - strlen(mode2_textC)) / 2, screenHeightTiles / 2 + 1);
+            VDP_drawText(mode2_strat, (screenWidthTiles - strlen(mode2_textA)) / 2, screenHeightTiles / 2 - 5);
+            drawText(mode2_textA, (screenWidthTiles - strlen(mode2_textA)) / 2, screenHeightTiles / 2 - 1);
+            drawText(mode2_textB, (screenWidthTiles - strlen(mode2_textB)) / 2, screenHeightTiles / 2 - 0);
+            drawText(mode2_textC, (screenWidthTiles - strlen(mode2_textC)) / 2, screenHeightTiles / 2 + 1);
             break;
         case HINT_STRATEGY_3:
-            VDP_drawText(mode3_textA, (screenWidthTiles - strlen(mode3_textA)) / 2, screenHeightTiles / 2 - 1);
-            VDP_drawText(mode3_textB, (screenWidthTiles - strlen(mode3_textB)) / 2, screenHeightTiles / 2 - 0);
-            VDP_drawText(mode3_textC, (screenWidthTiles - strlen(mode3_textC)) / 2, screenHeightTiles / 2 + 1);
+            VDP_drawText(mode3_strat, (screenWidthTiles - strlen(mode3_textA)) / 2, screenHeightTiles / 2 - 5);
+            drawText(mode3_textA, (screenWidthTiles - strlen(mode3_textA)) / 2, screenHeightTiles / 2 - 1);
+            drawText(mode3_textB, (screenWidthTiles - strlen(mode3_textB)) / 2, screenHeightTiles / 2 - 0);
+            drawText(mode3_textC, (screenWidthTiles - strlen(mode3_textC)) / 2, screenHeightTiles / 2 + 1);
             break;
         case HINT_STRATEGY_4:
-            VDP_drawText(mode4_textA, (screenWidthTiles - strlen(mode4_textA)) / 2, screenHeightTiles / 2 - 1);
-            VDP_drawText(mode4_textB, (screenWidthTiles - strlen(mode4_textB)) / 2, screenHeightTiles / 2 - 0);
-            VDP_drawText(mode4_textC, (screenWidthTiles - strlen(mode4_textC)) / 2, screenHeightTiles / 2 + 1);
+            VDP_drawText(mode4_strat, (screenWidthTiles - strlen(mode4_textA)) / 2, screenHeightTiles / 2 - 5);
+            drawText(mode4_textA, (screenWidthTiles - strlen(mode4_textA)) / 2, screenHeightTiles / 2 - 1);
+            drawText(mode4_textB, (screenWidthTiles - strlen(mode4_textB)) / 2, screenHeightTiles / 2 - 0);
+            drawText(mode4_textC, (screenWidthTiles - strlen(mode4_textC)) / 2, screenHeightTiles / 2 + 1);
             break;
         default: break;
     }
-    VDP_drawText(startText, (screenWidthTiles - strlen(startText)) / 2, screenHeightTiles / 2 + 2);
+    drawText(startText, (screenWidthTiles - strlen(startText)) / 2, screenHeightTiles / 2 + 4);
 
     for (;;) {
         const u16 joyState = JOY_readJoypad(JOY_1);
@@ -91,42 +143,15 @@ static void showTransitionScreen () {
         SYS_doVBlankProcess();
     }
 
-    switch (titan256cHIntMode) {
-        case HINT_STRATEGY_0:
-            VDP_clearText((screenWidthTiles - strlen(mode0_textA)) / 2, screenHeightTiles / 2 - 1, strlen(mode0_textA));
-            VDP_clearText((screenWidthTiles - strlen(mode0_textB)) / 2, screenHeightTiles / 2 - 0, strlen(mode0_textB));
-            VDP_clearText((screenWidthTiles - strlen(mode0_textC)) / 2, screenHeightTiles / 2 + 1, strlen(mode0_textC));
-            break;
-        case HINT_STRATEGY_1:
-            VDP_clearText((screenWidthTiles - strlen(mode1_textA)) / 2, screenHeightTiles / 2 - 1, strlen(mode1_textA));
-            VDP_clearText((screenWidthTiles - strlen(mode1_textB)) / 2, screenHeightTiles / 2 - 0, strlen(mode1_textB));
-            VDP_clearText((screenWidthTiles - strlen(mode1_textC)) / 2, screenHeightTiles / 2 + 1, strlen(mode1_textC));
-            break;
-        case HINT_STRATEGY_2:
-            VDP_clearText((screenWidthTiles - strlen(mode2_textA)) / 2, screenHeightTiles / 2 - 1, strlen(mode2_textA));
-            VDP_clearText((screenWidthTiles - strlen(mode2_textB)) / 2, screenHeightTiles / 2 - 0, strlen(mode2_textB));
-            VDP_clearText((screenWidthTiles - strlen(mode2_textC)) / 2, screenHeightTiles / 2 + 1, strlen(mode2_textC));
-            break;
-        case HINT_STRATEGY_3:
-            VDP_clearText((screenWidthTiles - strlen(mode3_textA)) / 2, screenHeightTiles / 2 - 1, strlen(mode3_textA));
-            VDP_clearText((screenWidthTiles - strlen(mode3_textB)) / 2, screenHeightTiles / 2 - 0, strlen(mode3_textB));
-            VDP_clearText((screenWidthTiles - strlen(mode3_textC)) / 2, screenHeightTiles / 2 + 1, strlen(mode3_textC));
-            break;
-        case HINT_STRATEGY_4:
-            VDP_clearText((screenWidthTiles - strlen(mode4_textA)) / 2, screenHeightTiles / 2 - 1, strlen(mode4_textA));
-            VDP_clearText((screenWidthTiles - strlen(mode4_textB)) / 2, screenHeightTiles / 2 - 0, strlen(mode4_textB));
-            VDP_clearText((screenWidthTiles - strlen(mode4_textC)) / 2, screenHeightTiles / 2 + 1, strlen(mode4_textC));
-            break;
-        default: break;
-    }
-    VDP_clearText((screenWidthTiles - strlen(startText)) / 2, screenHeightTiles / 2 + 2, strlen(startText));
-    SYS_doVBlankProcess();
-
     SYS_disableInts();
         SYS_setVBlankCallback(NULL);
         VDP_setHInterrupt(FALSE);
         SYS_setHIntCallback(NULL);
     SYS_enableInts();
+
+    SYS_doVBlankProcess();
+
+    VDP_clearPlane(VDP_getTextPlane(), TRUE);
 }
 
 #if SPHERE_TEXT_ANIMATION == TRUE
@@ -170,22 +195,22 @@ static void titan256cDisplay () {
 
     SPR_initEx(sprDefTitanSphereText_1_Anim.maxNumTile + sprDefTitanSphereText_2_Anim.maxNumTile); // 137 + 127 tiles
 
-    Sprite* titanSphereText_1_AnimSpr = SPR_addSpriteEx(&sprDefTitanSphereText_1_Anim, 
+    Sprite* titanSphereText_1_AnimSpr = SPR_addSpriteExSafe(&sprDefTitanSphereText_1_Anim, 
         TITAN_SPHERE_TILEMAP_START_X_POS * 8, TITAN_SPHERE_TILEMAP_START_Y_POS * 8, 
         TILE_ATTR_FULL(PAL0, 0, FALSE, FALSE, currTileIndex),
         SPR_FLAG_AUTO_TILE_UPLOAD | SPR_FLAG_AUTO_VRAM_ALLOC);
     SPR_setAnim(titanSphereText_1_AnimSpr, 0); // set animation 0 (is the only one though)
     // always visible or always hidden along the three effects of the scene
-    SPR_setVisibility(titanSphereText_1_AnimSpr, HIDDEN);
+    SPR_setVisibility(titanSphereText_1_AnimSpr, VISIBLE);
     currTileIndex += sprDefTitanSphereText_1_Anim.maxNumTile;
 
-    Sprite* titanSphereText_2_AnimSpr = SPR_addSpriteEx(&sprDefTitanSphereText_2_Anim, 
+    Sprite* titanSphereText_2_AnimSpr = SPR_addSpriteExSafe(&sprDefTitanSphereText_2_Anim, 
         TITAN_SPHERE_TILEMAP_START_X_POS * 8, TITAN_SPHERE_TILEMAP_START_Y_POS * 8, 
         TILE_ATTR_FULL(PAL0, 0, FALSE, FALSE, currTileIndex),
         SPR_FLAG_AUTO_TILE_UPLOAD | SPR_FLAG_AUTO_VRAM_ALLOC);
     SPR_setAnim(titanSphereText_2_AnimSpr, 0); // set animation 0 (is the only one though)
     // always visible or always hidden along the three effects of the scene
-    SPR_setVisibility(titanSphereText_2_AnimSpr, VISIBLE);
+    SPR_setVisibility(titanSphereText_2_AnimSpr, HIDDEN);
     currTileIndex += sprDefTitanSphereText_2_Anim.maxNumTile;
 
     SYS_disableInts();
