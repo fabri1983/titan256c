@@ -7,6 +7,7 @@
 #include "hvInterrupts.h"
 #include "custom_font_res.h"
 #include "customFont_consts.h"
+#include "customFont.h"
 
 static u16 titan256cHIntMode;
 
@@ -38,44 +39,6 @@ static const char* mode4_strat = "STRATEGY 4";
 static const char* mode4_textA = "HInt in C";
 static const char* mode4_textB = "Called only once";
 static const char* mode4_textC = "Uses DMA to move colors into VDP CRAM";
-
-/// @brief Replacement for VDP_drawText(). This version uses the custom font.
-/// @param str 
-/// @param x 
-/// @param y 
-static void drawText (const char *str, u16 x, u16 y) {
-    u16 basetile = TILE_ATTR_FULL(PAL0, 0, FALSE, FALSE, CUSTOM_TILE_FONT_INDEX);
-    VDPPlane plane = VDP_getTextPlane();
-
-    u16 data[128];
-    const u8 *s;
-    u16 *d;
-    u16 i, pw, ph, len;
-
-    // get the horizontal plane size (in cell)
-    pw = (plane == WINDOW)?windowWidth:planeWidth;
-    ph = (plane == WINDOW)?32:planeHeight;
-
-    // string outside plane --> exit
-    if ((x >= pw) || (y >= ph))
-        return;
-
-    // get string len
-    len = strlen(str);
-    // if string don't fit in plane, we cut it
-    if (len > (pw - x))
-        len = pw - x;
-
-    // prepare the data
-    s = (const u8*) str;
-    d = data;
-    i = len;
-    while(i--)
-        *d++ = (*s++ - 32);
-
-    // VDP_setTileMapDataRowEx(..) take care of using temporary buffer to build the data so we are ok here
-    VDP_setTileMapDataRowEx(plane, data, basetile, y, x, len, CPU);
-}
 
 static void showTransitionScreen () {
 

@@ -223,9 +223,9 @@ FORCE_INLINE void varsSetup () {
     applyBlackPalPosY = TITAN_256C_HEIGHT - posYFalling;
     // On even strips we know we use [PAL0,PAL1] so starts with palIdx=0. On odd strips is [PAL1,PAL2] so starts with palIdx=32.
     palIdx = ((posYFalling / TITAN_256C_STRIP_HEIGHT) % 2) == 0 ? 0 : TITAN_256C_COLORS_PER_STRIP;
-    currGradPtr = getGradientColorsBuffer();
     textRampEffectLimitTop = TITAN_256C_TEXT_STARTING_STRIP * TITAN_256C_STRIP_HEIGHT - posYFalling + TITAN_256C_TEXT_OFFSET_TOP;
     textRampEffectLimitBottom = TITAN_256C_TEXT_ENDING_STRIP * TITAN_256C_STRIP_HEIGHT - posYFalling + TITAN_256C_TEXT_OFFSET_BOTTOM;
+    currGradPtr = getGradientColorsBuffer();
 }
 
 void vertIntOnTitan256cCallback_HIntEveryN () {
@@ -233,7 +233,7 @@ void vertIntOnTitan256cCallback_HIntEveryN () {
     vcounterManual = TITAN_256C_STRIP_HEIGHT - 1;
     if (vcounterManual >= applyBlackPalPosY)
         titan256cPalsPtr = (u16*) palette_black;
-    // when on bouncing, set the HInt responsibly to properly set the starting scanline of the color swap HInt
+    // when on bouncing, set the HInt responsibly of proper set the starting scanline of the color swap HInt
     if (startingScanlineForBounceEffect != 0) {
         VDP_setHIntCounter(0);
         SYS_setHIntCallback(horizIntScanlineStarterForBounceEffectCallback);
@@ -1133,7 +1133,7 @@ static u8 textColorIndex = 0;
 static s8 textColorDirection = 1;
 
 void vertIntOnDrawTextCallback () {
-    // resets text color to white
+    // resets text color to what custom font expects
     PAL_setColor(CUSTOM_FONT_COLOR_INDEX, custom_font_round_pal.data[1]);
 
     if ((vtimer % 4) == 0) {

@@ -22,8 +22,8 @@
 
 #define SPHERE_TEXT_ANIMATION TRUE // enable or disable the sphere wrapping text animation
 #define TITAN_SPHERE_TILEMAP_WIDTH 20 // Sphere tilemap width in tiles
-#define TITAN_SPHERE_TILEMAP_HEIGHT 16 // Sphere tilemap height in tiles
+#define TITAN_SPHERE_TILEMAP_HEIGHT 14 // Sphere tilemap height in tiles
 #define TITAN_SPHERE_TILEMAP_START_X_POS 11 // Sphere tilemap starting x position (in tiles)
-#define TITAN_SPHERE_TILEMAP_START_Y_POS 3 // Sphere tilemap starting y position (in tiles)
+#define TITAN_SPHERE_TILEMAP_START_Y_POS 4 // Sphere tilemap starting y position (in tiles)
 
 #endif // TITAN_256C_CONSTS_H
