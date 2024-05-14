@@ -242,7 +242,6 @@ void NO_INLINE updateTextGradientColors () {
             fadeTextAmount = max(0, fadeTextAmount - 0x222);
 
         #if TITAN_TEXT_GRADIENT_FADE_TO_BLACK_STRATEGY == 0
-        // IMPL A:
         switch (d & 0b1000100010000) {
             case 0b0000000010000: d &= ~0b0000000011110; break; // red overflows? then zero it
             case 0b0000100010000: d &= ~0b0000111111110; break; // red and green overflow? then zero them
@@ -254,12 +253,10 @@ void NO_INLINE updateTextGradientColors () {
             default: break;
         }
         #elif TITAN_TEXT_GRADIENT_FADE_TO_BLACK_STRATEGY == 1
-        // IMPL B:
         if (d & 0b0000000010000) d &= ~0b0000000011110; // red overflows? then zero it
         if (d & 0b0000100000000) d &= ~0b0000111100000; // green overflows? then zero it
         if (d & 0b1000000000000) d &= ~0b1111000000000; // blue overflows? then zero it
         #elif TITAN_TEXT_GRADIENT_FADE_TO_BLACK_STRATEGY == 2
-        // IMPL C:
         if (d & 0b1000100010000) d = 0; // if only one color overflows then zero them all
         #endif
         
@@ -295,7 +292,6 @@ void NO_INLINE fadingStepToBlack_pals (u8 currFadingStrip, u8 cycle) {
             u32 d = *palsPtr - 0b00000010001000100000001000100010; // decrement 1 unit in every component
 
             #if TITAN_256C_FADE_TO_BLACK_STRATEGY == 0
-            // IMPL A:
             switch (d & 0b0001000100010000) {
                 case 0b00000000000100000000000000010000: d &= ~0b00000000000111100000000000011110; break; // red overflows? then zero it
                 case 0b00000001000100000000000100010000: d &= ~0b00000001111111100000000111111110; break; // red and green overflow? then zero them
@@ -307,12 +303,10 @@ void NO_INLINE fadingStepToBlack_pals (u8 currFadingStrip, u8 cycle) {
                 default: break;
             }
             #elif TITAN_256C_FADE_TO_BLACK_STRATEGY == 1
-            // IMPL B:
             if (d & 0b00000000000100000000000000010000) d &= ~0b00000000000111100000000000011110; // red overflows? then zero it
             if (d & 0b00000001000000000000000100000000) d &= ~0b00000001111000000000000111100000; // green overflows? then zero it
             if (d & 0b00010000000000000001000000000000) d &= ~0b00011110000000000001111000000000; // blue overflows? then zero it
             #elif TITAN_256C_FADE_TO_BLACK_STRATEGY == 2
-            // IMPL C:
             if (d & 0b00010001000100000001000100010000) d = 0; // if only one color overflows then zero them all
             #endif
 

@@ -38,8 +38,8 @@ FORCE_INLINE void waitHCounter_old (u8 n) {
     // VDP_HVCOUNTER_PORT + 1 = 0xC00009 (HCOUNTER)
     ASM_STATEMENT __volatile__ (
         ".loopHC%=:\n"
-        "    cmpi.b    %[hcLimit], 0xC00009\n"    // cmp: (0xC00009) - hcLimit
-        "    blo       .loopHC%=\n"               // Compares byte because hcLimit won't be > 160 for our practical cases
+        "    cmpi.b    %[hcLimit],0xC00009\n"    // cmp: (0xC00009) - hcLimit
+        "    blo       .loopHC%=\n"              // Compares byte because hcLimit won't be > 160 for our practical cases
             // blo is for unsigned comparisons, same than bcs
         :
         : [hcLimit] "i" (n)
@@ -53,10 +53,10 @@ FORCE_INLINE void waitHCounter_old (u8 n) {
 FORCE_INLINE void waitHCounter (u8 n) {
     u32* regA=0; // placeholder used to indicate the use of an An register
     ASM_STATEMENT __volatile__ (
-        "    move.l    #0xC00009, %0\n"    // Load HCounter (VDP_HVCOUNTER_PORT + 1 = 0xC00009) into any An register
+        "    move.l    #0xC00009,%0\n"    // Load HCounter (VDP_HVCOUNTER_PORT + 1 = 0xC00009) into any An register
         ".loopHC%=:\n" 
-        "    cmp.b     (%0), %1\n"         // cmp: n - (0xC00009). Compares byte because hcLimit won't be > 160 for our practical cases
-        "    bhi       .loopHC%=\n"        // loop back if n is higher than (0xC00009)
+        "    cmp.b     (%0),%1\n"         // cmp: n - (0xC00009). Compares byte because hcLimit won't be > 160 for our practical cases
+        "    bhi       .loopHC%=\n"       // loop back if n is higher than (0xC00009)
             // bhi is for unsigned comparisons
         : "+a" (regA)
         : "d" (n)
@@ -70,7 +70,7 @@ FORCE_INLINE void waitHCounter (u8 n) {
 FORCE_INLINE void waitVCounterConst (u16 n) {
     u32* regA=0; // placeholder used to indicate the use of an An register
     ASM_STATEMENT __volatile__ (
-        "    move.l    #0xC00008, %0\n"     // Load V Counter address into any An register
+        "    move.l    #0xC00008,%0\n"      // Load V Counter address into any An register
         ".LoopVC%=:\n"
         "    cmpi.w     %[vcLimit],(%0)\n"  // cmp: (0xC00008) - vcLimit
         "    blo       .LoopVC%=\n"         // if (0xC00008) < vcLimit then loop back
@@ -87,10 +87,10 @@ FORCE_INLINE void waitVCounterConst (u16 n) {
 FORCE_INLINE void waitVCounterReg (u16 n) {
     u32* regA=0; // placeholder used to indicate the use of an An register
     ASM_STATEMENT __volatile__ (
-        "    move.l    #0xC00008, %0\n"    // Load V Counter address into any An register
+        "    move.l    #0xC00008,%0\n"    // Load V Counter address into any An register
         ".LoopVC%=:\n"
-        "    cmp.w     (%0), %1\n"         // cmp: n - (0xC00008)
-        "    bhi       .LoopVC%=\n"        // loop back if n is higher than (0xC00008)
+        "    cmp.w     (%0),%1\n"         // cmp: n - (0xC00008)
+        "    bhi       .LoopVC%=\n"       // loop back if n is higher than (0xC00008)
             // bhi is for unsigned comparisons
         : "+a" (regA)
         : "d" (n << 8) // (n << 8) | 0xFF
@@ -260,7 +260,7 @@ HINTERRUPT_CALLBACK horizIntOnTitan256cCallback_CPU_EveryN_asm () {
         "   move.l      %[titan256cPalsPtr],%%a1\n"    // a1: titan256cPalsPtr
         "   movea.l     #0xC00004,%%a2\n"              // a2: VDP_CTRL_PORT 0xC00004
         "   movea.l     #0xC00000,%%a3\n"              // a3: VDP_DATA_PORT 0xC00000
-        "   movea.l     #0xC00009,%%a4\n"              // a4: HCounter address 0xC00009
+        "   movea.l     #0xC00009,%%a4\n"              // a4: HCounter address 0xC00009 (VDP_HVCOUNTER_PORT + 1)
         "   move.b      %[hcLimit],%%d7\n"             // d7: HCounter limit
 
         // ".setGradColorForText_flag_%=:\n"
@@ -612,7 +612,7 @@ HINTERRUPT_CALLBACK horizIntOnTitan256cCallback_DMA_EveryN_asm () {
         "   move.l      %[titan256cPalsPtr],%%a1\n"    // a1: titan256cPalsPtr
         "   movea.l     #0xC00004,%%a2\n"              // a2: VDP_CTRL_PORT 0xC00004
         "   movea.l     #0xC00000,%%a3\n"              // a3: VDP_DATA_PORT 0xC00000
-        "   movea.l     #0xC00009,%%a4\n"              // a4: HCounter address 0xC00009
+        "   movea.l     #0xC00009,%%a4\n"              // a4: HCounter address 0xC00009 (VDP_HVCOUNTER_PORT + 1)
         "   move.b      %[hcLimit],%%d7\n"             // d7: HCounter limit
 
         // ".setGradColorForText_flag_%=:\n"

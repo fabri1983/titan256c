@@ -4,6 +4,7 @@
 #include <types.h>
 #include "compressionTypes_res.h"
 #include "decomp/bytekiller.h"
+#include "decomp/clownnemesis.h"
 #include "decomp/comper.h"
 #include "decomp/comperx.h"
 #include "decomp/elektro.h"

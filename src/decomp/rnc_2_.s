@@ -116,7 +116,7 @@
 * C prototype: extern u32 rnc2_Unpack (u16 key, u8 *src, u8 *dest);
 func rnc2_Unpack
 		movem.l 4(%sp), d0/%a0-%a1		// copy parameters into registers d0/a0-a1
-		movem.l	%d1-%d7/%a2-%a6,-(sp)
+		movem.l	%d1-%d7/%a2-%a6,-(sp)   // save registers (except the scratch pad)
 
 #if PROTECTED == 1
 		move.l	%d0,key

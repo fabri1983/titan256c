@@ -7,7 +7,7 @@ static bool megainitCalled = FALSE;
 #endif
 
 FORCE_INLINE void unpackSelector (u16 compression, u8* src, u8* dest, u16 outSizeInBytes) {
-    switch(compression) {
+    switch (compression) {
         case COMPRESSION_APLIB:
             aplib_unpack(src, dest); // SGDK
             break;
@@ -17,6 +17,11 @@ FORCE_INLINE void unpackSelector (u16 compression, u8* src, u8* dest, u16 outSiz
         #ifdef USING_BYTEKILLER
         case BYTEKILLER:
             bytekiller_depack_caller(src, dest);
+            break;
+        #endif
+        #ifdef USING_CLOWNNEMESIS
+        case CLOWNNEMESIS:
+            ClownNemesis_Decompress(src, dest);
             break;
         #endif
         #ifdef USING_COMPER
@@ -95,13 +100,13 @@ FORCE_INLINE void unpackSelector (u16 compression, u8* src, u8* dest, u16 outSiz
         #endif
         #ifdef USING_RNC1
         case RNC1:
-            rnc1_Unpack(src, dest);
+            rnc1c_Unpack(src, dest);
             break;
         #endif
         #ifdef USING_RNC2
         case RNC2:
-            // rnc2_Unpack(0, src, dest);
-            rnc2c_Unpack(src, dest);
+            // rnc2c_Unpack(src, dest);
+            rnc2_Unpack(0, src, dest);
             break;
         #endif
         #ifdef USING_ROCKET
