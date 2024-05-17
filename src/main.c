@@ -11,9 +11,25 @@
 
 static u16 titan256cHIntMode;
 
+static void setNextHintMode () {
+    titan256cHIntMode = modu(titan256cHIntMode + 1, HINT_STRATEGY_TOTAL);
+}
+
+static void setPreviousHintMode () {
+    if (titan256cHIntMode == 0)
+        titan256cHIntMode = HINT_STRATEGY_TOTAL - 1;
+    else
+        titan256cHIntMode = modu(titan256cHIntMode - 1, HINT_STRATEGY_TOTAL);
+}
+
 static u16 currTileIndex;
 
-static const char* startText = "(press START to continue)";
+static const char* press_txt_0 = "(press ";
+static const char* press_START_txt = "START";
+static const char* press_A_txt = "A";
+static const char* press_B_txt = "B";
+static const char* press_C_txt = "C";
+static const char* press_txt_2 = " to continue)";
 
 static const char* mode0_strat = "STRATEGY 0";
 static const char* mode0_textA = "HInt in ASM";
@@ -63,46 +79,105 @@ static void showTransitionScreen () {
 
     u16 screenWidthTiles = screenWidth/8;
     u16 screenHeightTiles = screenHeight/8;
-    switch (titan256cHIntMode) {
+    u8 currButtonIdx = 0;
+    u16 buttonChoices[] = {BUTTON_START, BUTTON_A, BUTTON_B, BUTTON_C};
+    u8 buttonFramesDelay = 0;
+
+    for (;;) {
+        const u16 currButtonChoice = buttonChoices[currButtonIdx];
+        const u16 joyState = JOY_readJoypad(JOY_1);
+        
+        if (joyState & currButtonChoice) {
+            break;
+        }
+
+        #define BUTTON_PRESS_DELAY 12
+        if (buttonFramesDelay == 0 && joyState & BUTTON_UP) {
+            ++currButtonIdx;
+            buttonFramesDelay = BUTTON_PRESS_DELAY;
+        }
+        else if (buttonFramesDelay == 0 && joyState & BUTTON_DOWN) {
+            --currButtonIdx;
+            buttonFramesDelay = BUTTON_PRESS_DELAY;
+        }
+        else if (buttonFramesDelay == 0 && joyState & BUTTON_RIGHT) {
+            setNextHintMode();
+            buttonFramesDelay = BUTTON_PRESS_DELAY;
+        }
+        else if (buttonFramesDelay == 0 && joyState & BUTTON_LEFT) {
+            setPreviousHintMode();
+            buttonFramesDelay = BUTTON_PRESS_DELAY;
+        }
+        currButtonIdx = currButtonIdx % 4;
+
+        if (buttonFramesDelay > 0)
+            --buttonFramesDelay;
+
+        VDP_clearTextLine(screenHeightTiles / 2 - 5);
+        VDP_clearTextLine(screenHeightTiles / 2 - 1);
+        VDP_clearTextLine(screenHeightTiles / 2 + 0);
+        VDP_clearTextLine(screenHeightTiles / 2 + 1);
+
+        switch (titan256cHIntMode) {
         case HINT_STRATEGY_0:
-            VDP_drawText(mode0_strat, (screenWidthTiles - strlen(mode0_textA)) / 2, screenHeightTiles / 2 - 5);
+            VDP_drawText(mode0_strat, (screenWidthTiles - strlen(mode0_strat)) / 2, screenHeightTiles / 2 - 5);
             drawText(mode0_textA, (screenWidthTiles - strlen(mode0_textA)) / 2, screenHeightTiles / 2 - 1);
-            drawText(mode0_textB, (screenWidthTiles - strlen(mode0_textB)) / 2, screenHeightTiles / 2 - 0);
+            drawText(mode0_textB, (screenWidthTiles - strlen(mode0_textB)) / 2, screenHeightTiles / 2 + 0);
             drawText(mode0_textC, (screenWidthTiles - strlen(mode0_textC)) / 2, screenHeightTiles / 2 + 1);
             break;
         case HINT_STRATEGY_1:
-            VDP_drawText(mode1_strat, (screenWidthTiles - strlen(mode1_textA)) / 2, screenHeightTiles / 2 - 5);
+            VDP_drawText(mode1_strat, (screenWidthTiles - strlen(mode1_strat)) / 2, screenHeightTiles / 2 - 5);
             drawText(mode1_textA, (screenWidthTiles - strlen(mode1_textA)) / 2, screenHeightTiles / 2 - 1);
-            drawText(mode1_textB, (screenWidthTiles - strlen(mode1_textB)) / 2, screenHeightTiles / 2 - 0);
+            drawText(mode1_textB, (screenWidthTiles - strlen(mode1_textB)) / 2, screenHeightTiles / 2 + 0);
             drawText(mode1_textC, (screenWidthTiles - strlen(mode1_textC)) / 2, screenHeightTiles / 2 + 1);
             break;
         case HINT_STRATEGY_2:
-            VDP_drawText(mode2_strat, (screenWidthTiles - strlen(mode2_textA)) / 2, screenHeightTiles / 2 - 5);
+            VDP_drawText(mode2_strat, (screenWidthTiles - strlen(mode2_strat)) / 2, screenHeightTiles / 2 - 5);
             drawText(mode2_textA, (screenWidthTiles - strlen(mode2_textA)) / 2, screenHeightTiles / 2 - 1);
-            drawText(mode2_textB, (screenWidthTiles - strlen(mode2_textB)) / 2, screenHeightTiles / 2 - 0);
+            drawText(mode2_textB, (screenWidthTiles - strlen(mode2_textB)) / 2, screenHeightTiles / 2 + 0);
             drawText(mode2_textC, (screenWidthTiles - strlen(mode2_textC)) / 2, screenHeightTiles / 2 + 1);
             break;
         case HINT_STRATEGY_3:
-            VDP_drawText(mode3_strat, (screenWidthTiles - strlen(mode3_textA)) / 2, screenHeightTiles / 2 - 5);
+            VDP_drawText(mode3_strat, (screenWidthTiles - strlen(mode3_strat)) / 2, screenHeightTiles / 2 - 5);
             drawText(mode3_textA, (screenWidthTiles - strlen(mode3_textA)) / 2, screenHeightTiles / 2 - 1);
-            drawText(mode3_textB, (screenWidthTiles - strlen(mode3_textB)) / 2, screenHeightTiles / 2 - 0);
+            drawText(mode3_textB, (screenWidthTiles - strlen(mode3_textB)) / 2, screenHeightTiles / 2 + 0);
             drawText(mode3_textC, (screenWidthTiles - strlen(mode3_textC)) / 2, screenHeightTiles / 2 + 1);
             break;
         case HINT_STRATEGY_4:
-            VDP_drawText(mode4_strat, (screenWidthTiles - strlen(mode4_textA)) / 2, screenHeightTiles / 2 - 5);
+            VDP_drawText(mode4_strat, (screenWidthTiles - strlen(mode4_strat)) / 2, screenHeightTiles / 2 - 5);
             drawText(mode4_textA, (screenWidthTiles - strlen(mode4_textA)) / 2, screenHeightTiles / 2 - 1);
-            drawText(mode4_textB, (screenWidthTiles - strlen(mode4_textB)) / 2, screenHeightTiles / 2 - 0);
+            drawText(mode4_textB, (screenWidthTiles - strlen(mode4_textB)) / 2, screenHeightTiles / 2 + 0);
             drawText(mode4_textC, (screenWidthTiles - strlen(mode4_textC)) / 2, screenHeightTiles / 2 + 1);
             break;
         default: break;
-    }
-    drawText(startText, (screenWidthTiles - strlen(startText)) / 2, screenHeightTiles / 2 + 4);
-
-    for (;;) {
-        const u16 joyState = JOY_readJoypad(JOY_1);
-        if (joyState & BUTTON_START) {
-            break;
         }
+
+        VDP_clearTextLine(screenHeightTiles / 2 + 4);
+
+        switch (currButtonChoice) {
+        case BUTTON_START:
+            drawText(press_txt_0, (screenWidthTiles - strlen(press_txt_0) - strlen(press_START_txt) - strlen(press_txt_2)) / 2, screenHeightTiles / 2 + 4);
+            VDP_drawText(press_START_txt, (screenWidthTiles + strlen(press_txt_0) - strlen(press_START_txt) - strlen(press_txt_2)) / 2, screenHeightTiles / 2 + 4);
+            drawText(press_txt_2, (screenWidthTiles + strlen(press_txt_0) + strlen(press_START_txt) - strlen(press_txt_2)) / 2, screenHeightTiles / 2 + 4);
+            break;
+        case BUTTON_A:
+            drawText(press_txt_0, (screenWidthTiles - strlen(press_txt_0) - strlen(press_A_txt) - strlen(press_txt_2)) / 2, screenHeightTiles / 2 + 4);
+            VDP_drawText(press_A_txt, (screenWidthTiles + strlen(press_txt_0) - strlen(press_A_txt) - strlen(press_txt_2)) / 2, screenHeightTiles / 2 + 4);
+            drawText(press_txt_2, (screenWidthTiles + strlen(press_txt_0) + strlen(press_A_txt) - strlen(press_txt_2)) / 2, screenHeightTiles / 2 + 4);
+            break;
+        case BUTTON_B:
+            drawText(press_txt_0, (screenWidthTiles - strlen(press_txt_0) - strlen(press_B_txt) - strlen(press_txt_2)) / 2, screenHeightTiles / 2 + 4);
+            VDP_drawText(press_B_txt, (screenWidthTiles + strlen(press_txt_0) - strlen(press_B_txt) - strlen(press_txt_2)) / 2, screenHeightTiles / 2 + 4);
+            drawText(press_txt_2, (screenWidthTiles + strlen(press_txt_0) + strlen(press_B_txt) - strlen(press_txt_2)) / 2, screenHeightTiles / 2 + 4);
+            break;
+        case BUTTON_C:
+            drawText(press_txt_0, (screenWidthTiles - strlen(press_txt_0) - strlen(press_C_txt) - strlen(press_txt_2)) / 2, screenHeightTiles / 2 + 4);
+            VDP_drawText(press_C_txt, (screenWidthTiles + strlen(press_txt_0) - strlen(press_C_txt) - strlen(press_txt_2)) / 2, screenHeightTiles / 2 + 4);
+            drawText(press_txt_2, (screenWidthTiles + strlen(press_txt_0) + strlen(press_C_txt) - strlen(press_txt_2)) / 2, screenHeightTiles / 2 + 4);
+            break;
+        default: break;
+        }
+
         SYS_doVBlankProcess();
     }
 
@@ -203,8 +278,8 @@ static void titan256cDisplay () {
         // while in the mid air apply translation
         else yPos += velocity;
 
-        // The bouncing effect has the side effect of offseting strips into scanlines not alligned with expected strips distribution,
-        // hence we need to "offset" the scanline at which the HInt gets into action.
+        // The bouncing effect has the side effect of offseting strips into scanlines not alligned with expected 
+        // strips palettes distribution, hence we need to "offset" the scanline at which the HInt gets into action.
         //setHIntScanlineStarterForBounceEffect(yPos, titan256cHIntMode);
 
         setYPosFalling(yPos);
@@ -251,7 +326,7 @@ static void titan256cDisplay () {
         SYS_doVBlankProcess();
 
         u16 joyState = JOY_readJoypad(JOY_1);
-        if (joyState & BUTTON_START) break;
+        if (joyState & (BUTTON_START | BUTTON_A | BUTTON_B | BUTTON_C)) break;
     }
 
     u8 fadingStripCnt = 0;
@@ -329,10 +404,6 @@ static void initGameStatus () {
     titan256cHIntMode = HINT_STRATEGY_0; // set initial HInt color swap strategy
 }
 
-static void prepareNextHintMode () {
-    titan256cHIntMode = modu(titan256cHIntMode + 1, HINT_STRATEGY_TOTAL);
-}
-
 int main (bool hardReset) {
 
 	// on soft reset do like a hard reset
@@ -341,8 +412,8 @@ int main (bool hardReset) {
 		SYS_hardReset();
 	}
 
-    // displaySegaLogo();
-    // waitMs_(200);
+    displaySegaLogo();
+    waitMs_(200);
     displayTeddyBearLogo();
     waitMs_(200);
 
@@ -352,7 +423,7 @@ int main (bool hardReset) {
     for (;;) {
         showTransitionScreen();
         titan256cDisplay();
-        prepareNextHintMode();
+        setNextHintMode();
     }
 
     return 0;

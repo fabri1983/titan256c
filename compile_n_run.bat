@@ -8,7 +8,7 @@ IF NOT "%target%" == "release" IF NOT "%target%" == "debug" IF NOT "%target%" ==
 )
 
 :: Edit accordingly
-SET "EMU_PATH=C:\Games\blastem-win64-0.6.3-pre-cde4ea2b4929\blastem.exe"
+SET "EMU_PATH=D:\Games\retro\blastem-win64-0.6.3-pre-48ab1e3e5df5\blastem.exe"
 
 IF NOT "%2" == "--no-emu" IF NOT EXIST %EMU_PATH% (
     ECHO Please set blastem path or use option --no-emu

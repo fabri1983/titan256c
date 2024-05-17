@@ -24,7 +24,7 @@ void updateTextGradientColors ();
 void setSphereTextColorsIntoTitanPalettes (const SpriteDefinition sprDef);
 void updateSphereTextColor ();
 
-#define FADE_OUT_COLOR_STEPS 8 // Changing this value will affect assumptions made in fadingStepToBlack_pals() method for fading color calculations
+#define FADE_OUT_COLOR_STEPS 8 // Max allowed is 8. Changing this value will affect assumptions made in fadingStepToBlack_pals() method for fading color calculations
 #define FADE_OUT_STRIPS_SPLIT_CYCLES 4 // How many parts do we split the strips visited for fading calculation to aliviate lenghty execution
 
 void fadingStepToBlack_pals (u8 currFadingStrip, u8 cycle);

@@ -22,17 +22,19 @@ and
 by CPU to CRAM every scanline along the duration of 8 scanlines, sending a total 2 palettes (32 colors) and 4 bg colors (ramp effect).  
 This approach has better ramp effect since the change in color happens every other scanline.
 
-**C** and **D**. DMA 32 colors (2 palettes) splitted in 3 chunks + 4 BG colors writes for the text color ramp effect.  
+**C** and **D**.  
+DMA 32 colors (2 palettes) splitted in 3 chunks + 4 BG colors writes for the text color ramp effect.  
 C is written in ASM 68k. D is written in C.  
 All done inside the duration of 8 scanlines.
 
-**E**. Same than D but calling only once the HInt with `VDP_setHIntCounter(0)` (every scanline) and disabling it using 
+**E**.  
+Same than D but calling only once the HInt with `VDP_setHIntCounter(0)` (every scanline) and disabling it using 
 `VDP_setHIntCounter(255)` at the first line of the HInt (which takes effect in the next line).
 
 **A** and **B**:  
 ![titan_cpu.jpg](screenshots/titan_cpu.jpg?raw=true "titan_cpu.jpg")
 
-**C**:  
+**D**:  
 ![titan_dma.jpg](screenshots/titan_dma.jpg?raw=true "titan_dma.jpg")
 
 **E**:  
