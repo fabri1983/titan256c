@@ -166,42 +166,46 @@ void setHIntScanlineStarterForBounceEffect (u16 yPos, u16 hintMode) {
     titan256cHIntMode = hintMode;
 }
 
+u16 vcounterManual;
+
 HINTERRUPT_CALLBACK horizIntScanlineStarterForBounceEffectCallback () {
-    if (GET_VCOUNTER < startingScanlineForBounceEffect) {
+    if (vcounterManual < startingScanlineForBounceEffect) {
+        ++vcounterManual;
         return;
     }
-    switch (titan256cHIntMode) {
-        case HINT_STRATEGY_0:
-            SYS_setHIntCallback(horizIntOnTitan256cCallback_CPU_EveryN_asm);
-            // instead of VDP_setHIntCounter(TITAN_256C_STRIP_HEIGHT - 1) due to additionals read and write from/to internal regValues[]
-            *((u16*) VDP_CTRL_PORT) = 0x8A00 | (TITAN_256C_STRIP_HEIGHT - 1);
-            break;
-        case HINT_STRATEGY_1:
-            SYS_setHIntCallback(horizIntOnTitan256cCallback_CPU_EveryN);
-            // instead of VDP_setHIntCounter(TITAN_256C_STRIP_HEIGHT - 1) due to additionals read and write from/to internal regValues[]
-            *((u16*) VDP_CTRL_PORT) = 0x8A00 | (TITAN_256C_STRIP_HEIGHT - 1);
-            break;
-        case HINT_STRATEGY_2:
-            SYS_setHIntCallback(horizIntOnTitan256cCallback_DMA_EveryN_asm);
-            // instead of VDP_setHIntCounter(TITAN_256C_STRIP_HEIGHT - 1) due to additionals read and write from/to internal regValues[]
-            *((u16*) VDP_CTRL_PORT) = 0x8A00 | (TITAN_256C_STRIP_HEIGHT - 1);
-            break;
-        case HINT_STRATEGY_3:
-            SYS_setHIntCallback(horizIntOnTitan256cCallback_DMA_EveryN);
-            // instead of VDP_setHIntCounter(TITAN_256C_STRIP_HEIGHT - 1) due to additionals read and write from/to internal regValues[]
-            *((u16*) VDP_CTRL_PORT) = 0x8A00 | (TITAN_256C_STRIP_HEIGHT - 1);
-            break;
-        case HINT_STRATEGY_4:
-            SYS_setHIntCallback(horizIntOnTitan256cCallback_DMA_OneTime);
-            // instead of VDP_setHIntCounter(0xFF) due to additionals read and write from/to internal regValues[]
-            *((u16*) VDP_CTRL_PORT) = 0x8A00 | 0xFF;
-            break;
-        default: break;
+    else {
+        ++vcounterManual;
+        switch (titan256cHIntMode) {
+            case HINT_STRATEGY_0:
+                SYS_setHIntCallback(horizIntOnTitan256cCallback_CPU_EveryN_asm);
+                // instead of VDP_setHIntCounter(TITAN_256C_STRIP_HEIGHT - 1) due to additionals read and write from/to internal regValues[]
+                *((u16*) VDP_CTRL_PORT) = 0x8A00 | (TITAN_256C_STRIP_HEIGHT - 1);
+                break;
+            case HINT_STRATEGY_1:
+                SYS_setHIntCallback(horizIntOnTitan256cCallback_CPU_EveryN);
+                // instead of VDP_setHIntCounter(TITAN_256C_STRIP_HEIGHT - 1) due to additionals read and write from/to internal regValues[]
+                *((u16*) VDP_CTRL_PORT) = 0x8A00 | (TITAN_256C_STRIP_HEIGHT - 1);
+                break;
+            case HINT_STRATEGY_2:
+                SYS_setHIntCallback(horizIntOnTitan256cCallback_DMA_EveryN_asm);
+                // instead of VDP_setHIntCounter(TITAN_256C_STRIP_HEIGHT - 1) due to additionals read and write from/to internal regValues[]
+                *((u16*) VDP_CTRL_PORT) = 0x8A00 | (TITAN_256C_STRIP_HEIGHT - 1);
+                break;
+            case HINT_STRATEGY_3:
+                SYS_setHIntCallback(horizIntOnTitan256cCallback_DMA_EveryN);
+                // instead of VDP_setHIntCounter(TITAN_256C_STRIP_HEIGHT - 1) due to additionals read and write from/to internal regValues[]
+                *((u16*) VDP_CTRL_PORT) = 0x8A00 | (TITAN_256C_STRIP_HEIGHT - 1);
+                break;
+            case HINT_STRATEGY_4:
+                SYS_setHIntCallback(horizIntOnTitan256cCallback_DMA_OneTime);
+                // instead of VDP_setHIntCounter(0xFF) due to additionals read and write from/to internal regValues[]
+                *((u16*) VDP_CTRL_PORT) = 0x8A00 | 0xFF;
+                break;
+            default: break;
+        }
     }
-    startingScanlineForBounceEffect = 0;
 }
 
-u16 vcounterManual;
 u16* titan256cPalsPtr; // 1st and 2nd strip's palette are loaded at the beginning of the display loop, so this ptr starts at 3rd strip
 u8 palIdx; // 3rd strip starts with palettes at [PAL0,PAL1]
 u16* currGradPtr;
@@ -209,7 +213,7 @@ u16 applyBlackPalPosY;
 u16 textRampEffectLimitTop;
 u16 textRampEffectLimitBottom;
 
-void setBlackCurrentGradientPtr () {
+void setGradientPtrToBlack () {
     currGradPtr = (u16*) palette_black;
 }
 
@@ -228,25 +232,24 @@ FORCE_INLINE void varsSetup () {
     textRampEffectLimitTop = TITAN_256C_TEXT_STARTING_STRIP * TITAN_256C_STRIP_HEIGHT - posYFalling + TITAN_256C_TEXT_OFFSET_TOP;
     textRampEffectLimitBottom = TITAN_256C_TEXT_ENDING_STRIP * TITAN_256C_STRIP_HEIGHT - posYFalling + TITAN_256C_TEXT_OFFSET_BOTTOM;
     currGradPtr = getGradientColorsBuffer();
+
+    if ((TITAN_256C_STRIP_HEIGHT - 1) >= applyBlackPalPosY)
+        titan256cPalsPtr = (u16*) palette_black;
 }
 
 void vertIntOnTitan256cCallback_HIntEveryN () {
     varsSetup();
     vcounterManual = TITAN_256C_STRIP_HEIGHT - 1;
-    if (vcounterManual >= applyBlackPalPosY)
-        titan256cPalsPtr = (u16*) palette_black;
     // when on bouncing, set the HInt responsibly of proper set the starting scanline of the color swap HInt
     if (startingScanlineForBounceEffect != 0) {
         VDP_setHIntCounter(0);
         SYS_setHIntCallback(horizIntScanlineStarterForBounceEffectCallback);
-        vcounterManual = startingScanlineForBounceEffect;
+        vcounterManual = 0;
     }
 }
 
 void vertIntOnTitan256cCallback_HIntOneTime () {
     varsSetup();
-    if ((TITAN_256C_STRIP_HEIGHT - 1) >= applyBlackPalPosY)
-        titan256cPalsPtr = (u16*) palette_black;
     VDP_setHIntCounter(0);
     // when on bouncing, set the HInt responsibly to properly set the starting scanline of the color swap HInt
     if (startingScanlineForBounceEffect != 0) {
@@ -1133,13 +1136,15 @@ MEMORY_BARRIER();
 static u16 textColor = 0xE00; // initial color is the same than titanCharsGradientColors[0]
 static u8 textColorIndex = 0;
 static s8 textColorDirection = 1;
+static u16 vintCycle = 0;
 
 void vertIntOnDrawTextCallback () {
     // resets text color to what custom font expects
     PAL_setColor(CUSTOM_FONT_COLOR_INDEX, custom_font_round_pal.data[1]);
     PAL_setColor(15, custom_font_round_pal.data[1]); // SGDK's font color index (15)
 
-    if ((vtimer % 4) == 0) {
+    ++vintCycle;
+    if ((vintCycle % 4) == 0) {
         // get next text color value for the HInt
         textColor = *(getTitanCharsGradientColors() + textColorIndex);
         textColorIndex += textColorDirection;

@@ -228,12 +228,16 @@ void NO_INLINE updateTextGradientColors () {
         fadeTextAmount = 0x222 * factor;
     }
 
-    u16* rampBufPtr = gradColorsBuffer;
-    u8 colorIdx = titanCharsCycleCnt / TITAN_TEXT_GRADIENT_SCROLL_FREQ; // advance ramp color every N frames (use divu for divisor non power of 2)
-    if (colorIdx > TITAN_TEXT_GRADIENT_MAX_COLORS) colorIdx = 0;
+    // Advance ramp color every N frames (use divu for divisor non power of 2)
+    u8 colorIdx = titanCharsCycleCnt++ / TITAN_TEXT_GRADIENT_SCROLL_FREQ;
+    if (colorIdx == TITAN_TEXT_GRADIENT_MAX_COLORS) {
+        colorIdx = 0;
+        titanCharsCycleCnt = 0;
+    }
 
     // Traverse titanCharsGradientColors from colorIdx position and copy the colors into gradColorsBuffer
     u16* palsPtr = (u16*)titanCharsGradientColors + colorIdx;
+    u16* rampBufPtr = gradColorsBuffer;
     for (u8 i=0; i < TITAN_TEXT_GRADIENT_ELEMS; ++i) {
         u16 d = *palsPtr++;
         d -= min(0xEEE, fadeTextAmount); // fadeTextAmount is 0 when is not in fading to black animation
@@ -262,10 +266,6 @@ void NO_INLINE updateTextGradientColors () {
         
         *rampBufPtr++ = d;
     }
-
-    ++titanCharsCycleCnt;
-    if (titanCharsCycleCnt == TITAN_TEXT_GRADIENT_SCROLL_FREQ * TITAN_TEXT_GRADIENT_MAX_COLORS)
-        titanCharsCycleCnt = 0;
 }
 
 void NO_INLINE fadingStepToBlack_pals (u8 currFadingStrip, u8 cycle) {

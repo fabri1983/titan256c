@@ -93,13 +93,20 @@ static void cyclePaletteUp (u16 *pal, u16 index, u16 count)
 //  Interrupt handlers
 // -------------------------------------------------------------------------
 
+static u8 vcounterManual = 0;
+
+static void VIntHandler ()
+{
+    vcounterManual = 0;
+}
+
 static INTERRUPT_ATTRIBUTE HIntLogoHandler ()
 {
-    vu16 *data;
-    vu32 *ctrl;
+    vu16 *data; // place holder to help inline asm use an Ax register
+    vu32 *ctrl; // place holder to help inline asm use an Ax register
 
     // Check if we are outside the logo
-    const u16 y = GET_VCOUNTER - 96;
+    const u16 y = vcounterManual++ - 96;
     if (y >= 32)
     {
         // Prime control and data ports
@@ -107,21 +114,20 @@ static INTERRUPT_ATTRIBUTE HIntLogoHandler ()
             "   lea     0xC00004,%0\n"      // Load the Effective Address of the memory location 0xC00004 (the VDP_CTRL_PORT) into the %0 register
             "   move.w  #0x8F04,(%0)\n"     // Set auto-increment to 4. '()' specifies memory indirection or dereferencing.
             "   move.l  #0x401E0010,(%0)\n" // Set VSRAM address (two-tile column 7)
-            : "=>a" (ctrl)                 // Output operands. Ctrl will be placed in a general-purpose register: a0, a1, etc.
-            : "0" (ctrl)                   // Input operands. 0 indicates that the input operand should use the same operand number as the corresponding output operand (in this case, operand 0 corresponds to =>a)
+            : "=>a" (ctrl)                  // Output operands. Ctrl will be placed in a general-purpose register: a0, a1, etc.
+            : "0" (ctrl)                    // Input operands. 0 indicates that the input operand should use the same operand number as the corresponding output operand (in this case, operand 0 corresponds to =>a)
         );
-
         return;
     }
 
     // Change vscroll values if inside the logo
     s16 *addr = vScrollBuffer+(y<<3);
     ASM_STATEMENT __volatile__ (
-        "   lea     0xC00000,%1\n"  // Load the Effective Address of the memory location 0xC00000 (the VDP_DATA_PORT) into the %1 register
+        "   lea     0xC00000,%1\n"      // Load the Effective Address of the memory location 0xC00000 (the VDP_DATA_PORT) into the %1 register
         "   move.l  (%0)+,(%1)\n"
         "   move.l  (%0)+,(%1)\n"
         "   move.l  (%0)+,(%1)\n"
-        "   lea     4(%1),%2\n"    // Immediate offset of 4 bytes from %1 memory address loaded into the %2 register
+        "   lea     4(%1),%2\n"         // Immediate offset of 4 bytes from %1 memory address loaded into the %2 register
         "   move.l  #0x401E0010,(%2)\n" // Reset VSRAM address (two-tile column 7)
         : "=>a" (addr), "=>a" (data), "=>a" (ctrl)
         : "0" (addr), "1" (data), "2" (ctrl)
@@ -177,11 +183,10 @@ void displaySgdkLogo ()
 
     // Setup interrupt handlers
     SYS_disableInts();
-    {
+        SYS_setVBlankCallback(VIntHandler);
         VDP_setHIntCounter(0); // each scanline
         VDP_setHInterrupt(TRUE);
         SYS_setHIntCallback(HIntLogoHandler);
-    }
     SYS_enableInts();
 
     //
@@ -240,11 +245,10 @@ void displaySgdkLogo ()
 
     // Clean Int handlers
     SYS_disableInts();
-    {
+        SYS_setVBlankCallback(NULL);
         VDP_setHInterrupt(FALSE);
         SYS_setHIntCallback(NULL);
         SYS_setVIntCallback(NULL);
-    }
     SYS_enableInts();
 
     // Fade out all graphics to Black since all palettes are used by the logo effects

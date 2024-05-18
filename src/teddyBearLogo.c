@@ -44,7 +44,7 @@ void displayTeddyBearLogo ()
     // PAL3 color 15th is white. Remember SGDK always uses color 15th for text tiles
     VDP_setTextPalette(PAL3);
     // Draw SGDK version number
-    VDP_drawText("v2.0 (April 2024)", screenWidth/8 - 18, screenHeight/8 - 1);
+    VDP_drawText("v2.0 (May 2024)", screenWidth/8 - 18, screenHeight/8 - 1);
 
     //
     // Fade In sprite and text

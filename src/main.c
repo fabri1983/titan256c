@@ -194,7 +194,7 @@ static void showTransitionScreen () {
 
 #if SPHERE_TEXT_ANIMATION == TRUE
 static void toggleSphereTextAnimations (Sprite* titanSphereText_1_AnimSpr, Sprite* titanSphereText_2_AnimSpr) {
-    // we check directly against VISIBLE because sprites settings are only VISIBLE or HIDDEN since their creation
+    // We check directly against VISIBLE because sprites settings are only VISIBLE or HIDDEN since their creation
     if (SPR_getVisibility(titanSphereText_1_AnimSpr) == VISIBLE) {
         if (SPR_getAnimationDone(titanSphereText_1_AnimSpr)) {
             SPR_setVisibility(titanSphereText_1_AnimSpr, HIDDEN);
@@ -216,8 +216,8 @@ static void toggleSphereTextAnimations (Sprite* titanSphereText_1_AnimSpr, Sprit
 
 static void titan256cDisplay () {
 
-    PAL_setColors(0, palette_black, 64, DMA); // palette_black is an array of 64
-    setBlackCurrentGradientPtr();
+    PAL_setColors(0, palette_black, 64, DMA_QUEUE); // palette_black is an array of 64
+    setGradientPtrToBlack();
 
     SYS_doVBlankProcess();
 
@@ -263,20 +263,34 @@ static void titan256cDisplay () {
 
     u16 yPos = TITAN_256C_HEIGHT;
     s16 velocity = 0;
+    u16 bounceCycle = 0;
 
     // Fall and bounce effect
     for (;;) {
-        // update bouncing velocity every 4 frames
-        if ((vtimer % 4) == 0) {
+        // Update bouncing velocity every 4 frames
+        if ((bounceCycle % 4) == 0) {
             velocity -= 1;
         }
+        ++bounceCycle;
         // Do this due to signed type of velocity. When touching floor then decay velocity just a bit
-        if ((yPos + velocity) <= 0) {
+        s16 new_yPos = yPos + velocity;
+        if (new_yPos <= 0) {
             yPos = 0;
-            velocity = (-velocity * 6) / 10; // decay in velocity as it bounces off the ground
+            // Decay in velocity as it bounces off the ground
+            //velocity = divu((velocity * -6), 10);
+            // Using a division "table"
+            switch (velocity) {
+                case -11: velocity = 6; break;
+                case -6: velocity = 3; break;
+                case -3: velocity = 1; break;
+                default: velocity = 0; break; // case -1
+            }
         }
-        // while in the mid air apply translation
-        else yPos += velocity;
+        // While in the mid air apply translation
+        else yPos = (u16) new_yPos;
+
+        // if bounce effect finished then continue with next game state
+        if (yPos == 0 && velocity == 0) break;
 
         // The bouncing effect has the side effect of offseting strips into scanlines not alligned with expected 
         // strips palettes distribution, hence we need to "offset" the scanline at which the HInt gets into action.
@@ -295,16 +309,15 @@ static void titan256cDisplay () {
         enqueue2Pals(yPos / TITAN_256C_STRIP_HEIGHT);
 
         #if SPHERE_TEXT_ANIMATION == TRUE
-        SPR_setPosition(titanSphereText_1_AnimSpr, TITAN_SPHERE_TILEMAP_START_X_POS * 8, TITAN_SPHERE_TILEMAP_START_Y_POS * 8 - yPos);
-        SPR_setPosition(titanSphereText_2_AnimSpr, TITAN_SPHERE_TILEMAP_START_X_POS * 8, TITAN_SPHERE_TILEMAP_START_Y_POS * 8 - yPos);
+        if (SPR_getVisibility(titanSphereText_1_AnimSpr) == VISIBLE)
+            SPR_setPosition(titanSphereText_1_AnimSpr, TITAN_SPHERE_TILEMAP_START_X_POS * 8, TITAN_SPHERE_TILEMAP_START_Y_POS * 8 - yPos);
+        else
+            SPR_setPosition(titanSphereText_2_AnimSpr, TITAN_SPHERE_TILEMAP_START_X_POS * 8, TITAN_SPHERE_TILEMAP_START_Y_POS * 8 - yPos);
         toggleSphereTextAnimations(titanSphereText_1_AnimSpr, titanSphereText_2_AnimSpr);
         SPR_update();
         #endif
 
         SYS_doVBlankProcess();
-
-        // if bounce effect finished then continue with next game state
-        if (yPos == 0 && velocity == 0) break;
     }
 
     // Titan display

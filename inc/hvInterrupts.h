@@ -5,7 +5,7 @@
 #include <sys.h>
 #include "compatibilities.h"
 
-void setBlackCurrentGradientPtr ();
+void setGradientPtrToBlack ();
 
 void setHVCallbacks (u16 titan256cHIntMode);
 

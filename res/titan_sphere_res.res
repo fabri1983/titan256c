@@ -1,2 +1,2 @@
-SPRITE  sprDefTitanSphereText_1_Anim  "sprites/titan_sphere_text_1_anim-sheet.png"  20  14  NONE  4  NONE  SPRITE  MEDIUM  TRUE
-SPRITE  sprDefTitanSphereText_2_Anim  "sprites/titan_sphere_text_2_anim-sheet.png"  20  14  NONE  4  NONE  SPRITE  MEDIUM  TRUE
+SPRITE  sprDefTitanSphereText_1_Anim  "sprites/titan_sphere_text_1_anim-sheet.png"  20  14  NONE  4  NONE  SPRITE  MAX  TRUE
+SPRITE  sprDefTitanSphereText_2_Anim  "sprites/titan_sphere_text_2_anim-sheet.png"  20  14  NONE  4  NONE  SPRITE  MAX  TRUE
