@@ -53,8 +53,8 @@ FORCE_INLINE void waitHCounter_old (u8 n) {
 FORCE_INLINE void waitHCounter (u8 n) {
     u32* regA=0; // placeholder used to indicate the use of an An register
     ASM_STATEMENT __volatile__ (
-        "    move.l    #0xC00009,%0\n"    // Load HCounter (VDP_HVCOUNTER_PORT + 1 = 0xC00009) into any An register
-        ".loopHC%=:\n" 
+        "    move.l    #0xC00009,%0\n"    // Load HCounter (VDP_HVCOUNTER_PORT + 1 = 0xC00009) into an An register
+        ".loopHC%=:\n"
         "    cmp.b     (%0),%1\n"         // cmp: n - (0xC00009). Compares byte because hcLimit won't be > 160 for our practical cases
         "    bhi       .loopHC%=\n"       // loop back if n is higher than (0xC00009)
             // bhi is for unsigned comparisons
@@ -70,7 +70,7 @@ FORCE_INLINE void waitHCounter (u8 n) {
 FORCE_INLINE void waitVCounterConst (u16 n) {
     u32* regA=0; // placeholder used to indicate the use of an An register
     ASM_STATEMENT __volatile__ (
-        "    move.l    #0xC00008,%0\n"      // Load V Counter address into any An register
+        "    move.l    #0xC00008,%0\n"      // Load V Counter address into an An register
         ".LoopVC%=:\n"
         "    cmpi.w     %[vcLimit],(%0)\n"  // cmp: (0xC00008) - vcLimit
         "    blo       .LoopVC%=\n"         // if (0xC00008) < vcLimit then loop back
@@ -87,7 +87,7 @@ FORCE_INLINE void waitVCounterConst (u16 n) {
 FORCE_INLINE void waitVCounterReg (u16 n) {
     u32* regA=0; // placeholder used to indicate the use of an An register
     ASM_STATEMENT __volatile__ (
-        "    move.l    #0xC00008,%0\n"    // Load V Counter address into any An register
+        "    move.l    #0xC00008,%0\n"    // Load V Counter address into an An register
         ".LoopVC%=:\n"
         "    cmp.w     (%0),%1\n"         // cmp: n - (0xC00008)
         "    bhi       .LoopVC%=\n"       // loop back if n is higher than (0xC00008)

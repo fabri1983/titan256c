@@ -238,7 +238,7 @@ void NO_INLINE updateTextGradientColors () {
     // Traverse titanCharsGradientColors from colorIdx position and copy the colors into gradColorsBuffer
     u16* palsPtr = (u16*)titanCharsGradientColors + colorIdx;
     u16* rampBufPtr = gradColorsBuffer;
-    for (u8 i=0; i < TITAN_TEXT_GRADIENT_ELEMS; ++i) {
+    for (u8 i=TITAN_TEXT_GRADIENT_ELEMS; i--;) {
         u16 d = *palsPtr++;
         d -= min(0xEEE, fadeTextAmount); // fadeTextAmount is 0 when is not in fading to black animation
         // Diminish the fade out weight every 4 colors (amount of ramp colors per strip)
