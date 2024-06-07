@@ -8,12 +8,16 @@ static bool megainitCalled = FALSE;
 
 FORCE_INLINE void unpackSelector (u16 compression, u8* src, u8* dest, u16 outSizeInBytes) {
     switch (compression) {
+        #ifdef USING_APLIB
         case COMPRESSION_APLIB:
             aplib_unpack(src, dest); // SGDK
             break;
+        #endif
+        #ifdef USING_LZ4W
         case COMPRESSION_LZ4W:
             lz4w_unpack(src, dest); // SGDK
             break;
+        #endif
         #ifdef USING_BYTEKILLER
         case BYTEKILLER:
             bytekiller_depack_caller(src, dest);
@@ -47,6 +51,7 @@ FORCE_INLINE void unpackSelector (u16 compression, u8* src, u8* dest, u16 outSiz
         #ifdef USING_ENIGMA
         case ENIGMA:
             EniDec(0, src, dest); // 0 acts as a mapBaseTileIndex, which we don't use here
+            //EniDec_opt(0, src, dest); // 0 acts as a mapBaseTileIndex, which we don't use here
             break;
         #endif
         #ifdef USING_FC8

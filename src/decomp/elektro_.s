@@ -48,7 +48,7 @@ idx2:
 * d0 end of output
 * C prototype: extern void elektro_unpack (u8* src, u8* dest);
 func elektro_unpack
-        * IMPORTANT: given the jump indexes defined above we can't add nor remove any instruction
+        * IMPORTANT: given the jump indexes defined above we can't add or remove any instruction
         movem.l %d2-%d7/%a2-%a3,-(%sp)    // save registers (except the scratch pad)
 
 loc_BBF0:

@@ -29,7 +29,7 @@
 #define _Rocket_UseLUT 1
 
 .macro _Rocket_ReadBit
-	dbra		%d2, 3f                 // Using numbers as labels make them local. Suffix f is for look forward label. Otherwise b.
+	dbra		%d2, 3f                 // Using numbers as labels make them local. Suffix f is for a look forward label. Otherwise b.
 	moveq		#7, %d2					// we have 8 new bits, but will use one up below.
 	move.b		(%a0)+, %d0				// get desc field low-byte.
 #if _Rocket_UseLUT == 1
@@ -49,7 +49,7 @@
 * C prototype: extern void RocketDec (u8* src, u8* dest);
 func RocketDec
 	movem.l     4(%sp), %a0-%a1             // copy parameters into registers a0-a1
-	movem.l     %a2-%a6/%d2-%d7, -(%sp)     // save registers (except the scratch pad)
+	movem.l     %a2-%a6/%d0-%d7, -(%sp)     // save registers (except the scratch pad)
 
 	move.w		(%a0)+, %d0				    // Read uncompressed file length, and discard it
 	move.w		(%a0)+, %d0				    // Read compressed data length
@@ -78,7 +78,7 @@ func RocketDec
 	bra.s		.rck_loop
 * ---------------------------------------------------------------------------
 .rck_end:
-	movem.l     (%sp)+, %a2-%a6/%d2-%d7      // restore registers (except the scratch pad)
+	movem.l     (%sp)+, %a2-%a6/%d0-%d7     // restore registers (except the scratch pad)
 	rts
 * ---------------------------------------------------------------------------
 .rck_fill20:

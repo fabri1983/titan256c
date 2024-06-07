@@ -48,7 +48,7 @@
 * C prototype: extern void ComperXDec (u8* src, u8* dest);
 func ComperXDec
 	*movem.l     4(%sp), %a0-%a1         	// copy parameters into registers a0-a1
-	*movem.l     %a2-%a3/%d2-%d4, -(%sp)     // save registers (except the scratch pad)
+	*movem.l     %a2-%a3/%d2-%d4, -(%sp)    // save registers (except the scratch pad)
 
 	moveq		#-1, %d1				// d1 is used for negative sign-extended displacement
 	moveq		#0, %d2					// d2 is used as 8-bit index for copy jump tables
@@ -67,7 +67,7 @@ func ComperXDec
 	bra.s		.compx_load_flags_field		// start a new block
 * -----------------------------------------------------------------------------
 .compx_end:
-	*movem.l     (%sp)+, %a2-%a3/%d2-%d4      // restore registers (except the scratch pad)
+	*movem.l     (%sp)+, %a2-%a3/%d2-%d4     // restore registers (except the scratch pad)
 	rts
 * -----------------------------------------------------------------------------
 .compx_flag:

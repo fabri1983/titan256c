@@ -29,18 +29,18 @@
 ********** MACROS **********
 
 *\1=pattlen
-.macro DEN_PATTREP _pattlen
+.macro DEN_PATTREP pattlen
 	sub.l   %d4,%a3
 	move.b  (%a3)+,(%a1)+
-#if _pattlen > 1
+.if \pattlen > 1
 	move.b  (%a3)+,(%a1)+
-#endif
-#if _pattlen > 2
+.endif
+.if \pattlen > 2
 	move.b  (%a3)+,(%a1)+
-#endif
-#if _pattlen > 3
+.endif
+.if \pattlen > 3
 	move.b (%a3)+,(%a1)+
-#endif
+.endif
 	move.b (%a6)+,%d1
 	bpl.b   DEN_Dinsyncl
 	jmp     (%a5)

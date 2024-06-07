@@ -69,10 +69,12 @@ static void showTransitionScreen () {
     PAL_setColors(0, custom_font_round_pal.data, CUSTOM_FONT_PAL_COLORS_COUNT, CPU);
 
     SYS_disableInts();
-        SYS_setVBlankCallback(vertIntOnDrawTextCallback);
-        VDP_setHIntCounter(screenHeight/2 + (4*8) - 1); // scanline location for startText
-        SYS_setHIntCallback(horizIntOnDrawTextCallback);
-        VDP_setHInterrupt(TRUE);
+
+    SYS_setVBlankCallback(vertIntOnDrawTextCallback);
+    VDP_setHIntCounter(screenHeight/2 + (4*8) - 1); // scanline location for startText
+    SYS_setHIntCallback(horizIntOnDrawTextCallback);
+    VDP_setHInterrupt(TRUE);
+
     SYS_enableInts();
 
     VDP_setEnable(TRUE);
@@ -182,9 +184,11 @@ static void showTransitionScreen () {
     }
 
     SYS_disableInts();
-        SYS_setVBlankCallback(NULL);
-        VDP_setHInterrupt(FALSE);
-        SYS_setHIntCallback(NULL);
+
+    SYS_setVBlankCallback(NULL);
+    VDP_setHInterrupt(FALSE);
+    SYS_setHIntCallback(NULL);
+
     SYS_enableInts();
 
     SYS_doVBlankProcess();
@@ -223,11 +227,15 @@ static void titan256cDisplay () {
 
     VDP_setEnable(FALSE);
 
+    SYS_disableInts();
+
     currTileIndex = TILE_USER_INDEX;
     loadTitan256cTileSet(currTileIndex);
     loadTitan256cTileMap(BG_B, currTileIndex);
     currTileIndex += titanRGB.tileset->numTile;
     unpackPalettes();
+
+    SYS_enableInts();
 
     setSphereTextColorsIntoTitanPalettes(sprDefTitanSphereText_1_Anim);
 
@@ -251,9 +259,9 @@ static void titan256cDisplay () {
     SPR_setVisibility(titanSphereText_2_AnimSpr, HIDDEN);
     currTileIndex += sprDefTitanSphereText_2_Anim.maxNumTile;
 
-    SYS_disableInts();
-        setHVCallbacks(titan256cHIntMode);
-        VDP_setHInterrupt(TRUE);
+    setHVCallbacks(titan256cHIntMode);
+    VDP_setHInterrupt(TRUE);
+
     SYS_enableInts();
 
     VDP_setEnable(TRUE);
@@ -386,9 +394,11 @@ static void titan256cDisplay () {
     }
 
     SYS_disableInts();
-        SYS_setVBlankCallback(NULL);
-        VDP_setHInterrupt(FALSE);
-        SYS_setHIntCallback(NULL);
+
+    SYS_setVBlankCallback(NULL);
+    VDP_setHInterrupt(FALSE);
+    SYS_setHIntCallback(NULL);
+
     SYS_enableInts();
 
     VDP_clearPlane(BG_B, TRUE);
@@ -425,10 +435,10 @@ int main (bool hardReset) {
 		SYS_hardReset();
 	}
 
-    displaySegaLogo();
-    waitMs_(200);
-    displayTeddyBearLogo();
-    waitMs_(200);
+    // displaySegaLogo();
+    // waitMs_(200);
+    // displayTeddyBearLogo();
+    // waitMs_(200);
 
     basicEngineConfig();
     initGameStatus();
