@@ -36,18 +36,19 @@
 #define _Eni_InlineBitStream 1
 
 * enidecpad16:
-* - for RemoveJmpTable, routines needs to be aligned in 16($10) byte chunks
+* - for RemoveJmpTable, routines needs to be aligned in 16 ($10) byte chunks
 *   none of the routines can exceed that boundary, or the code won't work
 *   the only exception to this is SubE; the last one
 .macro enidecpad16 routine_label
     .set routine_size, . - \routine_label
     .if routine_size > 16
-        .error "ADDR ERROR - EXCEED: routine exceeds 16 bytes!"
+        .error "ADDR ERROR - EXCEED: \routine_label exceeds 16 bytes!"
     .elseif routine_size < 16
         .set pad_size, 16 - routine_size
         .fill pad_size, 1, 0x00
     .endif
 .endm
+* fabri1983: this works on GCC GAS and C pre-processor
 #define PAD_TO_16_BYTES(label) .fill 16-(.-label),1,0x00
 
 * enidec_checktileflags:
@@ -267,12 +268,12 @@ opt_EniDec_End:
     bne.s	    .opt_got_byte   // if not, branch
     subq.w	    #1,a0
 .opt_got_byte:
-.if _Eni_EvenAligned == 0       // TODO: thorough testing
+#if _Eni_EvenAligned == 0       // TODO: thorough testing
 * Orion: small optimization, saves 8-10 cycles
     move.w	    a0,d0
     andi.w	    #1,d0
     adda.w	    d0,a0           // ensure we're on an even byte
-.endif
+#endif
     movem.l     (%sp)+,%d0-%d7/%a1-%a6      // restore registers (except the scratch pad)
 #endif
     rts
