@@ -39,17 +39,18 @@
 * - for RemoveJmpTable, routines needs to be aligned in 16 ($10) byte chunks
 *   none of the routines can exceed that boundary, or the code won't work
 *   the only exception to this is SubE; the last one
-.macro enidecpad16 routine_label
-    .set routine_size, . - \routine_label
-    .if routine_size > 16
-        .error "ADDR ERROR - EXCEED: \routine_label exceeds 16 bytes!"
-    .elseif routine_size < 16
-        .set pad_size, 16 - routine_size
-        .fill pad_size, 1, 0x00
-    .endif
-.endm
+*.macro enidecpad16 routine_label
+*    .set routine_size, . - \routine_label
+*    .if routine_size > 16
+*        .error "ADDR ERROR - EXCEED: \routine_label exceeds 16 bytes!"
+*    .elseif routine_size < 16
+*        .set pad_size, 16 - routine_size
+*        .fill pad_size, 1, 0x00
+*    .endif
+*.endm
+
 * fabri1983: this works on GCC GAS and C pre-processor
-#define PAD_TO_16_BYTES(label) .fill 16-(.-label),1,0x00
+#define enidecpad16(label) .fill 16-(.-label),1,0x00
 
 * enidec_checktileflags:
 * - this was just repetitive
@@ -58,6 +59,7 @@
     bcc.s       1f                  // if that bit wasn't set, branch
     subq.w      #1,%d6              // get next bit number
     btst        %d6,%d5             // is this tile flag bit set?
+    beq         1f                  // if not, branch
 .if \setmode == 0
     ori.w       #1<<\bit,%d3
 .else
@@ -174,7 +176,7 @@ opt_EniDec_Sub0:
     jmp         (%a5)           // EniDec_Loop
 #if _Eni_RemoveJmpTable == 1
     *enidecpad16 opt_EniDec_Sub0
-    PAD_TO_16_BYTES(opt_EniDec_Sub0)
+    enidecpad16(opt_EniDec_Sub0)
 opt_EniDec_Sub2:
 2:
     move.w      %d4,(%a1)+      // write to destination
@@ -182,7 +184,7 @@ opt_EniDec_Sub2:
     dbra        %d2,2b          // repeat
     jmp         (%a5)           // EniDec_Loop
     *enidecpad16 opt_EniDec_Sub2
-    PAD_TO_16_BYTES(opt_EniDec_Sub2)
+    enidecpad16(opt_EniDec_Sub2)
 #endif
 * ---------------------------------------------------------------------------
 opt_EniDec_Sub4:
@@ -192,14 +194,14 @@ opt_EniDec_Sub4:
     jmp         (%a5)           // EniDec_Loop
 #if _Eni_RemoveJmpTable == 1
     *enidecpad16 opt_EniDec_Sub4
-    PAD_TO_16_BYTES(opt_EniDec_Sub4)
+    enidecpad16(opt_EniDec_Sub4)
 opt_EniDec_Sub6:
 2:
     move.w      %a4,(%a1)+      // write to destination
     dbra        %d2,2b          // repeat
     jmp         (%a5)           // EniDec_Loop
     *enidecpad16 opt_EniDec_Sub6
-    PAD_TO_16_BYTES(opt_EniDec_Sub6)
+    enidecpad16(opt_EniDec_Sub6)
 #endif
 * ---------------------------------------------------------------------------
 opt_EniDec_Sub8:
@@ -210,7 +212,7 @@ opt_EniDec_Sub8:
     jmp         (%a5)           // EniDec_Loop
 #if _Eni_RemoveJmpTable == 1
     *enidecpad16 opt_EniDec_Sub8
-    PAD_TO_16_BYTES(opt_EniDec_Sub8)
+    enidecpad16(opt_EniDec_Sub8)
 #endif
 * ---------------------------------------------------------------------------
 opt_EniDec_SubA:
@@ -222,7 +224,7 @@ opt_EniDec_SubA:
     jmp         (%a5)           // EniDec_Loop
 #if _Eni_RemoveJmpTable == 1
     *enidecpad16 opt_EniDec_SubA
-    PAD_TO_16_BYTES(opt_EniDec_SubA)
+    enidecpad16(opt_EniDec_SubA)
 #endif
 * ---------------------------------------------------------------------------
 opt_EniDec_SubC:
@@ -234,7 +236,7 @@ opt_EniDec_SubC:
     jmp         (%a5)           // EniDec_Loop
 #if _Eni_RemoveJmpTable == 1
     *enidecpad16 opt_EniDec_SubC
-    PAD_TO_16_BYTES(opt_EniDec_SubC)
+    enidecpad16(opt_EniDec_SubC)
 #else
 * ---------------------------------------------------------------------------
 opt_EniDec_JmpTable:
@@ -258,7 +260,7 @@ opt_EniDec_SubE:
     dbra        %d2,2b
     jmp         (%a5)           // EniDec_Loop
 opt_EniDec_End:
-    addq.l      #2,%sp          // deallocate those 2 bytes
+    addq.w      #2,%sp          // deallocate those 2 bytes
 #if _Eni_CompatibilityMode == 0
     movem.l     (%sp)+,%d1-%d7/%a2-%a6      // restore registers (except the scratch pad)
 #else
