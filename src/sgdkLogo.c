@@ -102,8 +102,8 @@ static void VIntHandler ()
 
 static INTERRUPT_ATTRIBUTE HIntLogoHandler ()
 {
-    vu16 *data; // place holder to help inline asm use an Ax register
-    vu32 *ctrl; // place holder to help inline asm use an Ax register
+    vu16 *data = 0; // place holder to help inline asm use an Ax register
+    vu32 *ctrl = 0; // place holder to help inline asm use an Ax register
 
     // Check if we are outside the logo
     const u16 y = vcounterManual++ - 96;

@@ -48,8 +48,7 @@
 *        .fill pad_size, 1, 0x00
 *    .endif
 *.endm
-
-* fabri1983: this works on GCC GAS and C pre-processor
+* fabri1983: this works on GCC GAS with C pre-processor
 #define enidecpad16(label) .fill 16-(.-label),1,0x00
 
 * enidec_checktileflags:
@@ -260,7 +259,7 @@ opt_EniDec_SubE:
     dbra        %d2,2b
     jmp         (%a5)           // EniDec_Loop
 opt_EniDec_End:
-    addq.w      #2,%sp          // deallocate those 2 bytes
+    addq.l      #2,%sp          // deallocate those 2 bytes
 #if _Eni_CompatibilityMode == 0
     movem.l     (%sp)+,%d1-%d7/%a2-%a6      // restore registers (except the scratch pad)
 #else
