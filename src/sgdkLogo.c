@@ -111,9 +111,9 @@ static INTERRUPT_ATTRIBUTE HIntLogoHandler ()
     {
         // Prime control and data ports
         ASM_STATEMENT __volatile__ (
-            "   lea     0xC00004,%0\n"      // Load the Effective Address of the memory location 0xC00004 (the VDP_CTRL_PORT) into the %0 register
+            "   lea     0xC00004,%0\n"      // Load the Effective Address of the memory location 0xC00004 (the VDP_CTRL_PORT) into the %0 register.
             "   move.w  #0x8F04,(%0)\n"     // Set auto-increment to 4. '()' specifies memory indirection or dereferencing.
-            "   move.l  #0x401E0010,(%0)\n" // Set VSRAM address (two-tile column 7)
+            "   move.l  #0x401E0010,(%0)\n" // Set VSRAM address (two-tile column 7).
             : "=>a" (ctrl)                  // Output operands. Ctrl will be placed in a general-purpose register: a0, a1, etc.
             : "0" (ctrl)                    // Input operands. 0 indicates that the input operand should use the same operand number as the corresponding output operand (in this case, operand 0 corresponds to =>a)
         );
@@ -123,14 +123,14 @@ static INTERRUPT_ATTRIBUTE HIntLogoHandler ()
     // Change vscroll values if inside the logo
     s16 *addr = vScrollBuffer+(y<<3);
     ASM_STATEMENT __volatile__ (
-        "   lea     0xC00000,%1\n"      // Load the Effective Address of the memory location 0xC00000 (the VDP_DATA_PORT) into the %1 register
+        "   lea     0xC00000,%1\n"      // Load the Effective Address of the memory location 0xC00000 (the VDP_DATA_PORT) into the %1 register.
         "   move.l  (%0)+,(%1)\n"
         "   move.l  (%0)+,(%1)\n"
         "   move.l  (%0)+,(%1)\n"
-        "   lea     4(%1),%2\n"         // Immediate offset of 4 bytes from %1 memory address loaded into the %2 register
-        "   move.l  #0x401E0010,(%2)\n" // Reset VSRAM address (two-tile column 7)
-        : "=>a" (addr), "=>a" (data), "=>a" (ctrl)
-        : "0" (addr), "1" (data), "2" (ctrl)
+        "   lea     4(%1),%2\n"         // Immediate offset of 4 bytes from %1 memory address loaded into the %2 register.
+        "   move.l  #0x401E0010,(%2)\n" // Reset VSRAM address (two-tile column 7).
+        : "=>a" (addr), "=>a" (data), "=>a" (ctrl)   // = is write-only, > applies change immediately, addr is param 0, data is 1, ctr is 2.
+        : "0" (addr), "1" (data), "2" (ctrl)         // addr goes in same location than param 0, etc.
     );
 }
 

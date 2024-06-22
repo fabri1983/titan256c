@@ -37,9 +37,9 @@ FORCE_INLINE void turnOnVDP (u8 reg01) {
 FORCE_INLINE void waitHCounter_old (u8 n) {
     // VDP_HVCOUNTER_PORT + 1 = 0xC00009 (HCOUNTER)
     ASM_STATEMENT __volatile__ (
-        ".loopHC%=:\n"
+        "1:\n"
         "    cmpi.b    %[hcLimit],0xC00009\n"    // cmp: (0xC00009) - hcLimit
-        "    blo       .loopHC%=\n"              // Compares byte because hcLimit won't be > 160 for our practical cases
+        "    blo.s     1b\n"                     // Compares byte because hcLimit won't be > 160 for our practical cases
             // blo is for unsigned comparisons, same than bcs
         :
         : [hcLimit] "i" (n)
@@ -54,9 +54,9 @@ FORCE_INLINE void waitHCounter (u8 n) {
     u32* regA=0; // placeholder used to indicate the use of an An register
     ASM_STATEMENT __volatile__ (
         "    move.l    #0xC00009,%0\n"    // Load HCounter (VDP_HVCOUNTER_PORT + 1 = 0xC00009) into an An register
-        ".loopHC%=:\n"
+        "1:\n"
         "    cmp.b     (%0),%1\n"         // cmp: n - (0xC00009). Compares byte because hcLimit won't be > 160 for our practical cases
-        "    bhi       .loopHC%=\n"       // loop back if n is higher than (0xC00009)
+        "    bhi.s     1b\n"              // loop back if n is higher than (0xC00009)
             // bhi is for unsigned comparisons
         : "+a" (regA)
         : "d" (n)
@@ -71,9 +71,9 @@ FORCE_INLINE void waitVCounterConst (u16 n) {
     u32* regA=0; // placeholder used to indicate the use of an An register
     ASM_STATEMENT __volatile__ (
         "    move.l    #0xC00008,%0\n"      // Load V Counter address into an An register
-        ".LoopVC%=:\n"
+        "1:\n"
         "    cmpi.w     %[vcLimit],(%0)\n"  // cmp: (0xC00008) - vcLimit
-        "    blo       .LoopVC%=\n"         // if (0xC00008) < vcLimit then loop back
+        "    blo.s     1b\n"                // if (0xC00008) < vcLimit then loop back
             // blo is for unsigned comparisons, same than bcs
         : "+a" (regA)
         : [vcLimit] "i" (n << 8) // (n << 8) | 0xFF
@@ -88,9 +88,9 @@ FORCE_INLINE void waitVCounterReg (u16 n) {
     u32* regA=0; // placeholder used to indicate the use of an An register
     ASM_STATEMENT __volatile__ (
         "    move.l    #0xC00008,%0\n"    // Load V Counter address into an An register
-        ".LoopVC%=:\n"
+        "1:\n"
         "    cmp.w     (%0),%1\n"         // cmp: n - (0xC00008)
-        "    bhi       .LoopVC%=\n"       // loop back if n is higher than (0xC00008)
+        "    bhi.s     1b\n"              // loop back if n is higher than (0xC00008)
             // bhi is for unsigned comparisons
         : "+a" (regA)
         : "d" (n << 8) // (n << 8) | 0xFF
@@ -284,7 +284,7 @@ HINTERRUPT_CALLBACK horizIntOnTitan256cCallback_CPU_EveryN_asm () {
         "   cmpi.w      %[i_TEXT_RAMP_EFFECT_HEIGHT],%%d0\n"   // d0 -= i_TEXT_RAMP_EFFECT_HEIGHT
         "   scs.b       %%d4\n"                                // if d0 >= 0 => d4=0xFF (enable bg color), if d0 < 0 => d4=0x00 (no bg color)
         // Next instructions not needed, logic works fine without them. I don't get it.
-        //"   bls         .color_batch_1_cmd\n"                  // branch if d0 <= i_TEXT_RAMP_EFFECT_HEIGHT (at this moment d4 is correctly set)
+        //"   bls.s       .color_batch_1_cmd\n"                  // branch if d0 <= i_TEXT_RAMP_EFFECT_HEIGHT (at this moment d4 is correctly set)
         //"   moveq       #0,%%d4\n"                             // d4=0x00 (no bg color)
 
 		".color_batch_1_cmd:\n"
@@ -292,21 +292,21 @@ HINTERRUPT_CALLBACK horizIntOnTitan256cCallback_CPU_EveryN_asm () {
             // set base command address once and then we'll add the right offset in next color batch blocks
 		"   move.l      #0xC0000000,%%d6\n"     // d6: cmdAddress = 0xC0000000
 		"   tst.b       %[palIdx]\n"            // palIdx == 0?
-		"   beq         .set_bgColor_1_%=\n"
+		"   beq.s       .set_bgColor_1_%=\n"
 		"   move.l      #0xC0400000,%%d6\n"     // d6: cmdAddress = 0xC0400000
 		".set_bgColor_1_%=:\n"
 		"   moveq       #0,%%d5\n"              // d5: bgColor = 0
             // from here on, d5=0 as long as d4 == 0, so no need to reset d5 in other color batch blocks
 		"   tst.b       %%d4\n"                 // d4: setGradColorForText => if setGradColorForText == 0 (FALSE)
-		"   beq         .color_batch_1_pal\n"
+		"   beq.s       .color_batch_1_pal\n"
 		"   move.w      (%%a0)+,%%d5\n"         // d5: bgColor = *(currGradPtr + 0);
 		".color_batch_1_pal:\n"
 		"   move.l      (%%a1)+,%%d0\n"         // d0: colors2_A = *((u32*) (titan256cPalsPtr + 0)); // 2 colors
 		"   move.l      (%%a1)+,%%d1\n"         // d1: colors2_B = *((u32*) (titan256cPalsPtr + 2)); // next 2 colors
         // wait HCounter
-        ".waitHCounter_1_%=:\n"
+        "1:\n"
         "   cmp.b       (%%a4),%%d7\n"          // cmp: d7 - (a4). Compare byte size given that d7 won't be > 160 for our practical cases
-        "   bhi         .waitHCounter_1_%=\n"   // loop back if d7 is higher than (a4)
+        "   bhi.s       1b\n"                   // loop back if d7 is higher than (a4)
 		// turnOffVDP
 		"   move.w      %[turnoff],(%%a2)\n"    // *(vu16*) VDP_CTRL_PORT = 0x8100 | (reg01 & ~0x40);
 		// send colors
@@ -327,9 +327,9 @@ HINTERRUPT_CALLBACK horizIntOnTitan256cCallback_CPU_EveryN_asm () {
 		"   move.l      (%%a1)+,%%d2\n"         // d2: colors2_C = *((u32*) (titan256cPalsPtr + 8)); // next 2 colors
 		"   move.l      (%%a1)+,%%d3\n"         // d3: colors2_D = *((u32*) (titan256cPalsPtr + 10)); // next 2 colors
         // wait HCounter
-        ".waitHCounter_2_%=:\n"
+        "1:\n"
         "   cmp.b       (%%a4),%%d7\n"          // cmp: d7 - (a4). Compare byte size given that d7 won't be > 160 for our practical cases
-        "   bhi         .waitHCounter_2_%=\n"   // loop back if d7 is higher than (a4)
+        "   bhi.s       1b\n"                   // loop back if d7 is higher than (a4)
 		// turnOffVDP
 		"   move.w      %[turnoff],(%%a2)\n"    // *(vu16*) VDP_CTRL_PORT = 0x8100 | (reg01 & ~0x40);
 		// send colors
@@ -346,15 +346,15 @@ HINTERRUPT_CALLBACK horizIntOnTitan256cCallback_CPU_EveryN_asm () {
 		"   addi.l      #0x100000,%%d6\n"       // d6: cmdAddress += 0x100000 // previous batch advanced 8 colors
 		".set_bgColor_2_%=:\n"
         "   tst.b       %%d4\n"                 // d4: setGradColorForText => if setGradColorForText == 0 (FALSE)
-		"   beq         .color_batch_3_pal\n"
+		"   beq.s       .color_batch_3_pal\n"
 		"   move.w      (%%a0)+,%%d5\n"         // d5: bgColor = *(currGradPtr + 1);
 		".color_batch_3_pal:\n"
 		"   move.l      (%%a1)+,%%d0\n"         // d0: colors2_A = *((u32*) (titan256cPalsPtr + 12)); // 2 colors
 		"   move.l      (%%a1)+,%%d1\n"         // d1: colors2_B = *((u32*) (titan256cPalsPtr + 14)); // next 2 colors
         // wait HCounter
-        ".waitHCounter_3_%=:\n"
+        "1:\n"
         "   cmp.b       (%%a4),%%d7\n"          // cmp: d7 - (a4). Compare byte size given that d7 won't be > 160 for our practical cases
-        "   bhi         .waitHCounter_3_%=\n"   // loop back if d7 is higher than (a4)
+        "   bhi.s       1b\n"                   // loop back if d7 is higher than (a4)
 		// turnOffVDP
 		"   move.w      %[turnoff],(%%a2)\n"    // *(vu16*) VDP_CTRL_PORT = 0x8100 | (reg01 & ~0x40);
 		// send colors
@@ -375,9 +375,9 @@ HINTERRUPT_CALLBACK horizIntOnTitan256cCallback_CPU_EveryN_asm () {
 		"   move.l      (%%a1)+,%%d2\n"         // d2: colors2_C = *((u32*) (titan256cPalsPtr + 20)); // next 2 colors
 		"   move.l      (%%a1)+,%%d3\n"         // d3: colors2_D = *((u32*) (titan256cPalsPtr + 22)); // next 2 colors
         // wait HCounter
-        ".waitHCounter_4_%=:\n"
+        "1:\n"
         "   cmp.b       (%%a4),%%d7\n"          // cmp: d7 - (a4). Compare byte size given that d7 won't be > 160 for our practical cases
-        "   bhi         .waitHCounter_4_%=\n"   // loop back if d7 is higher than (a4)
+        "   bhi.s       1b\n"                   // loop back if d7 is higher than (a4)
 		// turnOffVDP
 		"   move.w      %[turnoff],(%%a2)\n"    // *(vu16*) VDP_CTRL_PORT = 0x8100 | (reg01 & ~0x40);
 		// send colors
@@ -394,15 +394,15 @@ HINTERRUPT_CALLBACK horizIntOnTitan256cCallback_CPU_EveryN_asm () {
 		"   addi.l      #0x100000,%%d6\n"       // d6: cmdAddress += 0x100000 // previous batch advanced 8 colors
 		".set_bgColor_3_%=:\n"
 		"   tst.b       %%d4\n"                 // d4: setGradColorForText => if setGradColorForText == 0 (FALSE)
-		"   beq         .color_batch_5_pal\n"
+		"   beq.s       .color_batch_5_pal\n"
 		"   move.w      (%%a0)+,%%d5\n"         // d5: bgColor = *(currGradPtr + 2);
 		".color_batch_5_pal:\n"
 		"   move.l      (%%a1)+,%%d0\n"         // d0: colors2_A = *((u32*) (titan256cPalsPtr + 24)); // 2 colors
 		"   move.l      (%%a1)+,%%d1\n"         // d1: colors2_B = *((u32*) (titan256cPalsPtr + 26)); // next 2 colors
         // wait HCounter
-        ".waitHCounter_5_%=:\n"
+        "1:\n"
         "   cmp.b       (%%a4),%%d7\n"          // cmp: d7 - (a4). Compare byte size given that d7 won't be > 160 for our practical cases
-        "   bhi         .waitHCounter_5_%=\n"   // loop back if d7 is higher than (a4)
+        "   bhi.s       1b\n"                   // loop back if d7 is higher than (a4)
 		// turnOffVDP
 		"   move.w      %[turnoff],(%%a2)\n"    // *(vu16*) VDP_CTRL_PORT = 0x8100 | (reg01 & ~0x40);
 		// send colors
@@ -421,9 +421,9 @@ HINTERRUPT_CALLBACK horizIntOnTitan256cCallback_CPU_EveryN_asm () {
 		"   move.l      (%%a1)+,%%d0\n"         // d0: colors2_A = *((u32*) (titan256cPalsPtr + 28)); // 2 colors
 		"   move.l      (%%a1)+,%%d1\n"         // d1: colors2_B = *((u32*) (titan256cPalsPtr + 30)); // next 2 colors
         // wait HCounter
-        ".waitHCounter_6_%=:\n"
+        "1:\n"
         "   cmp.b       (%%a4),%%d7\n"          // cmp: d7 - (a4). Compare byte size given that d7 won't be > 160 for our practical cases
-        "   bhi        .waitHCounter_6_%=\n"    // loop back if d7 is higher than (a4)
+        "   bhi.s       1b\n"                   // loop back if d7 is higher than (a4)
 		// turnOffVDP
 		"   move.w      %[turnoff],(%%a2)\n"    // *(vu16*) VDP_CTRL_PORT = 0x8100 | (reg01 & ~0x40);
 		// send colors
@@ -435,9 +435,9 @@ HINTERRUPT_CALLBACK horizIntOnTitan256cCallback_CPU_EveryN_asm () {
 
 		".set_bgColor_4_%=:\n"
 		"   tst.b       %%d4\n"                 // d4: setGradColorForText => if setGradColorForText == 0 (FALSE)
-		"   beq         .accomodate_vars_A_%=\n"
+		"   beq.s       .accomodate_vars_A_%=\n"
 		"   move.w      (%%a0)+,%%d5\n"         // d5: bgColor = *(currGradPtr + 3);
-        "   move.l      %%a0,%[currGradPtr]\n"  // store current value currGradPtr
+        "   move.l      %%a0,%[currGradPtr]\n"  // store current pointer value currGradPtr
 
 		".accomodate_vars_A_%=:\n"
         "   move.w      %[vcounterManual],%%d0\n"                  // d0: vcounterManual
@@ -449,19 +449,19 @@ HINTERRUPT_CALLBACK horizIntOnTitan256cCallback_CPU_EveryN_asm () {
 
 		".color_batch_7_pal:\n"
         // wait HCounter
-        ".waitHCounter_7_%=:\n"
+        "1:\n"
         "   cmp.b       (%%a4),%%d7\n"          // cmp: d7 - (a4). Compare byte size given that d7 won't be > 160 for our practical cases
-        "   bhi         .waitHCounter_7_%=\n"   // loop back if d7 is higher than (a4)
+        "   bhi.s       1b\n"                   // loop back if d7 is higher than (a4)
 		// send colors
 		"   move.l      #0xC0000000,(%%a2)\n"   // *((vu32*) VDP_CTRL_PORT) = 0xC0000000; // VDP_WRITE_CRAM_ADDR(0): write to CRAM color index 0 multiplied by 2
 		"   move.w      %%d5,(%%a3)\n"          // *((vu16*) VDP_DATA_PORT) = bgColor;
 
         ".accomodate_vars_B_%=:\n"
         "   cmp.w       %[applyBlackPalPosY],%%d0\n"   // cmp: vcounterManual - applyBlackPalPosY
-        "   blo         .accomodate_vars_C_%=\n"       // branch if (vcounterManual < applyBlackPalPosY)
+        "   blo.s       .accomodate_vars_C_%=\n"       // branch if (vcounterManual < applyBlackPalPosY)
         "   move.l      %[palette_black],%%a1\n"       // a1 = palette_black
         ".accomodate_vars_C_%=:\n"
-        "   move.l      %%a1,%[titan256cPalsPtr]\n"    // store current value of a1 into variable titan256cPalsPtr
+        "   move.l      %%a1,%[titan256cPalsPtr]\n"    // store current pointer value of a1 into variable titan256cPalsPtr
 		: 
         [currGradPtr] "+m" (currGradPtr),
 		[titan256cPalsPtr] "+m" (titan256cPalsPtr),
@@ -636,14 +636,14 @@ HINTERRUPT_CALLBACK horizIntOnTitan256cCallback_DMA_EveryN_asm () {
         "   cmpi.w      %[i_TEXT_RAMP_EFFECT_HEIGHT],%%d0\n"   // d0 -= i_TEXT_RAMP_EFFECT_HEIGHT
         "   scs.b       %%d4\n"                                // if d0 >= 0 => d4=0xFF (enable bg color), if d0 < 0 => d4=0x00 (no bg color)
         // Next instructions not needed, logic works fine without them. I don't get it.
-      //"   bls         .set_bgColor_1_%=\n"                   // branch if d0 <= i_TEXT_RAMP_EFFECT_HEIGHT (at this moment d4 is correctly set)
+      //"   bls.s       .set_bgColor_1_%=\n"                   // branch if d0 <= i_TEXT_RAMP_EFFECT_HEIGHT (at this moment d4 is correctly set)
       //"   moveq       #0,%%d4\n"                             // d4=0x00 (no bg color)
 
 		".set_bgColor_1_%=:\n"
 		"   moveq       #0,%%d5\n"              // d5: bgColor = 0
             // from here on, d5=0 as long as d4 == 0, so no need to reset d5 in other color batch blocks
 		"   tst.b       %%d4\n"                 // d4: setGradColorForText => if setGradColorForText == 0 (FALSE)
-		"   beq         .dma_address_1_%=\n"
+		"   beq.s       .dma_address_1_%=\n"
 		"   move.w      (%%a0)+,%%d5\n"         // d5: bgColor = *(currGradPtr + 0);
         ".dma_address_1_%=:\n"
         "   move.l      %%a1,%%d3\n"            // d3: titan256cPalsPtr
@@ -660,9 +660,9 @@ HINTERRUPT_CALLBACK horizIntOnTitan256cCallback_DMA_EveryN_asm () {
         "   move.w      #0x9700,%%d2\n"         // d2: 0x9700
         "   or.b        %%d3,%%d2\n"            // d2: 0x9700 | (u8)((fromAddrForDMA >> 16) & 0x7f)
         // wait HCounter
-        ".waitHCounter_11_%=:\n"
+        "1:\n"
         "   cmp.b       (%%a4),%%d7\n"          // cmp: d7 - (a4). Compare byte size given that d7 won't be > 160 for our practical cases
-        "   bhi         .waitHCounter_11_%=\n"  // loop back if d7 is higher than (a4)
+        "   bhi.s       1b\n"                   // loop back if d7 is higher than (a4)
         // set BG color before setup DMA
         "   move.l      #0xC0000000,(%%a2)\n"   // *((vu32*) VDP_CTRL_PORT) = 0xC0000000; // VDP_WRITE_CRAM_ADDR(0): write to CRAM color index 0 multiplied by 2
 		"   move.w      %%d5,(%%a3)\n"          // *((vu16*) VDP_DATA_PORT) = bgColor;
@@ -680,12 +680,12 @@ HINTERRUPT_CALLBACK horizIntOnTitan256cCallback_DMA_EveryN_asm () {
             // set base command address once and then we'll add the right offset in next sets
 		"   move.l      #0xC0000080,%%d6\n"     // d6: palCmdForDMA = 0xC0000080
 		"   tst.b       %[palIdx]\n"            // palIdx == 0?
-		"   beq         .waitHCounter_12_%=\n"
+		"   beq.s       1f\n"
 		"   move.l      #0xC0400080,%%d6\n"     // d6: palCmdForDMA = 0xC0400080
         // wait HCounter
-        ".waitHCounter_12_%=:\n"
+        "1:\n"
         "   cmp.b       (%%a4),%%d7\n"          // cmp: d7 - (a4). Compare byte size given that d7 won't be > 160 for our practical cases
-        "   bhi         .waitHCounter_12_%=\n"  // loop back if d7 is higher than (a4)
+        "   bhi.s       1b\n"                   // loop back if d7 is higher than (a4)
 		// turnOffVDP
 		"   move.w      %[turnoff],(%%a2)\n"    // *(vu16*) VDP_CTRL_PORT = 0x8100 | (reg01 & ~0x40);
         // trigger DMA transfer
@@ -695,7 +695,7 @@ HINTERRUPT_CALLBACK horizIntOnTitan256cCallback_DMA_EveryN_asm () {
 
         ".set_bgColor_2_%=:\n"
 		"   tst.b       %%d4\n"                 // d4: setGradColorForText => if setGradColorForText == 0 (FALSE)
-		"   beq         .dma_address_2_%=\n"
+		"   beq.s       .dma_address_2_%=\n"
 		"   move.w      (%%a0)+,%%d5\n"         // d5: bgColor = *(currGradPtr + 1);
         ".dma_address_2_%=:\n"
         "   move.l      %%a1,%%d3\n"            // d3: titan256cPalsPtr
@@ -709,9 +709,9 @@ HINTERRUPT_CALLBACK horizIntOnTitan256cCallback_DMA_EveryN_asm () {
             // NOTE: previous & 0x7f operation not needed because higher bits were somehow already zeroed
         "   move.b      %%d3,%%d2\n"            // d2: 0x9700 | ((fromAddrForDMA >> 16) & 0x7f)
         // wait HCounter
-        ".waitHCounter_21_%=:\n"
+        "1:\n"
         "   cmp.b       (%%a4),%%d7\n"          // cmp: d7 - (a4). Compare byte size given that d7 won't be > 160 for our practical cases
-        "   bhi         .waitHCounter_21_%=\n"  // loop back if d7 is higher than (a4)
+        "   bhi.s       1b\n"                   // loop back if d7 is higher than (a4)
         // set BG color before setup DMA
         "   move.l      #0xC0000000,(%%a2)\n"   // *((vu32*) VDP_CTRL_PORT) = 0xC0000000; // VDP_WRITE_CRAM_ADDR(0): write to CRAM color index 0 multiplied by 2
 		"   move.w      %%d5,(%%a3)\n"          // *((vu16*) VDP_DATA_PORT) = bgColor;
@@ -727,9 +727,9 @@ HINTERRUPT_CALLBACK horizIntOnTitan256cCallback_DMA_EveryN_asm () {
             // palCmdForDMA = palIdx == 0 ? 0xC0140080 : 0xC0540080;
         "   addi.l      #0x00140000,%%d6\n"     // d6: cmdAddress += 0x00140000
         // wait HCounter
-        ".waitHCounter_22_%=:\n"
+        "1:\n"
         "   cmp.b       (%%a4),%%d7\n"          // cmp: d7 - (a4). Compare byte size given that d7 won't be > 160 for our practical cases
-        "   bhi         .waitHCounter_22_%=\n"  // loop back if d7 is higher than (a4)
+        "   bhi.s       1b\n"                   // loop back if d7 is higher than (a4)
 		// turnOffVDP
 		"   move.w      %[turnoff],(%%a2)\n"    // *(vu16*) VDP_CTRL_PORT = 0x8100 | (reg01 & ~0x40);
         // trigger DMA transfer
@@ -739,7 +739,7 @@ HINTERRUPT_CALLBACK horizIntOnTitan256cCallback_DMA_EveryN_asm () {
 
         ".set_bgColor_3_%=:\n"
 		"   tst.b       %%d4\n"                 // d4: setGradColorForText => if setGradColorForText == 0 (FALSE)
-		"   beq         .dma_address_3_%=\n"
+		"   beq.s       .dma_address_3_%=\n"
 		"   move.w      (%%a0)+,%%d5\n"         // d5: bgColor = *(currGradPtr + 1);
         ".dma_address_3_%=:\n"
         "   move.l      %%a1,%%d3\n"            // d3: titan256cPalsPtr
@@ -753,9 +753,9 @@ HINTERRUPT_CALLBACK horizIntOnTitan256cCallback_DMA_EveryN_asm () {
             // NOTE: previous & 0x7f operation not needed because higher bits were somehow already zeroed
         "   move.b      %%d3,%%d2\n"            // d2: 0x9700 | ((fromAddrForDMA >> 16) & 0x7f)
         // wait HCounter
-        ".waitHCounter_31_%=:\n"
+        "1:\n"
         "   cmp.b       (%%a4),%%d7\n"          // cmp: d7 - (a4). Compare byte size given that d7 won't be > 160 for our practical cases
-        "   bhi         .waitHCounter_31_%=\n"  // loop back if d7 is higher than (a4)
+        "   bhi.s       1b\n"                   // loop back if d7 is higher than (a4)
         // set BG color before setup DMA
         "   move.l      #0xC0000000,(%%a2)\n"   // *((vu32*) VDP_CTRL_PORT) = 0xC0000000; // VDP_WRITE_CRAM_ADDR(0): write to CRAM color index 0 multiplied by 2
 		"   move.w      %%d5,(%%a3)\n"          // *((vu16*) VDP_DATA_PORT) = bgColor;
@@ -771,9 +771,9 @@ HINTERRUPT_CALLBACK horizIntOnTitan256cCallback_DMA_EveryN_asm () {
             // palCmdForDMA = palIdx == 0 ? 0xC0280080 : 0xC0680080;
         "   addi.l      #0x00140000,%%d6\n"     // d6: cmdAddress += 0x00140000
         // wait HCounter
-        ".waitHCounter_32_%=:\n"
+        "1:\n"
         "   cmp.b       (%%a4),%%d7\n"          // cmp: d7 - (a4). Compare byte size given that d7 won't be > 160 for our practical cases
-        "   bhi         .waitHCounter_32_%=\n"  // loop back if d7 is higher than (a4)
+        "   bhi.s       1b\n"                   // loop back if d7 is higher than (a4)
 		// turnOffVDP
 		"   move.w      %[turnoff],(%%a2)\n"    // *(vu16*) VDP_CTRL_PORT = 0x8100 | (reg01 & ~0x40);
         // trigger DMA transfer
@@ -783,7 +783,7 @@ HINTERRUPT_CALLBACK horizIntOnTitan256cCallback_DMA_EveryN_asm () {
 
         ".set_bgColor_4_%=:\n"
 		"   tst.b       %%d4\n"                 // d4: setGradColorForText => if setGradColorForText = 0 (FALSE)
-		"   beq         .accomodate_vars_A_%=\n"
+		"   beq.s       .accomodate_vars_A_%=\n"
 		"   move.w      (%%a0)+,%%d5\n"         // d5: bgColor = *(currGradPtr + 3);
         "   move.l      %%a0,%[currGradPtr]\n"  // store current value currGradPtr
 
@@ -796,16 +796,16 @@ HINTERRUPT_CALLBACK horizIntOnTitan256cCallback_DMA_EveryN_asm () {
         "   move.b      %%d1,%[palIdx]\n"                          // store current value of palIdx
 
         // wait HCounter
-        ".waitHCounter_41_%=:\n"
+        "1:\n"
         "   cmp.b       (%%a4),%%d7\n"          // cmp: d7 - (a4). Compare byte size given that d7 won't be > 160 for our practical cases
-        "   bhi         .waitHCounter_41_%=\n"  // loop back if d7 is higher than (a4)
+        "   bhi.s       1b\n"                   // loop back if d7 is higher than (a4)
         // set last BG color
         "   move.l      #0xC0000000,(%%a2)\n"   // *((vu32*) VDP_CTRL_PORT) = 0xC0000000; // VDP_WRITE_CRAM_ADDR(0): write to CRAM color index 0 multiplied by 2
 		"   move.w      %%d5,(%%a3)\n"          // *((vu16*) VDP_DATA_PORT) = bgColor;
 
         ".accomodate_vars_B_%=:\n"
         "   cmp.w       %[applyBlackPalPosY],%%d0\n"   // cmp: vcounterManual - applyBlackPalPosY
-        "   blo         .accomodate_vars_C_%=\n"       // branch if (vcounterManual < applyBlackPalPosY)
+        "   blo.s       .accomodate_vars_C_%=\n"       // branch if (vcounterManual < applyBlackPalPosY)
         "   move.l      %[palette_black],%%a1\n"       // a1 = palette_black
         ".accomodate_vars_C_%=:\n"
         "   move.l      %%a1,%[titan256cPalsPtr]\n"    // store current value of a1 into variable titan256cPalsPtr
