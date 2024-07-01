@@ -24,7 +24,7 @@
     cmpm    (a0)+,(a1)+     ;// cmp memory to memory (only An registers and both post incremented)
     cmpi.b  #145,(a0)
     cmp     $EEFF0022,d0    ;// cmp memory content to d0
-    cmpi.b  #145,$C00009
+    cmpi.b  #145,$C00009    ;// cmp a constant to memory content
 
 * CMPI #0 vs TST
     cmpi    #0,d0
@@ -33,10 +33,20 @@
 
 * MOVE
     moveq   #127,d0
+    move    a2,d0           ;// load value from a2 into d0
     move    #$EEFF,d0       ;// load a constant into d0
+    move    #$EEFF,a2       ;// load a constant into a2
+    move    a2,(a4)         ;// load value from a2 into memory
     move.l  $EEFF0022,d0    ;// move memory content into d0
     move.l  d0,$EEFF0026    ;// move d0 into memory
-    move.l  $EEFF0022,$EEFF0026  ;// memory to memory
+    move.l  #$EC0A2468,(a4) ;// move a constant into memory
+    move.l  $EEFF0022,(a4)  ;// memory to memory
+
+* Move a long constant of form 0x00..0000 into Dn
+    move.l  #$00CA0000,d0
+* vs
+    moveq   #$00CA,d0
+    swap    d0
 
 * MOVE.l between memory locations vs LEA then MOVE.l to An
     move.l  $EEFF0022,$EEFF0026  ;// memory to memory
@@ -90,7 +100,7 @@
 * a4 parity test
 *    move.w a4,d7
 *    andi.b #1,d7
-*    beq    _is_even
+*    beq.s  _is_even
 *_is_even:
 
 

@@ -24,37 +24,32 @@ static void setPreviousHintMode () {
 
 static u16 currTileIndex;
 
-static const char* press_txt_0 = "(press ";
-static const char* press_START_txt = "START";
-static const char* press_A_txt = "A";
-static const char* press_B_txt = "B";
-static const char* press_C_txt = "C";
-static const char* press_txt_2 = " to continue)";
+static const char press_START_txt[] = "(press START to continue)";
 
-static const char* mode0_strat = "STRATEGY 0";
-static const char* mode0_textA = "HInt in ASM";
-static const char* mode0_textB = "Called every 8 scanlines";
-static const char* mode0_textC = "Uses CPU to move colors into VDP CRAM";
+static const char mode0_strat[] = "STRATEGY 0";
+static const char mode0_textA[] = "HInt in ASM";
+static const char mode0_textB[] = "Called every 8 scanlines";
+static const char mode0_textC[] = "Uses CPU to move colors into VDP CRAM";
 
-static const char* mode1_strat = "STRATEGY 1";
-static const char* mode1_textA = "HInt in C";
-static const char* mode1_textB = "Called every 8 scanlines";
-static const char* mode1_textC = "Uses CPU to move colors into VDP CRAM";
+static const char mode1_strat[] = "STRATEGY 1";
+static const char mode1_textA[] = "HInt in C";
+static const char mode1_textB[] = "Called every 8 scanlines";
+static const char mode1_textC[] = "Uses CPU to move colors into VDP CRAM";
 
-static const char* mode2_strat = "STRATEGY 2";
-static const char* mode2_textA = "HInt in ASM";
-static const char* mode2_textB = "Called every 8 scanlines";
-static const char* mode2_textC = "Uses DMA to move colors into VDP CRAM";
+static const char mode2_strat[] = "STRATEGY 2";
+static const char mode2_textA[] = "HInt in ASM";
+static const char mode2_textB[] = "Called every 8 scanlines";
+static const char mode2_textC[] = "Uses DMA to move colors into VDP CRAM";
 
-static const char* mode3_strat = "STRATEGY 3";
-static const char* mode3_textA = "HInt in C";
-static const char* mode3_textB = "Called every 8 scanlines";
-static const char* mode3_textC = "Uses DMA to move colors into VDP CRAM";
+static const char mode3_strat[] = "STRATEGY 3";
+static const char mode3_textA[] = "HInt in C";
+static const char mode3_textB[] = "Called every 8 scanlines";
+static const char mode3_textC[] = "Uses DMA to move colors into VDP CRAM";
 
-static const char* mode4_strat = "STRATEGY 4";
-static const char* mode4_textA = "HInt in C";
-static const char* mode4_textB = "Called only once";
-static const char* mode4_textC = "Uses DMA to move colors into VDP CRAM";
+static const char mode4_strat[] = "STRATEGY 4";
+static const char mode4_textA[] = "HInt in C";
+static const char mode4_textB[] = "Called only once";
+static const char mode4_textC[] = "Uses DMA to move colors into VDP CRAM";
 
 static void showTransitionScreen () {
 
@@ -81,28 +76,17 @@ static void showTransitionScreen () {
 
     u16 screenWidthTiles = screenWidth/8;
     u16 screenHeightTiles = screenHeight/8;
-    u8 currButtonIdx = 0;
-    u16 buttonChoices[] = {BUTTON_START, BUTTON_A, BUTTON_B, BUTTON_C};
     u8 buttonFramesDelay = 0;
 
     for (;;) {
-        const u16 currButtonChoice = buttonChoices[currButtonIdx];
         const u16 joyState = JOY_readJoypad(JOY_1);
         
-        if (joyState & currButtonChoice) {
+        if (joyState & BUTTON_START) {
             break;
         }
 
         #define BUTTON_PRESS_DELAY 12
-        if (buttonFramesDelay == 0 && joyState & BUTTON_UP) {
-            ++currButtonIdx;
-            buttonFramesDelay = BUTTON_PRESS_DELAY;
-        }
-        else if (buttonFramesDelay == 0 && joyState & BUTTON_DOWN) {
-            --currButtonIdx;
-            buttonFramesDelay = BUTTON_PRESS_DELAY;
-        }
-        else if (buttonFramesDelay == 0 && joyState & BUTTON_RIGHT) {
+        if (buttonFramesDelay == 0 && joyState & BUTTON_RIGHT) {
             setNextHintMode();
             buttonFramesDelay = BUTTON_PRESS_DELAY;
         }
@@ -110,7 +94,7 @@ static void showTransitionScreen () {
             setPreviousHintMode();
             buttonFramesDelay = BUTTON_PRESS_DELAY;
         }
-        currButtonIdx = currButtonIdx % 4;
+        #undef BUTTON_PRESS_DELAY
 
         if (buttonFramesDelay > 0)
             --buttonFramesDelay;
@@ -155,30 +139,7 @@ static void showTransitionScreen () {
         }
 
         VDP_clearTextLine(screenHeightTiles / 2 + 4);
-
-        switch (currButtonChoice) {
-        case BUTTON_START:
-            drawText(press_txt_0, (screenWidthTiles - strlen(press_txt_0) - strlen(press_START_txt) - strlen(press_txt_2)) / 2, screenHeightTiles / 2 + 4);
-            VDP_drawText(press_START_txt, (screenWidthTiles + strlen(press_txt_0) - strlen(press_START_txt) - strlen(press_txt_2)) / 2, screenHeightTiles / 2 + 4);
-            drawText(press_txt_2, (screenWidthTiles + strlen(press_txt_0) + strlen(press_START_txt) - strlen(press_txt_2)) / 2, screenHeightTiles / 2 + 4);
-            break;
-        case BUTTON_A:
-            drawText(press_txt_0, (screenWidthTiles - strlen(press_txt_0) - strlen(press_A_txt) - strlen(press_txt_2)) / 2, screenHeightTiles / 2 + 4);
-            VDP_drawText(press_A_txt, (screenWidthTiles + strlen(press_txt_0) - strlen(press_A_txt) - strlen(press_txt_2)) / 2, screenHeightTiles / 2 + 4);
-            drawText(press_txt_2, (screenWidthTiles + strlen(press_txt_0) + strlen(press_A_txt) - strlen(press_txt_2)) / 2, screenHeightTiles / 2 + 4);
-            break;
-        case BUTTON_B:
-            drawText(press_txt_0, (screenWidthTiles - strlen(press_txt_0) - strlen(press_B_txt) - strlen(press_txt_2)) / 2, screenHeightTiles / 2 + 4);
-            VDP_drawText(press_B_txt, (screenWidthTiles + strlen(press_txt_0) - strlen(press_B_txt) - strlen(press_txt_2)) / 2, screenHeightTiles / 2 + 4);
-            drawText(press_txt_2, (screenWidthTiles + strlen(press_txt_0) + strlen(press_B_txt) - strlen(press_txt_2)) / 2, screenHeightTiles / 2 + 4);
-            break;
-        case BUTTON_C:
-            drawText(press_txt_0, (screenWidthTiles - strlen(press_txt_0) - strlen(press_C_txt) - strlen(press_txt_2)) / 2, screenHeightTiles / 2 + 4);
-            VDP_drawText(press_C_txt, (screenWidthTiles + strlen(press_txt_0) - strlen(press_C_txt) - strlen(press_txt_2)) / 2, screenHeightTiles / 2 + 4);
-            drawText(press_txt_2, (screenWidthTiles + strlen(press_txt_0) + strlen(press_C_txt) - strlen(press_txt_2)) / 2, screenHeightTiles / 2 + 4);
-            break;
-        default: break;
-        }
+        VDP_drawText(press_START_txt, (screenWidthTiles - strlen(press_START_txt)) / 2, screenHeightTiles / 2 + 4);
 
         SYS_doVBlankProcess();
     }
