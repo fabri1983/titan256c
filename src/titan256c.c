@@ -292,7 +292,7 @@ void NO_INLINE fadingStepToBlack_pals (u8 currFadingStrip, u8 cycle) {
             u32 d = *palsPtr - 0b00000010001000100000001000100010; // decrement 1 unit in every component
 
             #if TITAN_256C_FADE_TO_BLACK_STRATEGY == 0
-            switch (d & 0b0001000100010000) {
+            switch (d & 0b00010001000100000001000100010000) {
                 case 0b00000000000100000000000000010000: d &= ~0b00000000000111100000000000011110; break; // red overflows? then zero it
                 case 0b00000001000100000000000100010000: d &= ~0b00000001111111100000000111111110; break; // red and green overflow? then zero them
                 case 0b00000001000000000000000100000000: d &= ~0b00000001111000000000000111100000; break; // green overflows? then zero it

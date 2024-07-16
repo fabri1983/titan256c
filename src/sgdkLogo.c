@@ -261,5 +261,5 @@ void displaySgdkLogo ()
     VDP_setHorizontalScroll(BG_B, 0);
 
     // restore SGDK's default palete for text
-    PAL_setPalette(PAL0, palette_grey, DMA);
+    PAL_setPalette(PAL0, palette_grey, CPU);
 }
