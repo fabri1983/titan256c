@@ -281,7 +281,7 @@ no_bmp_task:
         rte
 
 * Custom version of the _VINT vector which discards User tasks, Bitmap tasks, and XGM tasks, 
-* and calls user's VInt callback.
+* and immediately calls user's VInt callback.
 _VINT_lean:
         movem.l %d0-%d1/%a0-%a1,-(%sp)
         ori.w   #0x0001, intTrace           /* in V-Int */
