@@ -23,8 +23,8 @@ void displayTeddyBearLogo ()
     // Setup SGDK Teddy Bear animation
     //
 
-    // Init Sprites engine with default values (CAUTION: 420 reserved tiles in VRAM)
-    SPR_init();
+    // Init Sprites engine with fixed vram size (in tiles)
+    SPR_initEx(sprDefTeddyBearAnim.maxNumTile);
 
     u16 tileIndexNext = TILE_USER_INDEX;
     u16 teddyBearAnimTileAttribsBase = TILE_ATTR_FULL(PAL3, 0, FALSE, FALSE, tileIndexNext);
@@ -53,9 +53,6 @@ void displayTeddyBearLogo ()
 
     // Fade in to Sprite palette (previously defined to be located at PAL3)
     PAL_fadeIn(PAL3*16, PAL3*16 + 16, sprDefTeddyBearAnim.palette->data, 30, FALSE);
-
-    // Leave some time the last animation frame in the screen
-    waitMs_(250);
 
     //
     // Display loop for SGDK Teddy Bear animation

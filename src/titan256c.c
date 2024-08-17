@@ -7,30 +7,30 @@
 #include "titan256c.h"
 #include "decomp/unpackSelector.h"
 
+// the code is optimised further using GCC's automatic unrolling
+#pragma GCC push_options
+#pragma GCC optimize ("unroll-loops")
+
 static TileSet* allocateTileSetInternal (VOID_OR_CHAR* adr) {
     TileSet *result = (TileSet*) adr;
-    if (result != NULL) {
-        result->compression = COMPRESSION_NONE;
-        result->tiles = (u32*) (adr + sizeof(TileSet));
-    }
+    result->compression = COMPRESSION_NONE;
+    result->tiles = (u32*) (adr + sizeof(TileSet));
     return result;
 }
 
-static TileSet* unpackTileSet_custom(const TileSet* src, TileSet *dest) {
+static TileSet* unpackTileSet_custom (const TileSet* src, TileSet *dest) {
     TileSet *result;
     if (dest) result = dest;
     else result = allocateTileSetInternal(MEM_alloc(src->numTile * 32 + sizeof(TileSet)));
 
-    if (result != NULL) {
-        result->numTile = src->numTile;
-        result->compression = COMPRESSION_NONE;
-        if (src->compression != COMPRESSION_NONE) {
-            unpackSelector(src->compression, (u8*) FAR_SAFE(src->tiles, src->numTile * 32), (u8*) result->tiles, src->numTile * 32);
-        }
-        else if (src->tiles != result->tiles) {
-            const u16 size = src->numTile * 32;
-            memcpy((u8*) result->tiles, FAR_SAFE(src->tiles, size), size);
-        }
+    result->numTile = src->numTile;
+    result->compression = COMPRESSION_NONE;
+    if (src->compression != COMPRESSION_NONE) {
+        unpackSelector(src->compression, (u8*) FAR_SAFE(src->tiles, src->numTile * 32), (u8*) result->tiles, src->numTile * 32);
+    }
+    else if (src->tiles != result->tiles) {
+        const u16 size = src->numTile * 32;
+        memcpy((u8*) result->tiles, FAR_SAFE(src->tiles, size), size);
     }
 
     return result;
@@ -41,7 +41,7 @@ void loadTitan256cTileSet (u16 currTileIndex) {
     if (tileset->compression != COMPRESSION_NONE) {
         TileSet *unpacked = unpackTileSet_custom(tileset, NULL);
         VDP_loadTileData(unpacked->tiles, currTileIndex, unpacked->numTile, DMA);
-        // be careful, we are releasing buffer here so DMA_QUEUE transfer isn't safe here, use DMA_QUEUE_COPY instead for safe operation
+        // Be careful, we are releasing buffer here so DMA_QUEUE transfer isn't safe here, use DMA_QUEUE_COPY instead for safe operation
         MEM_free(unpacked);
     }
     else
@@ -50,28 +50,24 @@ void loadTitan256cTileSet (u16 currTileIndex) {
 
 static TileMap* allocateTileMapInternal (VOID_OR_CHAR* adr) {
     TileMap *result = (TileMap*) adr;
-    if (result != NULL) {
-        result->compression = COMPRESSION_NONE;
-        result->tilemap = (u16*) (adr + sizeof(TileMap));
-    }
+    result->compression = COMPRESSION_NONE;
+    result->tilemap = (u16*) (adr + sizeof(TileMap));
     return result;
 }
 
-static TileMap* unpackTileMap_custom(const TileMap *src, TileMap *dest) {
+static TileMap* unpackTileMap_custom(TileMap *src, TileMap *dest) {
     TileMap *result;
     if (dest) result = dest;
     else result = allocateTileMapInternal(MEM_alloc((src->w * src->h * 2) + sizeof(TileMap)));
 
-    if (result != NULL) {
-        result->w = src->w;
-        result->h = src->h;
-        result->compression = COMPRESSION_NONE;
-        if (src->compression != COMPRESSION_NONE)
-            unpackSelector(src->compression, (u8*) FAR_SAFE(src->tilemap, (src->w * src->h) * 2), (u8*) result->tilemap, src->w * src->h * 2);
-        else if (src->tilemap != result->tilemap) {
-            const u16 size = (src->w * src->h) * 2;
-            memcpy((u8*) result->tilemap, FAR_SAFE(src->tilemap, size), size);
-        }
+    result->w = src->w;
+    result->h = src->h;
+    result->compression = COMPRESSION_NONE;
+    if (src->compression != COMPRESSION_NONE)
+        unpackSelector(src->compression, (u8*) FAR_SAFE(src->tilemap, (src->w * src->h) * 2), (u8*) result->tilemap, src->w * src->h * 2);
+    else if (src->tilemap != result->tilemap) {
+        const u16 size = (src->w * src->h) * 2;
+        memcpy((u8*) result->tilemap, FAR_SAFE(src->tilemap, size), size);
     }
 
     return result;
@@ -79,20 +75,19 @@ static TileMap* unpackTileMap_custom(const TileMap *src, TileMap *dest) {
 
 void loadTitan256cTileMap (VDPPlane plane, u16 currTileIndex) {
     u16 baseTileAttribs = TILE_ATTR_FULL(PAL0, 0, FALSE, FALSE, currTileIndex);
-    const TileMap* tilemap = titanRGB.tilemap;
+    TileMap* tilemap = titanRGB.tilemap;
 
     const u32 offset = 0;//mulu(y, tilemap->w) + x;
     if (tilemap->compression != COMPRESSION_NONE) {
-        // unpack first
         TileMap *unpacked = unpackTileMap_custom(tilemap, NULL);
         VDP_setTileMapDataRectEx(plane, unpacked->tilemap + offset, baseTileAttribs, 0, 0, TITAN_256C_WIDTH/8, TITAN_256C_HEIGHT/8, 
             TITAN_256C_WIDTH/8, DMA_QUEUE_COPY);
-        // be careful, we are releasing buffer here so DMA_QUEUE transfer isn't safe here, use DMA_QUEUE_COPY instead for safe operation
+        // Be careful, we are releasing buffer here so DMA_QUEUE transfer isn't safe here, use DMA_QUEUE_COPY instead for safe operation
         MEM_free(unpacked);
     }
     else
         VDP_setTileMapDataRectEx(plane, (u16*) FAR_SAFE(tilemap->tilemap + offset, (TITAN_256C_WIDTH/8) * (TITAN_256C_HEIGHT/8) * 2), 
-            baseTileAttribs, 0, 0, TITAN_256C_WIDTH/8, TITAN_256C_HEIGHT/8, TITAN_256C_WIDTH/8, DMA_QUEUE_COPY);
+            baseTileAttribs, 0, 0, TITAN_256C_WIDTH/8, TITAN_256C_HEIGHT/8, TITAN_256C_WIDTH/8, DMA_QUEUE);
 }
 
 static u16* palettesData;

@@ -17,7 +17,7 @@
 
 /// @brief Set bit 6 (64 decimal, 0x40 hexa) of reg 1.
 /// @param reg01 VDP's Reg 1 holds other bits than just VDP ON/OFF status, so we need its current value.
-FORCE_INLINE void turnOffVDP (u8 reg01) {
+static FORCE_INLINE void turnOffVDP (u8 reg01) {
     //reg01 &= ~0x40;
     //*(vu16*) VDP_CTRL_PORT = 0x8100 | reg01;
     *(vu16*) VDP_CTRL_PORT = 0x8100 | (reg01 & ~0x40);
@@ -25,7 +25,7 @@ FORCE_INLINE void turnOffVDP (u8 reg01) {
 
 /// @brief Set bit 6 (64 decimal, 0x40 hexa) of reg 1.
 /// @param reg01 VDP's Reg 1 holds other bits than just VDP ON/OFF status, so we need its current value.
-FORCE_INLINE void turnOnVDP (u8 reg01) {
+static FORCE_INLINE void turnOnVDP (u8 reg01) {
     //reg01 |= 0x40;
     //*(vu16*) VDP_CTRL_PORT = 0x8100 | reg01;
     *(vu16*) VDP_CTRL_PORT = 0x8100 | (reg01 | 0x40);
@@ -34,7 +34,7 @@ FORCE_INLINE void turnOnVDP (u8 reg01) {
 /**
  * Wait until HCounter 0xC00009 reaches nth position (actually the (n*2)th pixel since the VDP counts by 2)
 */
-FORCE_INLINE void waitHCounter_old (u8 n) {
+static FORCE_INLINE void waitHCounter_old (u8 n) {
     // VDP_HVCOUNTER_PORT + 1 = 0xC00009 (HCOUNTER)
     ASM_STATEMENT __volatile__ (
         "1:\n"
@@ -50,7 +50,7 @@ FORCE_INLINE void waitHCounter_old (u8 n) {
 /**
  * Wait until HCounter 0xC00009 reaches nth position (actually the (n*2)th pixel since the VDP counts by 2).
 */
-FORCE_INLINE void waitHCounter (u8 n) {
+static FORCE_INLINE void waitHCounter (u8 n) {
     u32* regA=0; // placeholder used to indicate the use of an An register
     ASM_STATEMENT __volatile__ (
         "    move.l    #0xC00009,%0\n"    // Load HCounter (VDP_HVCOUNTER_PORT + 1 = 0xC00009) into an An register
@@ -67,7 +67,7 @@ FORCE_INLINE void waitHCounter (u8 n) {
 /**
  * Wait until VCounter 0xC00008 reaches nth scanline position. Only valid with constants.
 */
-FORCE_INLINE void waitVCounterConst (u16 n) {
+static FORCE_INLINE void waitVCounterConst (u16 n) {
     u32* regA=0; // placeholder used to indicate the use of an An register
     ASM_STATEMENT __volatile__ (
         "    move.l    #0xC00008,%0\n"      // Load V Counter address into an An register
@@ -84,7 +84,7 @@ FORCE_INLINE void waitVCounterConst (u16 n) {
 /**
  * Wait until VCounter 0xC00008 reaches nth scanline position. Parameter n is loaded into a register.
 */
-FORCE_INLINE void waitVCounterReg (u16 n) {
+static FORCE_INLINE void waitVCounterReg (u16 n) {
     u32* regA=0; // placeholder used to indicate the use of an An register
     ASM_STATEMENT __volatile__ (
         "    move.l    #0xC00008,%0\n"    // Load V Counter address into an An register
@@ -104,7 +104,7 @@ FORCE_INLINE void waitVCounterReg (u16 n) {
  * \param len How many colors to move.
  * \param fromAddr Must be >> 1 (shifted to right).
 */
-void NO_INLINE setupDMAForPals (u16 len, u32 fromAddr) {
+static void NO_INLINE setupDMAForPals (u16 len, u32 fromAddr) {
     // Uncomment if you previously change it to 1 (CPU access to VRAM is 1 byte length, and 2 bytes length for CRAM and VSRAM)
     //VDP_setAutoInc(2);
 
@@ -168,7 +168,7 @@ void setHIntScanlineStarterForBounceEffect (u16 yPos, u16 hintMode) {
 
 u16 vcounterManual;
 
-HINTERRUPT_CALLBACK horizIntScanlineStarterForBounceEffectCallback () {
+INTERRUPT_ATTRIBUTE horizIntScanlineStarterForBounceEffectCallback () {
     if (vcounterManual < startingScanlineForBounceEffect) {
         ++vcounterManual;
         return;
@@ -257,7 +257,7 @@ void vertIntOnTitan256cCallback_HIntOneTime () {
     }
 }
 
-HINTERRUPT_CALLBACK horizIntOnTitan256cCallback_CPU_EveryN_asm () {
+INTERRUPT_ATTRIBUTE horizIntOnTitan256cCallback_CPU_EveryN_asm () {
     // 1308-1336 cycles total (budget is 480~488 cycles per scanline - 120 cost of Hint Callback)
     ASM_STATEMENT __volatile__ (
         ".prepare_regs_%=:\n"
@@ -489,7 +489,7 @@ HINTERRUPT_CALLBACK horizIntOnTitan256cCallback_CPU_EveryN_asm () {
     );
 }
 
-HINTERRUPT_CALLBACK horizIntOnTitan256cCallback_CPU_EveryN () {
+INTERRUPT_ATTRIBUTE horizIntOnTitan256cCallback_CPU_EveryN () {
     // test if current HCounter is in the range for text gradient effect
     bool setGradColorForText = vcounterManual >= textRampEffectLimitTop && vcounterManual <= textRampEffectLimitBottom;
 
@@ -615,7 +615,7 @@ HINTERRUPT_CALLBACK horizIntOnTitan256cCallback_CPU_EveryN () {
         titan256cPalsPtr = (u16*) palette_black;
 }
 
-HINTERRUPT_CALLBACK horizIntOnTitan256cCallback_DMA_EveryN_asm () {
+INTERRUPT_ATTRIBUTE horizIntOnTitan256cCallback_DMA_EveryN_asm () {
     // 1122-1150 cycles total (budget is 480~488 cycles per scanline - 120 cost of Hint Callback)
     ASM_STATEMENT __volatile__ (
         ".prepare_regs_%=:\n"
@@ -848,7 +848,7 @@ HINTERRUPT_CALLBACK horizIntOnTitan256cCallback_DMA_EveryN_asm () {
     );
 }
 
-HINTERRUPT_CALLBACK horizIntOnTitan256cCallback_DMA_EveryN () {
+INTERRUPT_ATTRIBUTE horizIntOnTitan256cCallback_DMA_EveryN () {
     // 1510~1524 cycles
 
     // test if current HCounter is in the range for text gradient effect
@@ -979,7 +979,7 @@ MEMORY_BARRIER();
         titan256cPalsPtr = (u16*) palette_black;
 }
 
-HINTERRUPT_CALLBACK horizIntOnTitan256cCallback_DMA_OneTime () {
+INTERRUPT_ATTRIBUTE horizIntOnTitan256cCallback_DMA_OneTime () {
     // instead of VDP_setHIntCounter(0xFF) due to additionals read and write from/to internal regValues[]
     *((u16*) VDP_CTRL_PORT) = 0x8A00 | 0xFF;
 
@@ -1170,7 +1170,7 @@ void vertIntOnDrawTextCallback () {
     }
 }
 
-HINTERRUPT_CALLBACK horizIntOnDrawTextCallback () {
+INTERRUPT_ATTRIBUTE horizIntOnDrawTextCallback () {
     waitHCounter(150);
     turnOffVDP(116);
     *((vu32*) VDP_CTRL_PORT) = VDP_WRITE_CRAM_ADDR((u32)(CUSTOM_FONT_COLOR_INDEX * 2));
