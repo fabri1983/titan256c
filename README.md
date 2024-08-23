@@ -42,7 +42,7 @@ Same than D but calling only once the HInt with `VDP_setHIntCounter(0)` (every s
 
 ### TODO:
 - Fix incorrect value for VDP_setHIntCounter() when on bouncing effect to avoid wrong strip <-> palette alignment.
-- Fix black BG color lines over text in approaches using DMA. Check if they appear in Nuked-MD.
-- Fix TITAN_256C_FADE_TO_BLACK_STRATEGY 0 and 1.
+- Fix black BG color lines over text in approaches with DMA. Check if they appear in Nuked-MD.
+- Fix TITAN_256C_FADE_TO_BLACK_STRATEGY 0 and 1: wrong bitwise operations.
 - Add DMA command buffering as Stef does to avoid error in some MD consoles. See dma.c.
 - Try to use titan256c_rgb.png as input and do the color ramp effect over the white color.

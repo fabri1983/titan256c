@@ -7,10 +7,6 @@
 #include "titan256c.h"
 #include "decomp/unpackSelector.h"
 
-// the code is optimised further using GCC's automatic unrolling
-#pragma GCC push_options
-#pragma GCC optimize ("unroll-loops")
-
 static TileSet* allocateTileSetInternal (VOID_OR_CHAR* adr) {
     TileSet *result = (TileSet*) adr;
     result->compression = COMPRESSION_NONE;
