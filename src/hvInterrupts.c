@@ -104,7 +104,7 @@ static FORCE_INLINE void waitVCounterReg (u16 n) {
  * \param len How many colors to move.
  * \param fromAddr Must be >> 1 (shifted to right).
 */
-static void NO_INLINE setupDMAForPals (u16 len, u32 fromAddr) {
+/*static void NO_INLINE setupDMAForPals (u16 len, u32 fromAddr) {
     // Uncomment if you previously change it to 1 (CPU access to VRAM is 1 byte length, and 2 bytes length for CRAM and VSRAM)
     //VDP_setAutoInc(2);
 
@@ -118,7 +118,7 @@ static void NO_INLINE setupDMAForPals (u16 len, u32 fromAddr) {
     *palDmaPtr = 0x9500 | (fromAddr & 0xff);
     *palDmaPtr = 0x9600 | ((fromAddr >> 8) & 0xff); // This step is useless if the address has only set first 8 bits
     *palDmaPtr = 0x9700 | ((fromAddr >> 16) & 0x7f); // This step is useless if the address has only set first 12 bits
-}
+}*/
 
 void setHVCallbacks (u16 titan256cHIntMode) {
     switch (titan256cHIntMode) {

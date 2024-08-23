@@ -9,7 +9,7 @@ This version displays up to **256 colors**.
 
 For convenience testing you can directly try the last compiled rom [titan256c_rom.bin](titan256c_rom.bin?raw=true "titan256c_rom.bin").
 
-## 4 Approaches  
+## 4 Strategies  
 
 **(pressing START cycles between them)**  
 
@@ -20,7 +20,7 @@ Interweaving writes beetwen:
 and
 - 4 u32 vars (8 colors from palette)
 by CPU to CRAM every scanline along the duration of 8 scanlines, sending a total 2 palettes (32 colors) and 4 bg colors (ramp effect).  
-This approach has better ramp effect since the change in color happens every other scanline.
+This strategy has better ramp effect since the change in color happens every other scanline.
 
 **C** and **D**.  
 DMA 32 colors (2 palettes) splitted in 3 chunks + 4 BG colors writes for the text color ramp effect.  
@@ -31,18 +31,16 @@ All done inside the duration of 8 scanlines.
 Same than D but calling only once the HInt with `VDP_setHIntCounter(0)` (every scanline) and disabling it using 
 `VDP_setHIntCounter(255)` at the first line of the HInt (which takes effect in the next line).
 
-**A** and **B**:  
+Strategy **A**:  
 ![titan_cpu.jpg](screenshots/titan_cpu.jpg?raw=true "titan_cpu.jpg")
 
-**D**:  
+Strategy **C**:  
 ![titan_dma.jpg](screenshots/titan_dma.jpg?raw=true "titan_dma.jpg")
 
-**E**:  
-![titan_dma_onetime.jpg](screenshots/titan_dma_onetime.jpg?raw=true "titan_dma_onetime.jpg")
 
 ### TODO:
 - Fix incorrect value for VDP_setHIntCounter() when on bouncing effect to avoid wrong strip <-> palette alignment.
-- Fix black BG color lines over text in approaches with DMA. Check if they appear in Nuked-MD.
+- Fix black BG color lines over text in strategies with DMA. Check if they appear in Nuked-MD.
 - Fix TITAN_256C_FADE_TO_BLACK_STRATEGY 0 and 1: wrong bitwise operations.
 - Add DMA command buffering as Stef does to avoid error in some MD consoles. See dma.c.
 - Try to use titan256c_rgb.png as input and do the color ramp effect over the white color.

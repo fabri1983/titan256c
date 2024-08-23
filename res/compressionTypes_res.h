@@ -24,8 +24,8 @@
 #define NEMESIS 25
 #define NIBBLER 26
 #define PACKFIRE 27
-#define RLEWXMAP_A 28
-#define RLEWXMAP_B 29
+#define RLEW_A 28
+#define RLEW_B 29
 #define RNC1 30
 #define RNC2 31
 #define ROCKET 32

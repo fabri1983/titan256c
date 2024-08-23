@@ -17,7 +17,7 @@ void displayTeddyBearLogo ()
     PAL_setPalette(PAL0, palette_black, DMA);
 
     // Fill top plane with solid black tiles (tile index 1 seems to be a SGDK system tile)
-    VDP_fillTileMapRect(BG_A, TILE_ATTR_FULL(PAL0, 0, FALSE, FALSE, 1), 0, 0, 40, 28);
+    VDP_fillTileMapRect(BG_A, TILE_ATTR_FULL(PAL0, 0, FALSE, FALSE, 1), 0, 0, screenWidth/8, screenHeight/8);
 
     //
     // Setup SGDK Teddy Bear animation
