@@ -14,7 +14,8 @@ void displayTeddyBearLogo ()
 
     // Setup VDP
     VDP_setPlaneSize(64, 32, TRUE);
-    PAL_setPalette(PAL0, palette_black, DMA);
+    PAL_setPalette(PAL0, palette_black, CPU);
+    PAL_setColor(15, 0xCCC); // SGDK's font color
 
     // Fill top plane with solid black tiles (tile index 1 seems to be a SGDK system tile)
     VDP_fillTileMapRect(BG_A, TILE_ATTR_FULL(PAL0, 0, FALSE, FALSE, 1), 0, 0, screenWidth/8, screenHeight/8);
@@ -34,15 +35,13 @@ void displayTeddyBearLogo ()
     tileIndexNext += sprDefTeddyBearAnim.maxNumTile;
     
     // Draw first frame with only black palette to later do the fade in
-    PAL_setPalette(PAL3, palette_black, DMA);
+    PAL_setPalette(PAL3, palette_black, CPU);
     SPR_update();
 
     //
     // Setup SGDK version text
     //
 
-    // PAL3 color 15th is white. Remember SGDK always uses color 15th of the chosen palette for text colouring
-    VDP_setTextPalette(PAL3);
     // Draw SGDK version number
     const char* sgdk_version = "v2.0 (July 2024)";
     VDP_drawText(sgdk_version, screenWidth/8 - (strlen(sgdk_version) + 1), screenHeight/8 - 1);
@@ -51,8 +50,8 @@ void displayTeddyBearLogo ()
     // Fade In sprite and text
     //
 
-    // Fade in to Sprite palette (previously defined to be located at PAL3)
-    PAL_fadeIn(PAL3*16, PAL3*16 + 16, sprDefTeddyBearAnim.palette->data, 30, FALSE);
+    // Fade in to Sprite palette (previously located at PAL3)
+    PAL_fadeIn(PAL3*16, PAL3*16 + 15, sprDefTeddyBearAnim.palette->data, 30, FALSE);
 
     //
     // Display loop for SGDK Teddy Bear animation

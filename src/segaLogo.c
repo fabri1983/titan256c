@@ -159,7 +159,7 @@ void displaySegaLogo ()
     // Draw SEGA logo
     {
         // Fill top plane with solid black tiles (tile index 1 its a SGDK system tile)
-        VDP_fillTileMapRect(BG_A, attr(PAL0)|1, 0, 0, 40, 28);
+        VDP_fillTileMapRect(BG_A, attr(PAL0)|1, 0, 0, screenWidth/8, screenHeight/8);
 
         // Draw logo outline and letters. There are two versions using different color registers.
         drawImage(BG_A, &imgSEGAOutline, attr(PAL0), 14, 12, FALSE, TRUE);
