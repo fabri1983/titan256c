@@ -166,7 +166,7 @@ void setHIntScanlineStarterForBounceEffect (u16 yPos, u16 hintMode) {
     titan256cHIntMode = hintMode;
 }
 
-u16 vcounterManual;
+static u16 vcounterManual;
 
 INTERRUPT_ATTRIBUTE horizIntScanlineStarterForBounceEffectCallback () {
     if (vcounterManual < startingScanlineForBounceEffect) {
@@ -206,18 +206,18 @@ INTERRUPT_ATTRIBUTE horizIntScanlineStarterForBounceEffectCallback () {
     }
 }
 
-u16* titan256cPalsPtr; // 1st and 2nd strip's palette are loaded at the beginning of the display loop, so this ptr starts at 3rd strip
-u8 palIdx; // 3rd strip starts with palettes at [PAL0,PAL1]
-u16* currGradPtr;
-u16 applyBlackPalPosY;
-u16 textRampEffectLimitTop;
-u16 textRampEffectLimitBottom;
+static u16* titan256cPalsPtr; // 1st and 2nd strip's palette are loaded at the beginning of the display loop, so this ptr starts at 3rd strip
+static u8 palIdx; // 3rd strip starts with palettes at [PAL0,PAL1]
+static u16* currGradPtr;
+static u16 applyBlackPalPosY;
+static u16 textRampEffectLimitTop;
+static u16 textRampEffectLimitBottom;
 
 void setGradientPtrToBlack () {
     currGradPtr = (u16*) palette_black;
 }
 
-FORCE_INLINE void varsSetup () {
+static FORCE_INLINE void varsSetup () {
     // Needed for sending colors in u32 type
 	//*((vu16*) VDP_CTRL_PORT) = 0x8F00 | 2; // instead of VDP_setAutoInc(2) due to additionals read and write from/to internal regValues[]
 

@@ -175,7 +175,7 @@ void NO_INLINE setSphereTextColorsIntoTitanPalettes (const SpriteDefinition sprD
     //u16 colorAt15 = sprDef.palette->data[14];
     u16 colorAt16 = sprDef.palette->data[15];
 
-    for (u8 i=(TITAN_SPHERE_TILEMAP_HEIGHT+1)/2 + + (TITAN_SPHERE_TILEMAP_START_Y_POS % 2); i--; ) {
+    for (u8 i=(TITAN_SPHERE_TILEMAP_HEIGHT+1)/2 + (TITAN_SPHERE_TILEMAP_START_Y_POS % 2); i--; ) {
         //*(palsPtr + 14) = colorAt15;
         *(palsPtr + 15) = colorAt16;
         palsPtr += 2 * TITAN_256C_COLORS_PER_STRIP;
@@ -194,7 +194,7 @@ void NO_INLINE updateSphereTextColor () {
         u16 factor = currFadingStrip - startingStrip + 1;
         fadeAmount = 0x222 * factor;
     }
-    
+
     for (u8 i=(TITAN_SPHERE_TILEMAP_HEIGHT+1)/2 + (TITAN_SPHERE_TILEMAP_START_Y_POS % 2); i--; ) {
         u16 d = gradColorsBuffer[0] - min(0xEEE, fadeAmount);
         fadeAmount = max(0, fadeAmount - 0x222); // diminish the fade out weight

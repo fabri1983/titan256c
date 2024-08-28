@@ -43,7 +43,7 @@ void displayTeddyBearLogo ()
     //
 
     // Draw SGDK version number
-    const char* sgdk_version = "v2.0 (July 2024)";
+    const char* sgdk_version = "v2.0 (Aug 2024)";
     VDP_drawText(sgdk_version, screenWidth/8 - (strlen(sgdk_version) + 1), screenHeight/8 - 1);
 
     //

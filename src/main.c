@@ -9,6 +9,12 @@
 #include "customFont_consts.h"
 #include "customFont.h"
 
+typedef enum {
+    TRANSITION_SCREEN, FALL_AND_BOUNCE, NORMAL, FADE_OUT
+} TITAN_256C_GAME_STATUS;
+
+static TITAN_256C_GAME_STATUS currentGameStatus;
+
 static u16 titan256cHIntMode;
 
 static void setNextHintMode () {
@@ -51,6 +57,57 @@ static const char mode4_textA[] = "HInt in C";
 static const char mode4_textB[] = "Called only once";
 static const char mode4_textC[] = "Uses DMA to move colors into VDP CRAM";
 
+static u16 buttonBitsChange = 0;
+static u16 buttonBitsState = 0;
+static u16 joyCurrent = 0;
+
+/**
+ * - joy: This tells us which joypad was used. It will usually be JOY_1 or JOY_2, but SGDK actually supports up to 8 joypads.</br>
+ * - changed: This tells us whether the state of a button has changed over the last frame. 
+ * If the current state is different from the state in the previous frame, this will be 1 (otherwise 0). </br>
+ * - state: This will be 1 if the button is currently pressed and 0 if it isn’t.</br>
+*/
+static void joyHandler (u16 joy, u16 changed, u16 state) {
+    joyCurrent = joy;
+    // Only process JOY_1 and JOY_2
+    if (joyCurrent < JOY_3) {
+        buttonBitsChange = changed;
+        buttonBitsState = state;
+    }
+}
+
+static void joyStatusReset () {
+    joyCurrent = 0;
+    buttonBitsChange = 0;
+    buttonBitsState = 0;
+}
+
+static u8 strategySelectionDelay = 0;
+#define MENU_SELECTOR_DELAY_FRAMES 12
+
+static void updateTransitionScreenOnJoyInput () {
+    if (buttonBitsState & BUTTON_START) {
+        currentGameStatus = FALL_AND_BOUNCE;
+    }
+    else {
+        if (buttonBitsState & BUTTON_RIGHT) {
+            if (strategySelectionDelay == 0) {
+                setNextHintMode();
+                strategySelectionDelay = MENU_SELECTOR_DELAY_FRAMES;
+            }
+        }
+        else if (buttonBitsState & BUTTON_LEFT) {
+            if (strategySelectionDelay == 0) {
+                setPreviousHintMode();
+                strategySelectionDelay = MENU_SELECTOR_DELAY_FRAMES;
+            }
+        }
+    }
+
+    if (strategySelectionDelay > 0)
+        --strategySelectionDelay;
+}
+
 static void showTransitionScreen () {
 
     VDP_setEnable(FALSE);
@@ -74,30 +131,15 @@ static void showTransitionScreen () {
 
     VDP_setEnable(TRUE);
 
+    JOY_setEventHandler(joyHandler);
+    joyStatusReset();
+
     u16 screenWidthTiles = screenWidth/8;
     u16 screenHeightTiles = screenHeight/8;
-    u8 buttonFramesDelay = 0;
 
-    for (;;) {
-        const u16 joyState = JOY_readJoypad(JOY_1);
-        
-        if (joyState & BUTTON_START) {
-            break;
-        }
+    while (currentGameStatus == TRANSITION_SCREEN) {
 
-        #define BUTTON_PRESS_DELAY 12
-        if (buttonFramesDelay == 0 && joyState & BUTTON_RIGHT) {
-            setNextHintMode();
-            buttonFramesDelay = BUTTON_PRESS_DELAY;
-        }
-        else if (buttonFramesDelay == 0 && joyState & BUTTON_LEFT) {
-            setPreviousHintMode();
-            buttonFramesDelay = BUTTON_PRESS_DELAY;
-        }
-        #undef BUTTON_PRESS_DELAY
-
-        if (buttonFramesDelay > 0)
-            --buttonFramesDelay;
+        updateTransitionScreenOnJoyInput();
 
         VDP_clearTextLine(screenHeightTiles / 2 - 5);
         VDP_clearTextLine(screenHeightTiles / 2 - 1);
@@ -150,6 +192,8 @@ static void showTransitionScreen () {
     VDP_setHInterrupt(FALSE);
     SYS_setHIntCallback(NULL);
 
+    JOY_setEventHandler(NULL);
+
     SYS_enableInts();
 
     SYS_doVBlankProcess();
@@ -157,25 +201,89 @@ static void showTransitionScreen () {
     VDP_clearPlane(VDP_getTextPlane(), TRUE);
 }
 
-#if SPHERE_TEXT_ANIMATION == TRUE
+#if TITAN_SPHERE_TEXT_ANIMATION == TRUE
 static void toggleSphereTextAnimations (Sprite* titanSphereText_1_AnimSpr, Sprite* titanSphereText_2_AnimSpr) {
     // We check directly against VISIBLE because sprites settings are only VISIBLE or HIDDEN since their creation
     if (SPR_getVisibility(titanSphereText_1_AnimSpr) == VISIBLE) {
         if (SPR_getAnimationDone(titanSphereText_1_AnimSpr)) {
             SPR_setVisibility(titanSphereText_1_AnimSpr, HIDDEN);
             SPR_setVisibility(titanSphereText_2_AnimSpr, VISIBLE);
-            SPR_setAnimAndFrame(titanSphereText_2_AnimSpr, 0, 0); // reset animation 0 to first frame
+            SPR_setFrame(titanSphereText_2_AnimSpr, 0); // reset animation to first frame
             titanSphereText_2_AnimSpr->status &= ~0x0010; // set NOT STATE_ANIMATION_DONE from sprite_eng.c
         }
     }
-    else {
+    else if (SPR_getVisibility(titanSphereText_2_AnimSpr) == VISIBLE) {
         if (SPR_getAnimationDone(titanSphereText_2_AnimSpr)) {
             SPR_setVisibility(titanSphereText_2_AnimSpr, HIDDEN);
             SPR_setVisibility(titanSphereText_1_AnimSpr, VISIBLE);
-            SPR_setAnimAndFrame(titanSphereText_1_AnimSpr, 0, 0); // reset animation 0 to first frame
+            SPR_setFrame(titanSphereText_1_AnimSpr, 0); // reset animation to first frame
             titanSphereText_1_AnimSpr->status &= ~0x0010; // set NOT STATE_ANIMATION_DONE from sprite_eng.c
         }
     }
+}
+
+static u8 spriteAnimManualEffectDelay = 0;
+#define SPRITE_ANIM_MANUAL_EFFECT_DELAY_FRAMES 2
+
+static s8 animOffset = 0; // no direction by default
+
+static void updateSphereTextAnimFrameOnJoyInput (Sprite* titanSphereText_1_AnimSpr, Sprite* titanSphereText_2_AnimSpr) {
+    if (buttonBitsChange & BUTTON_RIGHT) {
+        if (buttonBitsState & BUTTON_RIGHT) {
+            animOffset = 1;
+        }
+        else {
+            if (animOffset != -1) // check if the other direction is not being used
+                animOffset = 0;
+            buttonBitsChange &= ~BUTTON_RIGHT; // released
+        }
+    }
+    if (buttonBitsChange & BUTTON_LEFT) {
+        if (buttonBitsState & BUTTON_LEFT) {
+            animOffset = -1;
+        }
+        else {
+            if (animOffset != 1) // check if the other direction is not being used
+                animOffset = 0;
+            buttonBitsChange &= ~BUTTON_LEFT; // released
+        }
+    }
+
+    if (spriteAnimManualEffectDelay == 0 && animOffset != 0) {
+        // We check directly against VISIBLE because sprites settings are only VISIBLE or HIDDEN since their creation
+        if (SPR_getVisibility(titanSphereText_1_AnimSpr) == VISIBLE) {
+            s16 nextFrameInd = titanSphereText_1_AnimSpr->frameInd - animOffset;
+            if (nextFrameInd < 0) {
+                nextFrameInd = titanSphereText_1_AnimSpr->animation->numFrame - 1;
+                SPR_setVisibility(titanSphereText_1_AnimSpr, FALSE);
+                SPR_setVisibility(titanSphereText_2_AnimSpr, TRUE);
+            }
+            else if (nextFrameInd >= titanSphereText_1_AnimSpr->animation->numFrame) {
+                nextFrameInd = 0;
+                SPR_setVisibility(titanSphereText_1_AnimSpr, FALSE);
+                SPR_setVisibility(titanSphereText_2_AnimSpr, TRUE);
+            }
+            SPR_setFrame(titanSphereText_1_AnimSpr, nextFrameInd);
+        }
+        else if (SPR_getVisibility(titanSphereText_2_AnimSpr) == VISIBLE) {
+            s16 nextFrameInd = titanSphereText_2_AnimSpr->frameInd - animOffset;
+            if (nextFrameInd < 0) {
+                nextFrameInd = titanSphereText_2_AnimSpr->animation->numFrame - 1;
+                SPR_setVisibility(titanSphereText_2_AnimSpr, FALSE);
+                SPR_setVisibility(titanSphereText_1_AnimSpr, TRUE);
+            }
+            else if (nextFrameInd >= titanSphereText_2_AnimSpr->animation->numFrame) {
+                nextFrameInd = 0;
+                SPR_setVisibility(titanSphereText_2_AnimSpr, FALSE);
+                SPR_setVisibility(titanSphereText_1_AnimSpr, TRUE);
+            }
+            SPR_setFrame(titanSphereText_2_AnimSpr, nextFrameInd);
+        }
+        spriteAnimManualEffectDelay = SPRITE_ANIM_MANUAL_EFFECT_DELAY_FRAMES;
+    }
+
+    if (spriteAnimManualEffectDelay > 0)
+        --spriteAnimManualEffectDelay;
 }
 #endif
 
@@ -234,8 +342,11 @@ static void titan256cDisplay () {
     s16 velocity = 0;
     u16 bounceCycle = 0;
 
-    // Fall and bounce effect
-    for (;;) {
+    JOY_setEventHandler(joyHandler);
+    joyStatusReset();
+
+    // Fall and bounce effect loop
+    while (currentGameStatus == FALL_AND_BOUNCE) {
         // Update bouncing velocity every 4 frames
         if ((bounceCycle % 4) == 0) {
             velocity -= 1;
@@ -258,8 +369,11 @@ static void titan256cDisplay () {
         // While in the mid air apply translation
         else yPos = (u16) new_yPos;
 
-        // if bounce effect finished then continue with next game state
-        if (yPos == 0 && velocity == 0) break;
+        // If bounce effect finished then continue with next game state
+        if (yPos == 0 && velocity == 0){
+            currentGameStatus = NORMAL;
+            break;
+        }
 
         // The bouncing effect has the side effect of offseting strips into scanlines not alligned with expected 
         // strips palettes distribution, hence we need to "offset" the scanline at which the HInt gets into action.
@@ -268,7 +382,7 @@ static void titan256cDisplay () {
         setYPosFalling(yPos);
         VDP_setVerticalScrollVSync(BG_B, yPos);
 
-        #if SPHERE_TEXT_ANIMATION == TRUE
+        #if TITAN_SPHERE_TEXT_ANIMATION == TRUE
         //updateSphereTextColor();
         #endif
 
@@ -277,7 +391,7 @@ static void titan256cDisplay () {
         // Enqueue 2 strips palettes depending on the Y position (in strips) of the image
         enqueue2Pals(yPos / TITAN_256C_STRIP_HEIGHT);
 
-        #if SPHERE_TEXT_ANIMATION == TRUE
+        #if TITAN_SPHERE_TEXT_ANIMATION == TRUE
         if (SPR_getVisibility(titanSphereText_1_AnimSpr) == VISIBLE)
             SPR_setPosition(titanSphereText_1_AnimSpr, TITAN_SPHERE_TILEMAP_START_X_POS * 8, TITAN_SPHERE_TILEMAP_START_Y_POS * 8 - yPos);
         else
@@ -289,9 +403,9 @@ static void titan256cDisplay () {
         SYS_doVBlankProcess();
     }
 
-    // Titan display
-    for (;;) {
-        #if SPHERE_TEXT_ANIMATION == TRUE
+    // Titan display loop
+    while (currentGameStatus == NORMAL) {
+        #if TITAN_SPHERE_TEXT_ANIMATION == TRUE
         //updateSphereTextColor();
         #endif
 
@@ -300,35 +414,39 @@ static void titan256cDisplay () {
         // Load 1st and 2nd strip's palette
         enqueue2Pals(0);
 
-        #if SPHERE_TEXT_ANIMATION == TRUE
+        if (buttonBitsState & (BUTTON_START | BUTTON_A | BUTTON_B | BUTTON_C)){
+            currentGameStatus = FADE_OUT;
+            break;
+        }
+
+        #if TITAN_SPHERE_TEXT_ANIMATION == TRUE
+        updateSphereTextAnimFrameOnJoyInput(titanSphereText_1_AnimSpr, titanSphereText_2_AnimSpr);
         toggleSphereTextAnimations(titanSphereText_1_AnimSpr, titanSphereText_2_AnimSpr);
         SPR_update();
         #endif
 
         SYS_doVBlankProcess();
-
-        u16 joyState = JOY_readJoypad(JOY_1);
-        if (joyState & (BUTTON_START | BUTTON_A | BUTTON_B | BUTTON_C)) break;
     }
 
     u8 fadingStripCnt = 0;
     u8 prevFadingStrip = 0;
     u8 fadingCycleCurrStrip = 0; // use to split the fading to black into N cycles, due to its lenghty execution
 
-    // Fade to black effect
-    for (;;) {
+    // Fade to black effect loop
+    while (currentGameStatus == FADE_OUT) {
         // advance 1 strip every N frames. N = FADE_OUT_STRIPS_SPLIT_CYCLES (used to execute the fading for current strip)
         u8 currFadingStrip = fadingStripCnt / FADE_OUT_STRIPS_SPLIT_CYCLES; // Use divu() for N non power of 2
         ++fadingStripCnt;
         // already passed last strip? then fading is finished
         if (currFadingStrip == (TITAN_256C_STRIPS_COUNT + FADE_OUT_COLOR_STEPS)) {
+            currentGameStatus = TRANSITION_SCREEN;
             break;
         }
 
         // Enable the fading effect on titan text calculated on VInt
         setCurrentFadingStripForText(currFadingStrip);
 
-        #if SPHERE_TEXT_ANIMATION == TRUE
+        #if TITAN_SPHERE_TEXT_ANIMATION == TRUE
         //updateSphereTextColor();
         #endif
 
@@ -346,7 +464,7 @@ static void titan256cDisplay () {
             fadingCycleCurrStrip = 0;
         }
 
-        #if SPHERE_TEXT_ANIMATION == TRUE
+        #if TITAN_SPHERE_TEXT_ANIMATION == TRUE
         toggleSphereTextAnimations(titanSphereText_1_AnimSpr, titanSphereText_2_AnimSpr);
         SPR_update();
         #endif
@@ -359,6 +477,8 @@ static void titan256cDisplay () {
     SYS_setVBlankCallback(NULL);
     VDP_setHInterrupt(FALSE);
     SYS_setHIntCallback(NULL);
+
+    JOY_setEventHandler(NULL);
 
     SYS_enableInts();
 
@@ -385,6 +505,7 @@ static void basicEngineConfig () {
 }
 
 static void initGameStatus () {
+    currentGameStatus = TRANSITION_SCREEN;
     titan256cHIntMode = HINT_STRATEGY_0; // set initial HInt color swap strategy
 }
 
