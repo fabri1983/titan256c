@@ -10,12 +10,12 @@
 #include "customFont.h"
 
 typedef enum {
-    TRANSITION_SCREEN, FALL_AND_BOUNCE, NORMAL, FADE_OUT
+    TRANSITION_SCREEN, FALL_AND_BOUNCE, STATIONARY, FADE_OUT
 } TITAN_256C_GAME_STATUS;
 
 static TITAN_256C_GAME_STATUS currentGameStatus;
 
-static u16 titan256cHIntMode;
+static u8 titan256cHIntMode;
 
 static void setNextHintMode () {
     titan256cHIntMode = modu(titan256cHIntMode + 1, HINT_STRATEGY_TOTAL);
@@ -201,6 +201,45 @@ static void showTransitionScreen () {
     VDP_clearPlane(VDP_getTextPlane(), TRUE);
 }
 
+static s16 yPosOffset = 0; // 0: no direction by default
+static u16 yPos;
+static s16 velocity = 0;
+static bool isManualPosY = FALSE;
+
+static void updateBounceEffectOnJoyInput () {
+    if (buttonBitsState & BUTTON_START) {
+        isManualPosY = FALSE;
+    }
+
+    if (buttonBitsChange & BUTTON_UP) {
+        if (buttonBitsState & BUTTON_UP) {
+            isManualPosY = TRUE;
+            yPosOffset = 1; // scanlines up
+            velocity = 0;
+            yPos += yPosOffset;
+            yPos = min(yPos, TITAN_256C_HEIGHT);
+        }
+        else {
+            if (yPosOffset > 0) // check if the other direction is not being used
+                yPosOffset = 0;
+            buttonBitsChange &= ~BUTTON_UP; // released
+        }
+    }
+    if (buttonBitsChange & BUTTON_DOWN) {
+        if (buttonBitsState & BUTTON_DOWN) {
+            isManualPosY = TRUE;
+            velocity = 0;
+            yPosOffset = -1; // scanlines down
+            yPos += yPosOffset;
+        }
+        else {
+            if (yPosOffset < 0) // check if the other direction is not being used
+                yPosOffset = 0;
+            buttonBitsChange &= ~BUTTON_DOWN; // released
+        }
+    }
+}
+
 #if TITAN_SPHERE_TEXT_ANIMATION == TRUE
 static void toggleSphereTextAnimations (Sprite* titanSphereText_1_AnimSpr, Sprite* titanSphereText_2_AnimSpr) {
     // We check directly against VISIBLE because sprites settings are only VISIBLE or HIDDEN since their creation
@@ -223,9 +262,9 @@ static void toggleSphereTextAnimations (Sprite* titanSphereText_1_AnimSpr, Sprit
 }
 
 static u8 spriteAnimManualEffectDelay = 0;
-#define SPRITE_ANIM_MANUAL_EFFECT_DELAY_FRAMES 2
+#define SPRITE_ANIM_MANUAL_EFFECT_DELAY_FRAMES 1
 
-static s8 animOffset = 0; // no direction by default
+static s8 animOffset = 0; // 0: no direction by default
 
 static void updateSphereTextAnimFrameOnJoyInput (Sprite* titanSphereText_1_AnimSpr, Sprite* titanSphereText_2_AnimSpr) {
     if (buttonBitsChange & BUTTON_RIGHT) {
@@ -233,7 +272,7 @@ static void updateSphereTextAnimFrameOnJoyInput (Sprite* titanSphereText_1_AnimS
             animOffset = 1;
         }
         else {
-            if (animOffset != -1) // check if the other direction is not being used
+            if (animOffset > 0) // check if the other direction is not being used
                 animOffset = 0;
             buttonBitsChange &= ~BUTTON_RIGHT; // released
         }
@@ -243,7 +282,7 @@ static void updateSphereTextAnimFrameOnJoyInput (Sprite* titanSphereText_1_AnimS
             animOffset = -1;
         }
         else {
-            if (animOffset != 1) // check if the other direction is not being used
+            if (animOffset < 0) // check if the other direction is not being used
                 animOffset = 0;
             buttonBitsChange &= ~BUTTON_LEFT; // released
         }
@@ -338,45 +377,51 @@ static void titan256cDisplay () {
     // disable the fading effect on titan text
     setCurrentFadingStripForText(0);
 
-    u16 yPos = TITAN_256C_HEIGHT;
-    s16 velocity = 0;
-    u16 bounceCycle = 0;
-
     JOY_setEventHandler(joyHandler);
     joyStatusReset();
 
+    yPos = TITAN_256C_HEIGHT;
+    isManualPosY = FALSE;
+    velocity = 0;
+    u16 bounceCycleCntr = 0;
+
     // Fall and bounce effect loop
     while (currentGameStatus == FALL_AND_BOUNCE) {
-        // Update bouncing velocity every 4 frames
-        if ((bounceCycle % 4) == 0) {
-            velocity -= 1;
-        }
-        ++bounceCycle;
-        // Do this due to signed type of velocity. When touching floor then decay velocity just a bit
-        s16 new_yPos = yPos + velocity;
-        if (new_yPos <= 0) {
-            yPos = 0;
-            // Decay in velocity as it bounces off the ground
-            //velocity = divu((velocity * -6), 10);
-            // Using a division "table"
-            switch (velocity) {
-                case -11: velocity = 6; break;
-                case -6: velocity = 3; break;
-                case -3: velocity = 1; break;
-                default: velocity = 0; break; // case -1
+
+        updateBounceEffectOnJoyInput();
+
+        if (!isManualPosY) {
+            // Update bouncing velocity every 4 frames
+            if ((bounceCycleCntr % 4) == 0) {
+                velocity += 1;
+            }
+            ++bounceCycleCntr;
+
+            // Do this due to signed type of velocity. When touching floor then decay velocity just a bit
+            s16 new_yPos = yPos - velocity;
+            if (new_yPos <= 0) {
+                yPos = 0;
+                // Decay in velocity as it bounces off the ground
+                velocity = divs((velocity * -6), 10);
+            }
+            // While in the mid air apply translation
+            else yPos = (u16) new_yPos;
+
+            // If bounce effect finished then continue with next game state
+            if (!(yPos | velocity)) {
+                currentGameStatus = STATIONARY;
+                break;
             }
         }
-        // While in the mid air apply translation
-        else yPos = (u16) new_yPos;
-
-        // If bounce effect finished then continue with next game state
-        if (yPos == 0 && velocity == 0){
-            currentGameStatus = NORMAL;
-            break;
+        else {
+            if (yPos == 0) {
+                currentGameStatus = STATIONARY;
+                break;
+            }
         }
 
-        // The bouncing effect has the side effect of offseting strips into scanlines not alligned with expected 
-        // strips palettes distribution, hence we need to "offset" the scanline at which the HInt gets into action.
+        // The bouncing effect has the side effect of offsets strips into scanlines not alligned with expected 
+        // palettes distribution, hence we need to shift the scanline at which the HInt gets into action.
         //setHIntScanlineStarterForBounceEffect(yPos, titan256cHIntMode);
 
         setYPosFalling(yPos);
@@ -392,10 +437,8 @@ static void titan256cDisplay () {
         enqueue2Pals(yPos / TITAN_256C_STRIP_HEIGHT);
 
         #if TITAN_SPHERE_TEXT_ANIMATION == TRUE
-        if (SPR_getVisibility(titanSphereText_1_AnimSpr) == VISIBLE)
-            SPR_setPosition(titanSphereText_1_AnimSpr, TITAN_SPHERE_TILEMAP_START_X_POS * 8, TITAN_SPHERE_TILEMAP_START_Y_POS * 8 - yPos);
-        else
-            SPR_setPosition(titanSphereText_2_AnimSpr, TITAN_SPHERE_TILEMAP_START_X_POS * 8, TITAN_SPHERE_TILEMAP_START_Y_POS * 8 - yPos);
+        SPR_setPosition(titanSphereText_1_AnimSpr, TITAN_SPHERE_TILEMAP_START_X_POS * 8, TITAN_SPHERE_TILEMAP_START_Y_POS * 8 - yPos);
+        SPR_setPosition(titanSphereText_2_AnimSpr, TITAN_SPHERE_TILEMAP_START_X_POS * 8, TITAN_SPHERE_TILEMAP_START_Y_POS * 8 - yPos);
         toggleSphereTextAnimations(titanSphereText_1_AnimSpr, titanSphereText_2_AnimSpr);
         SPR_update();
         #endif
@@ -403,8 +446,10 @@ static void titan256cDisplay () {
         SYS_doVBlankProcess();
     }
 
+    joyStatusReset();
+
     // Titan display loop
-    while (currentGameStatus == NORMAL) {
+    while (currentGameStatus == STATIONARY) {
         #if TITAN_SPHERE_TEXT_ANIMATION == TRUE
         //updateSphereTextColor();
         #endif
@@ -427,6 +472,8 @@ static void titan256cDisplay () {
 
         SYS_doVBlankProcess();
     }
+
+    joyStatusReset();
 
     u8 fadingStripCnt = 0;
     u8 prevFadingStrip = 0;

@@ -120,7 +120,7 @@ static FORCE_INLINE void waitVCounterReg (u16 n) {
     *palDmaPtr = 0x9700 | ((fromAddr >> 16) & 0x7f); // This step is useless if the address has only set first 12 bits
 }*/
 
-void setHVCallbacks (u16 titan256cHIntMode) {
+void setHVCallbacks (u8 titan256cHIntMode) {
     switch (titan256cHIntMode) {
         // Call the HInt every N scanlines. Uses CPU for palette swapping. In ASM.
         case HINT_STRATEGY_0:
@@ -156,10 +156,10 @@ void setHVCallbacks (u16 titan256cHIntMode) {
     }
 }
 
-static u16 titan256cHIntMode;
+static u8 titan256cHIntMode;
 static u16 startingScanlineForBounceEffect = 0;
 
-void setHIntScanlineStarterForBounceEffect (u16 yPos, u16 hintMode) {
+void setHIntScanlineStarterForBounceEffect (u16 yPos, u8 hintMode) {
     startingScanlineForBounceEffect = 0;
     if (yPos < (TITAN_256C_HEIGHT - (2 * TITAN_256C_STRIP_HEIGHT) - 1))
         startingScanlineForBounceEffect = (TITAN_256C_STRIP_HEIGHT - 1) - (yPos % TITAN_256C_STRIP_HEIGHT);
@@ -174,7 +174,6 @@ INTERRUPT_ATTRIBUTE horizIntScanlineStarterForBounceEffectCallback () {
         return;
     }
     else {
-        ++vcounterManual;
         switch (titan256cHIntMode) {
             case HINT_STRATEGY_0:
                 SYS_setHIntCallback(horizIntOnTitan256cCallback_CPU_EveryN_asm);
@@ -201,13 +200,16 @@ INTERRUPT_ATTRIBUTE horizIntScanlineStarterForBounceEffectCallback () {
                 // instead of VDP_setHIntCounter(0xFF) due to additionals read and write from/to internal regValues[]
                 *((u16*) VDP_CTRL_PORT) = 0x8A00 | 0xFF;
                 break;
-            default: break;
+            default: return;
         }
+        ++vcounterManual;
+        startingScanlineForBounceEffect = 0;
+        titan256cHIntMode = 0xFF;
     }
 }
 
-static u16* titan256cPalsPtr; // 1st and 2nd strip's palette are loaded at the beginning of the display loop, so this ptr starts at 3rd strip
-static u8 palIdx; // 3rd strip starts with palettes at [PAL0,PAL1]
+static u16* titan256cPalsPtr; // 1st and 2nd strip's palette are loaded at the beginning of the display loop, so it points to 3rd strip
+static u8 palIdx; // which pallete the titan256cPalsPtr uses
 static u16* currGradPtr;
 static u16 applyBlackPalPosY;
 static u16 textRampEffectLimitTop;
@@ -218,13 +220,18 @@ void setGradientPtrToBlack () {
 }
 
 static FORCE_INLINE void varsSetup () {
-    // Needed for sending colors in u32 type
+    // Setup sending colors in u32 type
 	//*((vu16*) VDP_CTRL_PORT) = 0x8F00 | 2; // instead of VDP_setAutoInc(2) due to additionals read and write from/to internal regValues[]
 
     u16 posYFalling = getYPosFalling();
     u16 stripN = min(TITAN_256C_HEIGHT/TITAN_256C_STRIP_HEIGHT - 1, (posYFalling / TITAN_256C_STRIP_HEIGHT) + 2);
-    titan256cPalsPtr = getPalettesData() + stripN * TITAN_256C_COLORS_PER_STRIP;
     applyBlackPalPosY = TITAN_256C_HEIGHT - posYFalling;
+    // This marks where to start painting all the image as black
+    if (applyBlackPalPosY <= (TITAN_256C_STRIP_HEIGHT - 1))
+        titan256cPalsPtr = (u16*) palette_black;
+    // Otherwise use normal colors
+    else
+        titan256cPalsPtr = getPalettesData() + stripN * TITAN_256C_COLORS_PER_STRIP;
 
     // On even strips we know we use [PAL0,PAL1] so starts with palIdx=0. On odd strips is [PAL1,PAL2] so starts with palIdx=32.
     palIdx = ((posYFalling / TITAN_256C_STRIP_HEIGHT) % 2) == 0 ? 0 : TITAN_256C_COLORS_PER_STRIP;
@@ -232,9 +239,6 @@ static FORCE_INLINE void varsSetup () {
     textRampEffectLimitTop = TITAN_256C_TEXT_STARTING_STRIP * TITAN_256C_STRIP_HEIGHT - posYFalling + TITAN_256C_TEXT_OFFSET_TOP;
     textRampEffectLimitBottom = TITAN_256C_TEXT_ENDING_STRIP * TITAN_256C_STRIP_HEIGHT - posYFalling + TITAN_256C_TEXT_OFFSET_BOTTOM;
     currGradPtr = getGradientColorsBuffer();
-
-    if ((TITAN_256C_STRIP_HEIGHT - 1) >= applyBlackPalPosY)
-        titan256cPalsPtr = (u16*) palette_black;
 }
 
 void vertIntOnTitan256cCallback_HIntEveryN () {
