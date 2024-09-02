@@ -212,7 +212,7 @@ void NO_INLINE updateSphereTextColor () {
 static u8 titanCharsCycleCnt = 0;
 
 void NO_INLINE updateTextGradientColors () {
-    // Strips [21,25] (0 based) renders the letters using transparent color, and we want to use a gradient scrolling over time. So 5 strips.
+    // Strips [21,25] (0 based) renders the letters using transparent color, and we want to use a scrolling ramp over time. So 5 strips.
     u16 fadeTextAmount = 0;
     if (currFadingStrip >= TITAN_256C_TEXT_STARTING_STRIP) {
         u16 factor = currFadingStrip - TITAN_256C_TEXT_STARTING_STRIP + 1;

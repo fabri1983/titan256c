@@ -168,7 +168,7 @@ void setHIntScanlineStarterForBounceEffect (u16 yPos, u8 hintMode) {
 
 static u16 vcounterManual;
 
-INTERRUPT_ATTRIBUTE horizIntScanlineStarterForBounceEffectCallback () {
+HINTERRUPT_CALLBACK horizIntScanlineStarterForBounceEffectCallback () {
     if (vcounterManual < startingScanlineForBounceEffect) {
         ++vcounterManual;
         return;
@@ -261,7 +261,7 @@ void vertIntOnTitan256cCallback_HIntOneTime () {
     }
 }
 
-INTERRUPT_ATTRIBUTE horizIntOnTitan256cCallback_CPU_EveryN_asm () {
+HINTERRUPT_CALLBACK horizIntOnTitan256cCallback_CPU_EveryN_asm () {
     // 1308-1336 cycles total (budget is 480~488 cycles per scanline - 120 cost of Hint Callback)
     ASM_STATEMENT __volatile__ (
         ".prepare_regs_%=:\n"
@@ -489,11 +489,13 @@ INTERRUPT_ATTRIBUTE horizIntOnTitan256cCallback_CPU_EveryN_asm () {
 		[i_TITAN_256C_STRIP_HEIGHT] "i" (TITAN_256C_STRIP_HEIGHT),
         [i_TEXT_RAMP_EFFECT_HEIGHT] "i" ((TITAN_256C_TEXT_ENDING_STRIP - TITAN_256C_TEXT_STARTING_STRIP) * TITAN_256C_STRIP_HEIGHT + TITAN_256C_TEXT_OFFSET_BOTTOM)
 		:
-		"d0","d1","d2","d3","d4","d5","d6","d7","a0","a1","a2","a3","a4","a5","cc","memory"  // backup registers used in the asm implementation
+        // backup registers used in the asm implementation including the scratch pad since this code is used in an interrupt call.
+        // a6 is backed up at the beginning of the asm block to avoid overriding the Stack Frame value, if not then things go wrong.
+		"d0","d1","d2","d3","d4","d5","d6","d7","a0","a1","a2","a3","a4","a5","cc","memory"
     );
 }
 
-INTERRUPT_ATTRIBUTE horizIntOnTitan256cCallback_CPU_EveryN () {
+HINTERRUPT_CALLBACK horizIntOnTitan256cCallback_CPU_EveryN () {
     // test if current HCounter is in the range for text gradient effect
     bool setGradColorForText = vcounterManual >= textRampEffectLimitTop && vcounterManual <= textRampEffectLimitBottom;
 
@@ -619,7 +621,7 @@ INTERRUPT_ATTRIBUTE horizIntOnTitan256cCallback_CPU_EveryN () {
         titan256cPalsPtr = (u16*) palette_black;
 }
 
-INTERRUPT_ATTRIBUTE horizIntOnTitan256cCallback_DMA_EveryN_asm () {
+HINTERRUPT_CALLBACK horizIntOnTitan256cCallback_DMA_EveryN_asm () {
     // 1122-1150 cycles total (budget is 480~488 cycles per scanline - 120 cost of Hint Callback)
     ASM_STATEMENT __volatile__ (
         ".prepare_regs_%=:\n"
@@ -630,7 +632,7 @@ INTERRUPT_ATTRIBUTE horizIntOnTitan256cCallback_DMA_EveryN_asm () {
         "   movea.l     #0xC00009,%%a4\n"               // a4: HCounter address 0xC00009 (VDP_HVCOUNTER_PORT + 1)
         "   move.b      %[hcLimit],%%d7\n"              // d7: HCounter limit
         "   move.w      %[turnOff],%%a5\n"              // a5: VDP's register with display OFF value
-        "   move.w      %%a6,-(%%sp)\n"                 // save a6 in the stack
+        "   move.w      %%a6,-(%%sp)\n"                 // save a6 in the stack (a6 has the Stack Frame)
         "   move.w      %[turnOn],%%a6\n"               // a6: VDP's register with display ON value
 
       //".setGradColorForText_flag_%=:\n"
@@ -848,11 +850,12 @@ INTERRUPT_ATTRIBUTE horizIntOnTitan256cCallback_DMA_EveryN_asm () {
 		[i_TITAN_256C_STRIP_HEIGHT] "i" (TITAN_256C_STRIP_HEIGHT),
         [i_TEXT_RAMP_EFFECT_HEIGHT] "i" ((TITAN_256C_TEXT_ENDING_STRIP - TITAN_256C_TEXT_STARTING_STRIP) * TITAN_256C_STRIP_HEIGHT + TITAN_256C_TEXT_OFFSET_BOTTOM)
 		:
-		"d0","d1","d2","d3","d4","d5","d6","d7","a0","a1","a2","a3","a4","a5","cc","memory"  // backup registers used in the asm implementation
+        // backup registers used in the asm implementation including the scratch pad since this code is used in an interrupt call
+		"d0","d1","d2","d3","d4","d5","d6","d7","a0","a1","a2","a3","a4","a5","cc","memory"
     );
 }
 
-INTERRUPT_ATTRIBUTE horizIntOnTitan256cCallback_DMA_EveryN () {
+HINTERRUPT_CALLBACK horizIntOnTitan256cCallback_DMA_EveryN () {
     // 1510~1524 cycles
 
     // test if current HCounter is in the range for text gradient effect
@@ -983,7 +986,7 @@ MEMORY_BARRIER();
         titan256cPalsPtr = (u16*) palette_black;
 }
 
-INTERRUPT_ATTRIBUTE horizIntOnTitan256cCallback_DMA_OneTime () {
+HINTERRUPT_CALLBACK horizIntOnTitan256cCallback_DMA_OneTime () {
     // instead of VDP_setHIntCounter(0xFF) due to additionals read and write from/to internal regValues[]
     *((u16*) VDP_CTRL_PORT) = 0x8A00 | 0xFF;
 
@@ -1029,7 +1032,7 @@ INTERRUPT_ATTRIBUTE horizIntOnTitan256cCallback_DMA_OneTime () {
         u32 fromAddrForDMA;
         u16 fromAddrForDMA_low, fromAddrForDMA_mid, fromAddrForDMA_hi;
         u16 bgColor=0;
-        u8 hcLimit = 156;
+        const u8 hcLimit = 156;
 
         fromAddrForDMA = (u32) titan256cPalsPtr >> 1; // here we manipulate the memory address not its content
         fromAddrForDMA_low = 0x9500 | (u8)(fromAddrForDMA);
@@ -1159,10 +1162,11 @@ void vertIntOnDrawTextCallback () {
     PAL_setColor(CUSTOM_FONT_COLOR_INDEX, custom_font_round_pal.data[1]);
     PAL_setColor(15, custom_font_round_pal.data[1]); // SGDK's font color index (15)
 
-    ++vintCycle;
-    if ((vintCycle % 4) == 0) {
+    if (vintCycle == 4) {
+        vintCycle = 0;
         // get next text color value for the HInt
         textColor = *(getTitanCharsGradientColors() + textColorIndex);
+        // calculate next color index going back and forth
         textColorIndex += textColorDirection;
         if (textColorIndex == TITAN_TEXT_GRADIENT_MAX_COLORS) {
             textColorIndex -= 2;
@@ -1172,9 +1176,11 @@ void vertIntOnDrawTextCallback () {
             textColorDirection = 1;
         }
     }
+
+    ++vintCycle;
 }
 
-INTERRUPT_ATTRIBUTE horizIntOnDrawTextCallback () {
+HINTERRUPT_CALLBACK horizIntOnDrawTextCallback () {
     waitHCounter(150);
     turnOffVDP(0x74);
     *((vu32*) VDP_CTRL_PORT) = VDP_WRITE_CRAM_ADDR((u32)(CUSTOM_FONT_COLOR_INDEX * 2));

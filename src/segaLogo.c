@@ -100,7 +100,7 @@ static void VIntHandler ()
     vcounterManual = 0;
 }
 
-static INTERRUPT_ATTRIBUTE HIntLogoHandler ()
+static HINTERRUPT_CALLBACK HIntLogoHandler ()
 {
     vu16 *data = 0; // place holder to help inline asm use an Ax register
     vu32 *ctrl = 0; // place holder to help inline asm use an Ax register

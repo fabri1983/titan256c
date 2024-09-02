@@ -15,18 +15,18 @@ void vertIntOnTitan256cCallback_HIntEveryN ();
 
 void vertIntOnTitan256cCallback_HIntOneTime ();
 
-INTERRUPT_ATTRIBUTE horizIntOnTitan256cCallback_CPU_EveryN_asm ();
+HINTERRUPT_CALLBACK horizIntOnTitan256cCallback_CPU_EveryN_asm ();
 
-INTERRUPT_ATTRIBUTE horizIntOnTitan256cCallback_CPU_EveryN ();
+HINTERRUPT_CALLBACK horizIntOnTitan256cCallback_CPU_EveryN ();
 
-INTERRUPT_ATTRIBUTE horizIntOnTitan256cCallback_DMA_EveryN_asm ();
+HINTERRUPT_CALLBACK horizIntOnTitan256cCallback_DMA_EveryN_asm ();
 
-INTERRUPT_ATTRIBUTE horizIntOnTitan256cCallback_DMA_EveryN ();
+HINTERRUPT_CALLBACK horizIntOnTitan256cCallback_DMA_EveryN ();
 
-INTERRUPT_ATTRIBUTE horizIntOnTitan256cCallback_DMA_OneTime ();
+HINTERRUPT_CALLBACK horizIntOnTitan256cCallback_DMA_OneTime ();
 
 void vertIntOnDrawTextCallback ();
 
-INTERRUPT_ATTRIBUTE horizIntOnDrawTextCallback ();
+HINTERRUPT_CALLBACK horizIntOnDrawTextCallback ();
 
 #endif // HV_INTERRUPTS_H

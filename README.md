@@ -14,7 +14,7 @@ For convenience testing you can directly try the last compiled rom [titan256c_ro
 **(pressing START cycles between them)**  
 
 **A** and **B**.  
-A is written in ASM 68k. B is written in C.  
+Strategy A is written in ASM 68k. Strategy B is written in C.  
 Interweaving writes beetwen:  
 - 2 u32 vars (4 colors from palette) and 1 u16 var (BG color for text ramp effect)  
 and
@@ -24,7 +24,7 @@ This strategy has better ramp effect since the change in color happens every oth
 
 **C** and **D**.  
 DMA 32 colors (2 palettes) splitted in 3 chunks + 4 BG colors writes for the text color ramp effect.  
-C is written in ASM 68k. D is written in C.  
+Strategy C is written in ASM 68k. Strategy D is written in C.  
 All done inside the duration of 8 scanlines.
 
 **E**.  
@@ -39,6 +39,7 @@ Strategy **C**:
 
 
 ### TODO:
+- Fix display corruption on strategy C.
 - Fix incorrect value for VDP_setHIntCounter() when on bouncing effect to avoid wrong strip <-> palette alignment.
 - Fix black BG color lines over text in strategies with DMA. Check if they appear in Nuked-MD.
 - Fix TITAN_256C_FADE_TO_BLACK_STRATEGY 0 and 1: wrong bitwise operations.

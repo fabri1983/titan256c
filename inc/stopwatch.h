@@ -103,7 +103,8 @@ const unsigned char mod_10[262] = {
 #define STRINGIFY(x) #x
 /// At NTSC and V224 max vertical scanline is 262. Take into account your code will be interrupted by hardware VInt and HInt. 
 /// HOWEVER VInt is executed at scanline 224 according to Shannon Birt. So a healthy limit for cpu utilizaiton is up to 223.
-/// Alternative way by ctr001: how I do profiling: change the background color by using VDP register $87
+/// Alternative way by ctr001: how I do profiling: change the background color by using VDP register $87.
+/// NOTE: instead of GET_VCOUNTER use VDP_getAdjustedVCounter() due to hardware wrapping bug at scanline 234.
 #define STOPWATCH_START(n) \
 	u8 lineStart_##n = GET_VCOUNTER;
 #define STOPWATCH_STOP(n) \
