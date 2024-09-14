@@ -244,7 +244,7 @@ static void updateBounceEffectOnJoyInput () {
 static void toggleSphereTextAnimations (Sprite* titanSphereText_1_AnimSpr, Sprite* titanSphereText_2_AnimSpr) {
     // We check directly against VISIBLE because sprites settings are only VISIBLE or HIDDEN since their creation
     if (SPR_getVisibility(titanSphereText_1_AnimSpr) == VISIBLE) {
-        if (SPR_getAnimationDone(titanSphereText_1_AnimSpr)) {
+        if (SPR_isAnimationDone(titanSphereText_1_AnimSpr)) {
             SPR_setVisibility(titanSphereText_1_AnimSpr, HIDDEN);
             SPR_setVisibility(titanSphereText_2_AnimSpr, VISIBLE);
             SPR_setFrame(titanSphereText_2_AnimSpr, 0); // reset animation to first frame
@@ -252,7 +252,7 @@ static void toggleSphereTextAnimations (Sprite* titanSphereText_1_AnimSpr, Sprit
         }
     }
     else if (SPR_getVisibility(titanSphereText_2_AnimSpr) == VISIBLE) {
-        if (SPR_getAnimationDone(titanSphereText_2_AnimSpr)) {
+        if (SPR_isAnimationDone(titanSphereText_2_AnimSpr)) {
             SPR_setVisibility(titanSphereText_2_AnimSpr, HIDDEN);
             SPR_setVisibility(titanSphereText_1_AnimSpr, VISIBLE);
             SPR_setFrame(titanSphereText_1_AnimSpr, 0); // reset animation to first frame

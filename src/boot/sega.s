@@ -40,7 +40,7 @@ _Vecteurs_68K:
         dc.l    _INT
         dc.l    hintCaller
         dc.l    _INT
-        dc.l    _VINT_lean              /* instead of SGDK's _VINT */
+        dc.l    _VINT                   /* _VINT_lean instead of SGDK's _VINT */
         dc.l    _INT
         dc.l    _trap_0                 /* Resume supervisor task */
         dc.l    _INT,_INT,_INT,_INT,_INT,_INT,_INT

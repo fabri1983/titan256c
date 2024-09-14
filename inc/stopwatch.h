@@ -10,7 +10,7 @@
 #define STOPWATCH_68K_CYCLES_START() ASM_STATEMENT volatile ("move.w  #0x9FC0, (0xC00004).l\n" :::"memory")
 #define STOPWATCH_68K_CYCLES_STOP() ASM_STATEMENT volatile ("move.w  #0x9F00, (0xC00004).l\n" :::"memory")
 
-const unsigned char div_100[] = {
+const unsigned char div_100[262] = {
     '0','0','0','0','0','0','0','0','0','0',
     '0','0','0','0','0','0','0','0','0','0',
     '0','0','0','0','0','0','0','0','0','0',
