@@ -12,8 +12,8 @@ void Denibble_caller (u8* src, u8* dest) {
 //     u8* a0 = src;
 //     u8* a1 = dest;
 // #endif
-// 	ASM_STATEMENT __volatile__ (
-// 		"jsr Denibble\n"
+// 	ASM_STATEMENT volatile (
+// 		"jsr Denibble"
 // 		: "+a" (a1)
 // 		: "a" (a0)
 // 		: "a2","a3","a4","a5","a6","d2","d3","d4","d5","d6","d7","cc"  // backup registers used in the asm implementation, except scratch pad

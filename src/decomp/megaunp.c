@@ -11,7 +11,7 @@ void init_mega_caller () {
 //     vu8* a2 =  (vu8*)0xFFD4CA;
 // #endif
 //     ASM_STATEMENT volatile (
-//         "jsr init_mega\n"
+//         "jsr init_mega"
 //         : "+a" (a2)
 //         : "a" (a2)
 //         : "d2", "d3", "d4", "d5", "d6", "d7", "a3", "a4", "a5", "a6"  // backup registers used in the asm implementation, except scratch pad
@@ -27,7 +27,7 @@ void megaunp_caller (const u8* data, u8* dest) {
 //     u8* a1 = dest;
 // #endif
 //     ASM_STATEMENT volatile (
-//         "jsr megaunp\n"
+//         "jsr megaunp"
 //         : "+a" (a0), "+a" (a1)
 //         : "a" (a0), "a" (a1)
 //         : "d2", "d3", "d4", "d5", "d6", "d7", "a2", "a3", "a4", "a5", "a6"  // backup registers used in the asm implementation, except scratch pad

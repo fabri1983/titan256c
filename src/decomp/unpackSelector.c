@@ -1,6 +1,7 @@
 #include "decomp/unpackSelector.h"
 #include "compressionTypesTracker.h"
 #include <tools.h> // constants: COMPRESSION_APLIB and COMPRESSION_LZ4W
+#include "compatibilities.h"
 
 #ifdef USING_MEGAPACK
 static bool megainitCalled = FALSE;

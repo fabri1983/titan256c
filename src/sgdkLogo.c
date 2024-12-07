@@ -2,11 +2,19 @@
  * Credits go to 
  * https://github.com/a-dietrich/SEGA-Genesis-Demos/tree/main/sega-logo
 */
-#include <genesis.h>
+#include <types.h>
+#include <vdp.h>
+#include <vdp_bg.h>
+#include <vdp_tile.h>
+#include <memory.h>
+#include <joy.h>
+#include <sys.h>
+#include <sprite_eng.h>
 #include "sgdkLogo.h"
 #include "utils.h"
+#include "logo_res.h"
 
-#define MAX_FRAMES_EFFECT 100
+#define LOGO_MAX_FRAMES_EFFECT 100
 
 // *****************************************************************************
 //
@@ -16,14 +24,7 @@
 
 static u16 tileIndexNext = TILE_USER_INDEX;
 
-static u16 paletteBuffer[4*16];
-static s16 vScrollBuffer[32*16];
-
-/// Blue/cyan cycling gradient
-static u16 colorsLogoGradient[26] = {
-    0x200, 0x400, 0x600, 0x800, 0xA00, 0xC00, 0xE00, 0xE20, 0xE40, 0xE60, 0xE80, 0xEA0, 0xEC0, 0xEE0, // blue to cyan
-    0xEC0, 0xEA0, 0xE80, 0xE60, 0xE40, 0xE20, 0xE00, 0xC00, 0xA00, 0x800, 0x600, 0x400 // cyan to blue
-};
+static s16* vScrollBuffer_ptr;
 
 // *****************************************************************************
 //
@@ -78,15 +79,51 @@ static void changePaletteBrightness (u16 *dstPal, u16 *srcPal, s16 val, u16 coun
 
 // -----------------------------------------------------------------------------
 
-static void cyclePaletteUp (u16 *pal, u16 index, u16 count)
+static void cyclePaletteUp(u16 *pal)
 {
-    if (count < 2)
-        return;
+    // Next causes compilation error: <artificial>:(.text+0xc2ce): undefined reference to `memmove'
+    /*u16 temp = pal[index];
+    // Shift colors up starting from the index
+    for (u16 i = index; i < count - 1; i++) {
+        pal[i] = pal[i + 1];
+    }
+    // Place the original first color at the end
+    pal[count - 1] = pal[0];
+    // Shift colors up from 0 to index
+    for (u16 i = 0; i < index; i++) {
+        pal[i] = pal[i + 1];
+    }
+    // Place the original first color at the beginning
+    pal[index] = temp;*/
 
-    u16 tmp = pal[index+count-1];
-    for (u16 i=index+count-1, n=index; i>n; i--)
-        pal[i] = pal[i-1];
-    pal[index] = tmp;
+    // Shift colors up starting from the beginning
+    u16 temp = pal[0];
+    pal[0] = pal[1];
+    pal[1] = pal[2];
+    pal[2] = pal[3];
+    pal[3] = pal[4];
+    pal[4] = pal[5];
+    pal[5] = pal[6];
+    pal[6] = pal[7];
+    pal[7] = pal[8];
+    pal[8] = pal[9];
+    pal[9] = pal[10];
+    pal[10] = pal[11];
+    pal[11] = pal[12];
+    pal[12] = pal[13];
+    pal[13] = pal[14];
+    pal[14] = pal[15];
+    pal[15] = pal[16];
+    pal[16] = pal[17];
+    pal[17] = pal[18];
+    pal[18] = pal[19];
+    pal[19] = pal[20];
+    pal[20] = pal[21];
+    pal[21] = pal[22];
+    pal[22] = pal[23];
+    pal[23] = pal[24];
+    pal[24] = pal[25];
+    pal[25] = temp;
 }
 
 // -------------------------------------------------------------------------
@@ -110,19 +147,20 @@ static HINTERRUPT_CALLBACK HIntLogoHandler ()
     if (y >= 32)
     {
         // Prime control and data ports
-        ASM_STATEMENT __volatile__ (
+        __asm volatile (
             "   lea     0xC00004,%0\n"      // Load the Effective Address of the memory location 0xC00004 (the VDP_CTRL_PORT) into the %0 register.
             "   move.w  #0x8F04,(%0)\n"     // Set auto-increment to 4. '()' specifies memory indirection or dereferencing.
             "   move.l  #0x401E0010,(%0)\n" // Set VSRAM address (two-tile column 7).
             : "=>a" (ctrl)                  // Output operands. Ctrl will be placed in a general-purpose register: a0, a1, etc.
             : "0" (ctrl)                    // Input operands. 0 indicates that the input operand should use the same operand number as the corresponding output operand (in this case, operand 0 corresponds to =>a)
+            : "cc", "memory"
         );
         return;
     }
 
     // Change vscroll values if inside the logo
-    s16 *addr = vScrollBuffer+(y<<3);
-    ASM_STATEMENT __volatile__ (
+    s16 *addr = vScrollBuffer_ptr+(y<<3);
+    __asm volatile (
         "   lea     0xC00000,%1\n"      // Load the Effective Address of the memory location 0xC00000 (the VDP_DATA_PORT) into the %1 register.
         "   move.l  (%0)+,(%1)\n"
         "   move.l  (%0)+,(%1)\n"
@@ -131,6 +169,7 @@ static HINTERRUPT_CALLBACK HIntLogoHandler ()
         "   move.l  #0x401E0010,(%2)\n" // Reset VSRAM address (two-tile column 7).
         : "=>a" (addr), "=>a" (data), "=>a" (ctrl)   // = is write-only, > applies change immediately, addr is param 0, data is 1, ctr is 2.
         : "0" (addr), "1" (data), "2" (ctrl)         // addr goes in same location than param 0, etc.
+        : "cc", "memory"
     );
 }
 
@@ -151,14 +190,32 @@ void displaySgdkLogo ()
     // Initalization
     //
 
+    // Blue/cyan cycling gradient
+    // u16 colorsLogoGradient[26] = {
+    //     0x200, 0x400, 0x600, 0x800, 0xA00, 0xC00, 0xE00, 0xE20, 0xE40, 0xE60, 0xE80, 0xEA0, 0xEC0, 0xEE0, // blue to cyan
+    //     0xEC0, 0xEA0, 0xE80, 0xE60, 0xE40, 0xE20, 0xE00, 0xC00, 0xA00, 0x800, 0x600, 0x400 // cyan to blue
+    // };
+    u16* colorsLogoGradient = (u16*) MEM_alloc(26 * sizeof(u16));
+    u16* p = colorsLogoGradient;
+    *p++ = 0x200; *p++ = 0x400; *p++ = 0x600; *p++ = 0x800; *p++ = 0xA00; *p++ = 0xC00; *p++ = 0xE00;
+    *p++ = 0xE20; *p++ = 0xE40; *p++ = 0xE60; *p++ = 0xE80; *p++ = 0xEA0; *p++ = 0xEC0; *p++ = 0xEE0;
+    *p++ = 0xEC0; *p++ = 0xEA0; *p++ = 0xE80; *p++ = 0xE60; *p++ = 0xE40; *p++ = 0xE20; *p++ = 0xE00;
+    *p++ = 0xC00; *p++ = 0xA00; *p++ = 0x800; *p++ = 0x600; *p++ = 0x400;
+
+    // u16 paletteBuffer[4*16] = {0};
+    // s16 vScrollBuffer[32*16] = {0};
+    u16* paletteBuffer = (u16*) MEM_alloc(4*16 * sizeof(u16));
+    s16* vScrollBuffer = (s16*) MEM_alloc(32*16 * sizeof(s16));
+    vScrollBuffer_ptr = vScrollBuffer;
+
     // Setup VDP
     VDP_setPlaneSize(64, 32, TRUE);
     VDP_setScrollingMode(HSCROLL_TILE, VSCROLL_COLUMN);
-    PAL_setPalette(PAL0, palette_black, DMA);
+    PAL_setPalette(PAL0, palette_black, CPU);
 
-    // Draw SEGA logo
+    // Draw SGDK logo
     {
-        // Fill top plane with solid black tiles (tile index 1 seems to be a SGDK system tile)
+        // Fill top plane with solid black tiles (tile index 1 its a SGDK system tile)
         VDP_fillTileMapRect(BG_A, attr(PAL0)|1, 0, 0, screenWidth/8, screenHeight/8);
 
         // Draw logo outline and letters. There are two versions using different color registers.
@@ -176,7 +233,7 @@ void displaySgdkLogo ()
 
     // Setup vertical scroll values
     fillVerticalScrollTile(BG_A, 7,     0, 6, DMA); // Logo outline position
-    fillVerticalScrollTile(BG_B, 7, -32*3, 6, DMA); // Backdrop (show normal colored letters) 
+    fillVerticalScrollTile(BG_B, 7, -32*3, 6, DMA); // Backdrop (show normal colored letters)
 
     // Fade to logo outline palete
     PAL_fadeTo(1, 15, imgSGDKOutline.palette->data+1, 16, FALSE);
@@ -196,16 +253,21 @@ void displaySgdkLogo ()
     s16 highlightBarY = -14; // starting from top
     s16 frameCtr = 0;
 
-    while (1)
+    for (;;)
     {
         const u16 joyState = JOY_readJoypad(JOY_1);
 
-        if (joyState & BUTTON_START || frameCtr > MAX_FRAMES_EFFECT)
+        if (joyState & BUTTON_START)
             break;
+        if (frameCtr > LOGO_MAX_FRAMES_EFFECT) {
+            // Leave some time the last animation frame in the screen
+            waitMs_(400);
+            break;
+        }
 
         if (frameCtr % 2 == 0) {
             // Cycle base palette
-            cyclePaletteUp(colorsLogoGradient, 0, 26);
+            cyclePaletteUp(colorsLogoGradient);
 
             // Move highlight bar
             if (++highlightBarY >= 32+6)
@@ -238,7 +300,7 @@ void displaySgdkLogo ()
         SYS_doVBlankProcess();
 
         // Update all palettes
-        PAL_setColors(8, paletteBuffer+8, 7*8, DMA);
+        PAL_setColors(8, paletteBuffer+8, 7*8, CPU);
 
         ++frameCtr;
     }
@@ -253,13 +315,22 @@ void displaySgdkLogo ()
 
     // Fade out all graphics to Black since all palettes are used by the logo effects
     PAL_fadeOutAll(16, FALSE);
+    SYS_doVBlankProcess();
 
+    MEM_free(colorsLogoGradient);
+    MEM_free(paletteBuffer);
+    MEM_free(vScrollBuffer);
+
+    // restore planes and settings
     VDP_clearPlane(BG_A, TRUE);
     VDP_clearPlane(BG_B, TRUE);
     VDP_setScrollingMode(HSCROLL_PLANE, VSCROLL_PLANE);
     VDP_setHorizontalScroll(BG_A, 0);
     VDP_setHorizontalScroll(BG_B, 0);
 
-    // restore SGDK's default palete for text
+    // restore SGDK's default palettes
     PAL_setPalette(PAL0, palette_grey, CPU);
+    PAL_setPalette(PAL1, palette_red, CPU);
+    PAL_setPalette(PAL2, palette_green, CPU);
+    PAL_setPalette(PAL3, palette_blue, CPU);
 }

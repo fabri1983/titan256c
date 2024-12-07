@@ -9,33 +9,22 @@
 
 static TileSet* allocateTileSetInternal (VOID_OR_CHAR* adr) {
     TileSet *result = (TileSet*) adr;
-    result->compression = COMPRESSION_NONE;
     result->tiles = (u32*) (adr + sizeof(TileSet));
     return result;
 }
 
-static TileSet* unpackTileSet_custom (const TileSet* src, TileSet *dest) {
-    TileSet *result;
-    if (dest) result = dest;
-    else result = allocateTileSetInternal(MEM_alloc(src->numTile * 32 + sizeof(TileSet)));
-
+static TileSet* unpackTileSet_custom (const TileSet* src) {
+    TileSet *result = allocateTileSetInternal(MEM_alloc(src->numTile * 32 + sizeof(TileSet)));
     result->numTile = src->numTile;
-    result->compression = COMPRESSION_NONE;
-    if (src->compression != COMPRESSION_NONE) {
-        unpackSelector(src->compression, (u8*) FAR_SAFE(src->tiles, src->numTile * 32), (u8*) result->tiles, src->numTile * 32);
-    }
-    else if (src->tiles != result->tiles) {
-        const u16 size = src->numTile * 32;
-        memcpy((u8*) result->tiles, FAR_SAFE(src->tiles, size), size);
-    }
-
+    result->compression = src->compression;
+    unpackSelector(src->compression, (u8*) FAR_SAFE(src->tiles, src->numTile * 32), (u8*) result->tiles, src->numTile * 32);
     return result;
 }
 
 void loadTitan256cTileSet (u16 currTileIndex) {
     TileSet* tileset = titanRGB.tileset;
     if (tileset->compression != COMPRESSION_NONE) {
-        TileSet *unpacked = unpackTileSet_custom(tileset, NULL);
+        TileSet *unpacked = unpackTileSet_custom(tileset);
         VDP_loadTileData(unpacked->tiles, currTileIndex, unpacked->numTile, DMA);
         // Be careful, we are releasing buffer here so DMA_QUEUE transfer isn't safe here, use DMA_QUEUE_COPY instead for safe operation
         MEM_free(unpacked);
@@ -46,26 +35,16 @@ void loadTitan256cTileSet (u16 currTileIndex) {
 
 static TileMap* allocateTileMapInternal (VOID_OR_CHAR* adr) {
     TileMap *result = (TileMap*) adr;
-    result->compression = COMPRESSION_NONE;
     result->tilemap = (u16*) (adr + sizeof(TileMap));
     return result;
 }
 
-static TileMap* unpackTileMap_custom(TileMap *src, TileMap *dest) {
-    TileMap *result;
-    if (dest) result = dest;
-    else result = allocateTileMapInternal(MEM_alloc((src->w * src->h * 2) + sizeof(TileMap)));
-
+static TileMap* unpackTileMap_custom(TileMap *src) {
+    TileMap *result = allocateTileMapInternal(MEM_alloc((src->w * src->h * 2) + sizeof(TileMap)));
     result->w = src->w;
     result->h = src->h;
-    result->compression = COMPRESSION_NONE;
-    if (src->compression != COMPRESSION_NONE)
-        unpackSelector(src->compression, (u8*) FAR_SAFE(src->tilemap, (src->w * src->h) * 2), (u8*) result->tilemap, src->w * src->h * 2);
-    else if (src->tilemap != result->tilemap) {
-        const u16 size = (src->w * src->h) * 2;
-        memcpy((u8*) result->tilemap, FAR_SAFE(src->tilemap, size), size);
-    }
-
+    result->compression = src->compression;
+    unpackSelector(src->compression, (u8*) FAR_SAFE(src->tilemap, (src->w * src->h) * 2), (u8*) result->tilemap, src->w * src->h * 2);
     return result;
 }
 
@@ -75,7 +54,7 @@ void loadTitan256cTileMap (VDPPlane plane, u16 currTileIndex) {
 
     const u32 offset = 0;//mulu(y, tilemap->w) + x;
     if (tilemap->compression != COMPRESSION_NONE) {
-        TileMap *unpacked = unpackTileMap_custom(tilemap, NULL);
+        TileMap *unpacked = unpackTileMap_custom(tilemap);
         VDP_setTileMapDataRectEx(plane, unpacked->tilemap + offset, baseTileAttribs, 0, 0, TITAN_256C_WIDTH/8, TITAN_256C_HEIGHT/8, 
             TITAN_256C_WIDTH/8, DMA_QUEUE_COPY);
         // Be careful, we are releasing buffer here so DMA_QUEUE transfer isn't safe here, use DMA_QUEUE_COPY instead for safe operation
@@ -284,21 +263,21 @@ void NO_INLINE fadingStepToBlack_pals (u8 currFadingStrip, u8 cycle) {
 
             #if TITAN_256C_FADE_TO_BLACK_STRATEGY == 0
             switch (d & 0b00010001000100000001000100010000) {
-                case 0b00000000000100000000000000010000: d &= ~0b00000000000111100000000000011110; break; // red overflows? then zero it
-                case 0b00000001000100000000000100010000: d &= ~0b00000001111111100000000111111110; break; // red and green overflow? then zero them
-                case 0b00000001000000000000000100000000: d &= ~0b00000001111000000000000111100000; break; // green overflows? then zero it
-                case 0b00010000000100000001000000010000: d &= ~0b00011110000111100001111000011110; break; // red and blue overflow? then zero them
-                case 0b00010000000000000001000000000000: d &= ~0b00011110000000000001111000000000; break; // blue overflows? then zero it
-                case 0b00010001000000000001000100000000: d &= ~0b00011111111000000001111111100000; break; // green and blue overflow? then zero them
+                case 0b00000000000100000000000000010000: d &= ~0b00000000000111100000000000011110; break; // any red overflows? then zero it
+                case 0b00000001000100000000000100010000: d &= ~0b00000001111111100000000111111110; break; // any red and green overflow? then zero them
+                case 0b00000001000000000000000100000000: d &= ~0b00000001111000000000000111100000; break; // any green overflows? then zero it
+                case 0b00010000000100000001000000010000: d &= ~0b00011110000111100001111000011110; break; // any red and blue overflow? then zero them
+                case 0b00010000000000000001000000000000: d &= ~0b00011110000000000001111000000000; break; // any blue overflows? then zero it
+                case 0b00010001000000000001000100000000: d &= ~0b00011111111000000001111111100000; break; // any green and blue overflow? then zero them
                 case 0b00010001000100000001000100010000: d = 0; break; // all colors overflow, then zero them
                 default: break;
             }
             #elif TITAN_256C_FADE_TO_BLACK_STRATEGY == 1
-            if (d & 0b00000000000100000000000000010000) d &= ~0b00000000000111100000000000011110; // red overflows? then zero it
-            if (d & 0b00000001000000000000000100000000) d &= ~0b00000001111000000000000111100000; // green overflows? then zero it
-            if (d & 0b00010000000000000001000000000000) d &= ~0b00011110000000000001111000000000; // blue overflows? then zero it
+            if (d & 0b00000000000100000000000000010000) d &= ~0b00000000000111100000000000011110; // any red overflows? then zero it
+            if (d & 0b00000001000000000000000100000000) d &= ~0b00000001111000000000000111100000; // any green overflows? then zero it
+            if (d & 0b00010000000000000001000000000000) d &= ~0b00011110000000000001111000000000; // any blue overflows? then zero it
             #elif TITAN_256C_FADE_TO_BLACK_STRATEGY == 2
-            if (d & 0b00010001000100000001000100010000) d = 0; // if only one color overflows then zero them all
+            if (d & 0b00010001000100000001000100010000) d = 0; // if any color overflows then zero them all
             #endif
 
             *palsPtr++ = d;

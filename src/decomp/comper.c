@@ -12,8 +12,8 @@ void ComperDec_caller (u8* src, u8* dest) {
     u8* a0 = src;
     u8* a1 = dest;
 #endif
-	ASM_STATEMENT __volatile__ (
-		"jsr ComperDec\n"
+	ASM_STATEMENT volatile (
+		"jsr ComperDec"
 		: "+a" (a1)
 		: "a" (a0)
 		: "a2","d2","d3","d4","d5","cc"  // backup registers used in the asm implementation, except scratch pad

@@ -17,5 +17,6 @@
 "C_Cpp.errorSquiggles": "enabled",
 "[m68k]": {
     "editor.rulers": []
-}
+},
+"gens.path": "C:\\Games\\blastem-win64-0.6.3-pre-9a07d299604b\\blastem.exe"
 }

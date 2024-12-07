@@ -8,6 +8,7 @@
 #include "custom_font_res.h"
 #include "customFont_consts.h"
 #include "customFont.h"
+#include "spr_eng_override.h"
 
 typedef enum {
     TRANSITION_SCREEN, FALL_AND_BOUNCE, STATIONARY, FADE_OUT
@@ -343,8 +344,6 @@ static void titan256cDisplay () {
     currTileIndex += titanRGB.tileset->numTile;
     unpackPalettes();
 
-    SYS_enableInts();
-
     setSphereTextColorsIntoTitanPalettes(sprDefTitanSphereText_1_Anim);
 
     SPR_initEx(sprDefTitanSphereText_1_Anim.maxNumTile + sprDefTitanSphereText_2_Anim.maxNumTile); // 137 + 127 tiles
@@ -353,7 +352,6 @@ static void titan256cDisplay () {
         TITAN_SPHERE_TILEMAP_START_X_POS * 8, TITAN_SPHERE_TILEMAP_START_Y_POS * 8, 
         TILE_ATTR_FULL(PAL0, 0, FALSE, FALSE, currTileIndex),
         SPR_FLAG_AUTO_TILE_UPLOAD | SPR_FLAG_AUTO_VRAM_ALLOC);
-    SPR_setAnim(titanSphereText_1_AnimSpr, 0); // set animation 0 (is the only one though)
     // always visible or always hidden along the three effects of the scene
     SPR_setVisibility(titanSphereText_1_AnimSpr, VISIBLE);
     currTileIndex += sprDefTitanSphereText_1_Anim.maxNumTile;
@@ -362,7 +360,6 @@ static void titan256cDisplay () {
         TITAN_SPHERE_TILEMAP_START_X_POS * 8, TITAN_SPHERE_TILEMAP_START_Y_POS * 8, 
         TILE_ATTR_FULL(PAL0, 0, FALSE, FALSE, currTileIndex),
         SPR_FLAG_AUTO_TILE_UPLOAD | SPR_FLAG_AUTO_VRAM_ALLOC);
-    SPR_setAnim(titanSphereText_2_AnimSpr, 0); // set animation 0 (is the only one though)
     // always visible or always hidden along the three effects of the scene
     SPR_setVisibility(titanSphereText_2_AnimSpr, HIDDEN);
     currTileIndex += sprDefTitanSphereText_2_Anim.maxNumTile;
@@ -383,7 +380,6 @@ static void titan256cDisplay () {
     yPos = TITAN_256C_HEIGHT;
     isManualPosY = FALSE;
     velocity = 0;
-    u16 bounceCycleCntr = 0;
 
     // Fall and bounce effect loop
     while (currentGameStatus == FALL_AND_BOUNCE) {
@@ -392,23 +388,23 @@ static void titan256cDisplay () {
 
         if (!isManualPosY) {
             // Update bouncing velocity every 4 frames
-            if ((bounceCycleCntr % 4) == 0) {
+            if ((vtimer % 4) == 0) {
                 velocity += 1;
             }
-            ++bounceCycleCntr;
 
-            // Do this due to signed type of velocity. When touching floor then decay velocity just a bit
+            // When at or move through floor then decay velocity just a bit
             s16 new_yPos = yPos - velocity;
             if (new_yPos <= 0) {
-                yPos = 0;
-                // Decay in velocity as it bounces off the ground
+                new_yPos = 0;
+                // Decay in velocity and change sign of direction as it bounces off the ground
                 velocity = divs((velocity * -6), 10);
             }
-            // While in the mid air apply translation
-            else yPos = (u16) new_yPos;
+            
+            // Apply translation
+            yPos = (u16) new_yPos;
 
             // If bounce effect finished then continue with next game state
-            if (!(yPos | velocity)) {
+            if ((yPos | velocity) == 0) {
                 currentGameStatus = STATIONARY;
                 break;
             }
@@ -440,7 +436,8 @@ static void titan256cDisplay () {
         SPR_setPosition(titanSphereText_1_AnimSpr, TITAN_SPHERE_TILEMAP_START_X_POS * 8, TITAN_SPHERE_TILEMAP_START_Y_POS * 8 - yPos);
         SPR_setPosition(titanSphereText_2_AnimSpr, TITAN_SPHERE_TILEMAP_START_X_POS * 8, TITAN_SPHERE_TILEMAP_START_Y_POS * 8 - yPos);
         toggleSphereTextAnimations(titanSphereText_1_AnimSpr, titanSphereText_2_AnimSpr);
-        SPR_update();
+        //SPR_update();
+        spr_eng_update();
         #endif
 
         SYS_doVBlankProcess();
@@ -467,7 +464,8 @@ static void titan256cDisplay () {
         #if TITAN_SPHERE_TEXT_ANIMATION == TRUE
         updateSphereTextAnimFrameOnJoyInput(titanSphereText_1_AnimSpr, titanSphereText_2_AnimSpr);
         toggleSphereTextAnimations(titanSphereText_1_AnimSpr, titanSphereText_2_AnimSpr);
-        SPR_update();
+        //SPR_update();
+        spr_eng_update();
         #endif
 
         SYS_doVBlankProcess();
@@ -513,7 +511,8 @@ static void titan256cDisplay () {
 
         #if TITAN_SPHERE_TEXT_ANIMATION == TRUE
         toggleSphereTextAnimations(titanSphereText_1_AnimSpr, titanSphereText_2_AnimSpr);
-        SPR_update();
+        //SPR_update();
+        spr_eng_update();
         #endif
 
         SYS_doVBlankProcess();
@@ -564,8 +563,8 @@ int main (bool hardReset) {
 		SYS_hardReset();
 	}
 
-    // displaySegaLogo();
-    // waitMs_(200);
+    displaySegaLogo();
+    waitMs_(200);
     displayTeddyBearLogo();
     waitMs_(200);
 

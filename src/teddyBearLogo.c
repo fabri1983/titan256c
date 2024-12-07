@@ -2,9 +2,18 @@
  * Teddy Bear animation author: fabri1983@gmail.com
  * https://github.com/fabri1983
 */
-#include <genesis.h>
+#include <types.h>
+#include <vdp.h>
+#include <vdp_bg.h>
+#include <vdp_tile.h>
+#include <memory.h>
+#include <joy.h>
+#include <sys.h>
+#include <sprite_eng.h>
+#include <string.h>
 #include "teddyBearLogo.h"
 #include "utils.h"
+#include "logo_res.h"
 
 void displayTeddyBearLogo ()
 {
@@ -31,7 +40,8 @@ void displayTeddyBearLogo ()
     u16 teddyBearAnimTileAttribsBase = TILE_ATTR_FULL(PAL3, 0, FALSE, FALSE, tileIndexNext);
     u16 sprX = (screenWidth - sprDefTeddyBearAnim.w) / 2;
     u16 sprY = (screenHeight - sprDefTeddyBearAnim.h) / 2;
-    Sprite* teddyBearAnimSpr = SPR_addSpriteSafe(&sprDefTeddyBearAnim, sprX, sprY, teddyBearAnimTileAttribsBase);
+    Sprite* teddyBearAnimSpr = SPR_addSpriteEx(&sprDefTeddyBearAnim, sprX, sprY, teddyBearAnimTileAttribsBase,
+        SPR_FLAG_AUTO_TILE_UPLOAD | SPR_FLAG_DISABLE_ANIMATION_LOOP);
     tileIndexNext += sprDefTeddyBearAnim.maxNumTile;
     
     // Draw first frame with only black palette to later do the fade in
@@ -43,7 +53,7 @@ void displayTeddyBearLogo ()
     //
 
     // Draw SGDK version number
-    const char* sgdk_version = "v2.0 (Sep 2024)";
+    const char* sgdk_version = "v2.0 (Nov 2024)";
     VDP_drawText(sgdk_version, screenWidth/8 - (strlen(sgdk_version) + 1), screenHeight/8 - 1);
 
     //
@@ -57,12 +67,7 @@ void displayTeddyBearLogo ()
     // Display loop for SGDK Teddy Bear animation
     //
 
-    // Set animation 0 (is the only one though)
-    SPR_setAnim(teddyBearAnimSpr, 0);
-
-    u8 frameCnt = 0;
-
-    while (1)
+    for (;;)
     {
         const u16 joyState = JOY_readJoypad(JOY_1);
 
@@ -70,30 +75,29 @@ void displayTeddyBearLogo ()
             break;
         }
 
-        // Is the last frame of the current animation? (The sprite has only one animation )
-        if (frameCnt == teddyBearAnimSpr->animation->numFrame) {
+        if (SPR_isAnimationDone(teddyBearAnimSpr)) {
             // Leave some time the last animation frame in the screen
-            waitMs_(500);
+            waitMs_(250);
             break;
         }
 
         SPR_update();
-        SYS_doVBlankProcess();
 
-        // Reaching 1 means the waiting time for current animation frame is done
-        if (teddyBearAnimSpr->timer == 1)
-            ++frameCnt;
+        SYS_doVBlankProcess();
     }
 
     // Fade out all graphics to Black
     PAL_fadeOutAll(30, FALSE);
-
-    SPR_end();
-
     SYS_doVBlankProcess();
 
-    // restore SGDK's default palete for text
-    VDP_setTextPalette(PAL0);
-    PAL_setPalette(PAL0, palette_grey, DMA);
+    SPR_end();
+    SYS_doVBlankProcess();
+
+    // restore planes
     VDP_clearPlane(BG_A, TRUE);
+    // restore SGDK's default palettes
+    PAL_setPalette(PAL0, palette_grey, CPU);
+    PAL_setPalette(PAL1, palette_red, CPU);
+    PAL_setPalette(PAL2, palette_green, CPU);
+    PAL_setPalette(PAL3, palette_blue, CPU);
 }
