@@ -25,6 +25,7 @@
 static u16 tileIndexNext = TILE_USER_INDEX;
 
 static s16* vScrollBuffer_ptr;
+static s16* vScrollTileBuffer_ptr;
 
 // *****************************************************************************
 //
@@ -34,10 +35,8 @@ static s16* vScrollBuffer_ptr;
 
 static void fillVerticalScrollTile (VDPPlane plan, u16 tile, s16 value, u16 len, TransferMethod tm)
 {
-    s16 buffer[32];
-    memsetU16((u16*)buffer, (u16)value, len & 0x1F);
-
-    VDP_setVerticalScrollTile(plan, tile, buffer, len, tm);
+    memsetU16((u16*)vScrollTileBuffer_ptr, (u16)value, len & 0x1F);
+    VDP_setVerticalScrollTile(plan, tile, vScrollTileBuffer_ptr, len, tm);
 }
 
 // -----------------------------------------------------------------------------
@@ -207,6 +206,7 @@ void displaySegaLogo ()
     u16* paletteBuffer = (u16*) MEM_alloc(4*16 * sizeof(u16));
     s16* vScrollBuffer = (s16*) MEM_alloc(32*16 * sizeof(s16));
     vScrollBuffer_ptr = vScrollBuffer;
+    vScrollTileBuffer_ptr = (s16*) MEM_alloc(32 * sizeof(s16));
 
     // Setup VDP
     VDP_setPlaneSize(64, 32, TRUE);
@@ -317,20 +317,21 @@ void displaySegaLogo ()
     PAL_fadeOutAll(16, FALSE);
     SYS_doVBlankProcess();
 
-    MEM_free(colorsLogoGradient);
-    MEM_free(paletteBuffer);
-    MEM_free(vScrollBuffer);
-
     // restore planes and settings
     VDP_clearPlane(BG_A, TRUE);
     VDP_clearPlane(BG_B, TRUE);
     VDP_setScrollingMode(HSCROLL_PLANE, VSCROLL_PLANE);
-    VDP_setHorizontalScroll(BG_A, 0);
-    VDP_setHorizontalScroll(BG_B, 0);
+    fillVerticalScrollTile(BG_A, 7, 0, 6, DMA); // restore VScroll Tile values
+    fillVerticalScrollTile(BG_B, 7, 0, 6, DMA); // restore VScroll Tile values
 
     // restore SGDK's default palettes
-    PAL_setPalette(PAL0, palette_grey, CPU);
-    PAL_setPalette(PAL1, palette_red, CPU);
-    PAL_setPalette(PAL2, palette_green, CPU);
-    PAL_setPalette(PAL3, palette_blue, CPU);
+    PAL_setPalette(PAL0, palette_grey, DMA);
+    PAL_setPalette(PAL1, palette_red, DMA);
+    PAL_setPalette(PAL2, palette_green, DMA);
+    PAL_setPalette(PAL3, palette_blue, DMA);
+
+    MEM_free(colorsLogoGradient);
+    MEM_free(paletteBuffer);
+    MEM_free(vScrollBuffer);
+    MEM_free(vScrollTileBuffer_ptr);
 }

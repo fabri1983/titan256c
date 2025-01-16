@@ -17,8 +17,10 @@
 #define TITAN_TEXT_GRADIENT_MAX_COLORS 42
 #define TITAN_TEXT_GRADIENT_ELEMS 16
 
+#define TITAN_256C_FADE_TO_BLACK_STRATEGY_U32 TRUE
 #define TITAN_256C_FADE_TO_BLACK_STRATEGY 2 // 0, 1, 2. From slowest to fastest (in cpu usage)
-#define TITAN_TEXT_GRADIENT_FADE_TO_BLACK_STRATEGY 1 // 0, 1, 2. From slowest to fastest (in cpu usage)
+#define TITAN_TEXT_GRADIENT_FADE_TO_BLACK_STRATEGY_U32 TRUE
+#define TITAN_TEXT_GRADIENT_FADE_TO_BLACK_STRATEGY 2 // 0, 1, 2. From slowest to fastest (in cpu usage)
 
 #define TITAN_SPHERE_TEXT_ANIMATION TRUE // Enable or disable the sphere wrapping text animation
 #define TITAN_SPHERE_TEXT_COMPRESSED FALSE // If resource sprites are compressed then set this to TRUE

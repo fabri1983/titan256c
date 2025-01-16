@@ -1,33 +1,24 @@
 #ifndef _COMPATIBILITIES_H
 #define _COMPATIBILITIES_H
 
-/**
- *  \brief
- *      Declare function for the hint callback (generate a RTE to return from interrupt instead of RTS)
- */
 #ifdef __GNUC__
-#define HINTERRUPT_CALLBACK __attribute__ ((interrupt)) void
+#define HINTERRUPT_CALLBACK __attribute__((interrupt)) void
 #elif defined(_MSC_VER)
+// Declare function for the hint callback (generate a RTE to return from interrupt instead of RTS)
 #define HINTERRUPT_CALLBACK void
 #endif
 
-/**
- *  \brief
- *      To force method inlining (not sure that GCC does actually care of it)
- */
 #ifdef __GNUC__
-#define FORCE_INLINE inline __attribute__ ((always_inline))
+#define FORCE_INLINE inline __attribute__((always_inline))
 #elif defined(_MSC_VER)
+// To force method inlining (not sure that GCC does actually care of it)
 #define FORCE_INLINE inline __forceinline
 #endif
 
-/**
- *  \brief
- *      To force no inlining for this method
- */
 #ifdef __GNUC__
-#define NO_INLINE __attribute__ ((noinline))
+#define NO_INLINE __attribute__((noinline))
 #elif defined(_MSC_VER)
+// To force no inlining for this method
 #define NO_INLINE __declspec(noinline)
 #endif
 

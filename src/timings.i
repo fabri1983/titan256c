@@ -113,7 +113,7 @@
   ;// 15*152 + 12 + 7*20 = 2432 cycles
   .irp k,0,32,64,96,128,160,192,224,256,288,320,352,384,416,448
     movem.l (a2)+, d2-d7/a5-a6      ;// 8 registers
-    movem.l d2-d7/a5-a6, \k(a1)
+    movem.l d2-d7/a5-a6, \k(a1)     ;// NOTE: THIS IS LIKELY AN INVALID INSTRUCTION. ONLY -(a1) IS ALLOWED
   .endr
     adda    #480, a1
   .rept  7
@@ -129,7 +129,7 @@
   ;// 31*88 + 12 + 7*12 = 2824 cycles
   .irp k,0,16,32,48,64,80,96,112,128,144,160,176,192,208,224,240,256,272,288,304,320,336,352,368,384,400,416,432,448,464,480
     movem.w (a2)+, d2-d7/a5-a6      ;// 8 registers
-    movem.w d2-d7/a5-a6, \k(a1)
+    movem.w d2-d7/a5-a6, \k(a1)     ;// NOTE: THIS IS LIKELY AN INVALID INSTRUCTION. ONLY -(a1) IS ALLOWED
   .endr
     adda    #496, a1
   .rept  7

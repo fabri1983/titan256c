@@ -14,6 +14,8 @@
 #define NEED_FRAME_UPDATE                   0x0002
 #define NEED_TILES_UPLOAD                   0x0004
 
+#define STATE_ANIMATION_DONE                0x0010
+
 static void setVisibility(Sprite* sprite, u16 newVisibility)
 {
     // set new visibility
@@ -172,6 +174,9 @@ static u16 updateFrame(Sprite* sprite, u16 status)
 
     // set frame
     sprite->frame = frame;
+    // init timer for this frame *before* frame change callback so it can modify change it if needed.
+    if (SPR_getAutoAnimation(sprite))
+        sprite->timer = frame->timer;
 
     // fabri1983: we don't need it
     // frame change event handler defined ? --> call it
@@ -181,17 +186,7 @@ static u16 updateFrame(Sprite* sprite, u16 status)
         sprite->status = status;
         sprite->onFrameChange(sprite);
         status = sprite->status;
-
-        // init timer for this frame *after* callback call and only if auto animation is enabled and timer was not manually changed in callback
-        if (sprite->timer == 0)
-            sprite->timer = frame->timer;
-    }
-    else*/
-    {
-        // init timer for this frame *after* callback call to allow SPR_isAnimationDone(..) to correctly report TRUE when animation is done in the callbacnk
-        if (SPR_getAutoAnimation(sprite))
-            sprite->timer = frame->timer;
-    }
+    }*/
 
     // require tile data upload
     if (status & SPR_FLAG_AUTO_TILE_UPLOAD)
@@ -201,8 +196,8 @@ static u16 updateFrame(Sprite* sprite, u16 status)
     /*if (status & SPR_FLAG_AUTO_VISIBILITY)
         status |= NEED_VISIBILITY_UPDATE;*/
 
-    // frame update done
-    status &= ~NEED_FRAME_UPDATE;
+    // frame update done, also clear ANIMATION_DONE state
+    status &= ~(NEED_FRAME_UPDATE | STATE_ANIMATION_DONE);
 
     return status;
 }
