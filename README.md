@@ -15,15 +15,15 @@ For convenience testing you can directly try the last compiled rom [titan256c_ro
 
 **Strategies** **A** and **B**.  
 Strategy A is written in ASM 68k. Strategy B is written in C.  
-Interweaving writes beetwen:  
-- 2 u32 vars (4 colors from palette) and 1 u16 var (BG color for text ramp effect)  
-and
-- 4 u32 vars (8 colors from palette)
-by CPU to CRAM every scanline along the duration of 8 scanlines, sending a total 2 palettes (32 colors) and 4 bg colors (ramp effect).  
-This strategy has better ramp effect since the change in color happens every other scanline.
+Swapping writes beetwen:  
+- Two u32 values holding 4 colors from palette, and 1 u16 value as BG color for text ramp effect.  
+And
+- Four u32 values holding 8 colors from palette.
+The writes are made by CPU to CRAM every scanline along the duration of 8 scanlines, sending a total 2 palettes (32 colors) and 4 bg colors (text color ramp effect).  
+This strategies has better ramp effect since the change in color happens every other scanline.
 
 **Strategies** **C** and **D**.  
-DMA 32 colors (2 palettes) splitted in 3 chunks + 4 BG colors writes for the text color ramp effect.  
+DMA of 32 colors holding 2 palettes splitted in 3 chunks, plus 4 BG color writes (text color ramp effect).  
 Strategy C is written in ASM 68k. Strategy D is written in C.  
 All done inside the duration of 8 scanlines.
 
