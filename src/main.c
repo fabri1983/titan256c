@@ -1,14 +1,13 @@
 #include <genesis.h>
 #include "utils.h"
-#include "segaLogo.h"
 #include "teddyBearLogo.h"
 #include "titan256c.h"
-#include "titan_sphere_res.h"
 #include "hvInterrupts.h"
 #include "custom_font_res.h"
 #include "customFont_consts.h"
 #include "customFont.h"
 #include "spr_eng_override.h"
+#include "sphereTextAnimation.h"
 
 typedef enum {
     TRANSITION_SCREEN, FALL_AND_BOUNCE, STATIONARY, FADE_OUT
@@ -33,27 +32,27 @@ static u16 currTileIndex;
 
 static const char press_START_txt[] = "(press START to continue)";
 
-static const char mode0_strat[] = "STRATEGY 0";
+static const char mode0_strat[] = "STRATEGY A";
 static const char mode0_textA[] = "HInt in ASM";
 static const char mode0_textB[] = "Called every 8 scanlines";
 static const char mode0_textC[] = "Uses CPU to move colors into VDP CRAM";
 
-static const char mode1_strat[] = "STRATEGY 1";
+static const char mode1_strat[] = "STRATEGY B";
 static const char mode1_textA[] = "HInt in C";
 static const char mode1_textB[] = "Called every 8 scanlines";
 static const char mode1_textC[] = "Uses CPU to move colors into VDP CRAM";
 
-static const char mode2_strat[] = "STRATEGY 2";
+static const char mode2_strat[] = "STRATEGY C";
 static const char mode2_textA[] = "HInt in ASM";
 static const char mode2_textB[] = "Called every 8 scanlines";
 static const char mode2_textC[] = "Uses DMA to move colors into VDP CRAM";
 
-static const char mode3_strat[] = "STRATEGY 3";
+static const char mode3_strat[] = "STRATEGY D";
 static const char mode3_textA[] = "HInt in C";
 static const char mode3_textB[] = "Called every 8 scanlines";
 static const char mode3_textC[] = "Uses DMA to move colors into VDP CRAM";
 
-static const char mode4_strat[] = "STRATEGY 4";
+static const char mode4_strat[] = "STRATEGY E";
 static const char mode4_textA[] = "HInt in C";
 static const char mode4_textB[] = "Called only once";
 static const char mode4_textC[] = "Uses DMA to move colors into VDP CRAM";
@@ -241,96 +240,6 @@ static void updateBounceEffectOnJoyInput () {
     }
 }
 
-#if TITAN_SPHERE_TEXT_ANIMATION == TRUE
-static void toggleSphereTextAnimations (Sprite* titanSphereText_1_AnimSpr, Sprite* titanSphereText_2_AnimSpr) {
-    // We check directly against VISIBLE because sprites settings are only VISIBLE or HIDDEN since their creation
-    if (SPR_getVisibility(titanSphereText_1_AnimSpr) == VISIBLE) {
-        if (SPR_isAnimationDone(titanSphereText_1_AnimSpr)) {
-            SPR_setVisibility(titanSphereText_1_AnimSpr, HIDDEN);
-            SPR_setVisibility(titanSphereText_2_AnimSpr, VISIBLE);
-            SPR_setFrame(titanSphereText_2_AnimSpr, 0); // reset animation to first frame
-            //titanSphereText_2_AnimSpr->status &= ~0x0010; // set NOT STATE_ANIMATION_DONE from sprite_eng.c
-        }
-    }
-    else if (SPR_getVisibility(titanSphereText_2_AnimSpr) == VISIBLE) {
-        if (SPR_isAnimationDone(titanSphereText_2_AnimSpr)) {
-            SPR_setVisibility(titanSphereText_2_AnimSpr, HIDDEN);
-            SPR_setVisibility(titanSphereText_1_AnimSpr, VISIBLE);
-            SPR_setFrame(titanSphereText_1_AnimSpr, 0); // reset animation to first frame
-            //titanSphereText_1_AnimSpr->status &= ~0x0010; // set NOT STATE_ANIMATION_DONE from sprite_eng.c
-        }
-    }
-}
-
-static u8 spriteAnimManualEffectDelay = 0;
-#define SPRITE_ANIM_MANUAL_EFFECT_DELAY_FRAMES 1
-
-static s8 animOffset = 0; // 0: no direction by default
-
-static void updateSphereTextAnimFrameOnJoyInput (Sprite* titanSphereText_1_AnimSpr, Sprite* titanSphereText_2_AnimSpr) {
-    if (buttonBitsChange & BUTTON_RIGHT) {
-        if (buttonBitsState & BUTTON_RIGHT) {
-            animOffset = -1; // move the animation backwards
-        }
-        else {
-            if (animOffset < 0) // check if the other direction is not being used
-                animOffset = 0;
-            buttonBitsChange &= ~BUTTON_RIGHT; // released
-        }
-    }
-    if (buttonBitsChange & BUTTON_LEFT) {
-        if (buttonBitsState & BUTTON_LEFT) {
-            animOffset = 1; // move the animation fordwards
-        }
-        else {
-            if (animOffset > 0) // check if the other direction is not being used
-                animOffset = 0;
-            buttonBitsChange &= ~BUTTON_LEFT; // released
-        }
-    }
-
-    if (spriteAnimManualEffectDelay == 0 && animOffset != 0) {
-        // We check directly against VISIBLE because sprites settings are only VISIBLE or HIDDEN since their creation
-        if (SPR_getVisibility(titanSphereText_1_AnimSpr) == VISIBLE) {
-            s16 nextFrameInd = titanSphereText_1_AnimSpr->frameInd + animOffset;
-            // if we moved back all the animation then we switch them
-            if (nextFrameInd < 0) {
-                nextFrameInd = titanSphereText_1_AnimSpr->animation->numFrame - 1;
-                SPR_setVisibility(titanSphereText_1_AnimSpr, FALSE);
-                SPR_setVisibility(titanSphereText_2_AnimSpr, TRUE);
-            }
-            // if we exceeded last frame animation then we switch them
-            else if (nextFrameInd >= titanSphereText_1_AnimSpr->animation->numFrame) {
-                nextFrameInd = 0;
-                SPR_setVisibility(titanSphereText_1_AnimSpr, FALSE);
-                SPR_setVisibility(titanSphereText_2_AnimSpr, TRUE);
-            }
-            SPR_setFrame(titanSphereText_1_AnimSpr, nextFrameInd);
-        }
-        else if (SPR_getVisibility(titanSphereText_2_AnimSpr) == VISIBLE) {
-            s16 nextFrameInd = titanSphereText_2_AnimSpr->frameInd + animOffset;
-            // if we moved back all the animation then we switch them
-            if (nextFrameInd < 0) {
-                nextFrameInd = titanSphereText_2_AnimSpr->animation->numFrame - 1;
-                SPR_setVisibility(titanSphereText_2_AnimSpr, FALSE);
-                SPR_setVisibility(titanSphereText_1_AnimSpr, TRUE);
-            }
-            // if we exceeded last frame animation then we switch them
-            else if (nextFrameInd >= titanSphereText_2_AnimSpr->animation->numFrame) {
-                nextFrameInd = 0;
-                SPR_setVisibility(titanSphereText_2_AnimSpr, FALSE);
-                SPR_setVisibility(titanSphereText_1_AnimSpr, TRUE);
-            }
-            SPR_setFrame(titanSphereText_2_AnimSpr, nextFrameInd);
-        }
-        spriteAnimManualEffectDelay = SPRITE_ANIM_MANUAL_EFFECT_DELAY_FRAMES;
-    }
-
-    if (spriteAnimManualEffectDelay > 0)
-        --spriteAnimManualEffectDelay;
-}
-#endif
-
 static void titan256cDisplay () {
 
     PAL_setColors(0, palette_black, 64, DMA_QUEUE); // palette_black is an array of 64
@@ -348,25 +257,7 @@ static void titan256cDisplay () {
     currTileIndex += titanRGB.tileset->numTile;
     unpackPalettes();
 
-    setSphereTextColorsIntoTitanPalettes(sprDefTitanSphereText_1_Anim);
-
-    SPR_initEx(sprDefTitanSphereText_1_Anim.maxNumTile + sprDefTitanSphereText_2_Anim.maxNumTile); // 137 + 127 tiles
-
-    Sprite* titanSphereText_1_AnimSpr = SPR_addSpriteExSafe(&sprDefTitanSphereText_1_Anim, 
-        TITAN_SPHERE_TILEMAP_START_X_POS * 8, TITAN_SPHERE_TILEMAP_START_Y_POS * 8, 
-        TILE_ATTR_FULL(PAL0, 0, FALSE, FALSE, currTileIndex),
-        SPR_FLAG_AUTO_TILE_UPLOAD | SPR_FLAG_AUTO_VRAM_ALLOC);
-    // always visible or always hidden along the three effects of the scene
-    SPR_setVisibility(titanSphereText_1_AnimSpr, VISIBLE);
-    currTileIndex += sprDefTitanSphereText_1_Anim.maxNumTile;
-
-    Sprite* titanSphereText_2_AnimSpr = SPR_addSpriteExSafe(&sprDefTitanSphereText_2_Anim, 
-        TITAN_SPHERE_TILEMAP_START_X_POS * 8, TITAN_SPHERE_TILEMAP_START_Y_POS * 8, 
-        TILE_ATTR_FULL(PAL0, 0, FALSE, FALSE, currTileIndex),
-        SPR_FLAG_AUTO_TILE_UPLOAD | SPR_FLAG_AUTO_VRAM_ALLOC);
-    // always visible or always hidden along the three effects of the scene
-    SPR_setVisibility(titanSphereText_2_AnimSpr, HIDDEN);
-    currTileIndex += sprDefTitanSphereText_2_Anim.maxNumTile;
+    currTileIndex = setupSphereTextAnimations(currTileIndex);
 
     setHVCallbacks(titan256cHIntMode);
     VDP_setHInterrupt(TRUE);
@@ -439,9 +330,8 @@ static void titan256cDisplay () {
 
         #if TITAN_SPHERE_TEXT_ANIMATION
         if (titan256cHIntMode < (HINT_STRATEGY_TOTAL - 1)) {
-            SPR_setPosition(titanSphereText_1_AnimSpr, TITAN_SPHERE_TILEMAP_START_X_POS * 8, TITAN_SPHERE_TILEMAP_START_Y_POS * 8 - yPos);
-            SPR_setPosition(titanSphereText_2_AnimSpr, TITAN_SPHERE_TILEMAP_START_X_POS * 8, TITAN_SPHERE_TILEMAP_START_Y_POS * 8 - yPos);
-            toggleSphereTextAnimations(titanSphereText_1_AnimSpr, titanSphereText_2_AnimSpr);
+            sphereTextAnimationsPosition(TITAN_SPHERE_TILEMAP_START_X_POS * 8, TITAN_SPHERE_TILEMAP_START_Y_POS * 8 - yPos);
+            toggleSphereTextAnimations();
             //SPR_update();
             spr_eng_update();
         }
@@ -471,8 +361,8 @@ static void titan256cDisplay () {
 
         #if TITAN_SPHERE_TEXT_ANIMATION
         if (titan256cHIntMode < (HINT_STRATEGY_TOTAL - 1)) {
-            updateSphereTextAnimFrameOnJoyInput(titanSphereText_1_AnimSpr, titanSphereText_2_AnimSpr);
-            toggleSphereTextAnimations(titanSphereText_1_AnimSpr, titanSphereText_2_AnimSpr);
+            updateSphereTextAnimFrameOnJoyInput(&buttonBitsChange, &buttonBitsState);
+            toggleSphereTextAnimations();
             //SPR_update();
             spr_eng_update();
         }
@@ -485,7 +375,7 @@ static void titan256cDisplay () {
 
     u8 fadingStripCnt = 0;
     u8 prevFadingStrip = 0;
-    u8 fadingCycleCurrStrip = 0; // use to split the fading to black into N cycles, due to its lenghty execution
+    u8 fadingCycleCurrStrip = 0; // use to split the fading to black into FADE_OUT_COLOR_STEPS cycles, due to its lenghty execution
 
     // Fade to black effect loop
     while (currentGameStatus == FADE_OUT) {
@@ -511,7 +401,7 @@ static void titan256cDisplay () {
         // Load 1st and 2nd strip's palettes
         enqueue2Pals(0);
 
-        // apply fade to black from currFadingStrip up to FADE_OUT_STEPS previous strips
+        // apply fade to black from currFadingStrip up to FADE_OUT_COLOR_STEPS previous strips
         fadingStepToBlack_pals(currFadingStrip, fadingCycleCurrStrip);
         ++fadingCycleCurrStrip;
 
@@ -522,7 +412,7 @@ static void titan256cDisplay () {
 
         #if TITAN_SPHERE_TEXT_ANIMATION
         if (titan256cHIntMode < (HINT_STRATEGY_TOTAL - 1)) {
-            toggleSphereTextAnimations(titanSphereText_1_AnimSpr, titanSphereText_2_AnimSpr);
+            toggleSphereTextAnimations();
             //SPR_update();
             spr_eng_update();
         }
@@ -576,8 +466,6 @@ int main (bool hardReset) {
 		SYS_hardReset();
 	}
 
-    // displaySegaLogo();
-    // waitMs_(200);
     displayTeddyBearLogo();
     waitMs_(200);
 

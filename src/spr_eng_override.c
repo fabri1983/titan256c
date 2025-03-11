@@ -24,11 +24,21 @@ static void setVisibility(Sprite* sprite, u16 newVisibility)
 
 static u16 updateVisibility(Sprite* sprite, u16 status)
 {
+    // fabri1983: sprites are always visible, they are unloaded when not used.
+    // set the new computed visibility
+    setVisibility(sprite, VISIBILITY_ON);
+    // visibility update done !
+    return status & ~NEED_VISIBILITY_UPDATE;
+
+
     u16 visibility;
     const SpriteDefinition* sprDef = sprite->definition;
 
-    const u16 sw = screenWidth;
-    const u16 sh = screenHeight;
+    // we use 'unsigned' on purpose here to get merged <0 test
+    // fabri1983: we know the screenWidth at compilation time
+    const u16 sw = 320; // screenWidth;
+    // fabri1983: we know the screenHeight at compilation time
+    const u16 sh = 224; // screenHeight;
     const u16 w = sprDef->w - 1;
     const u16 h = sprDef->h - 1;
     const u16 x = sprite->x - 0x80;
@@ -38,21 +48,21 @@ static u16 updateVisibility(Sprite* sprite, u16 status)
     // fast visibility computation ?
     /*if (status & SPR_FLAG_FAST_AUTO_VISIBILITY)
     {
-        // compute global visibility for sprite (use unsigned for merged <0 test)
-        if (((u16)(x + w) < (u16)(sw + w)) && ((u16)(y + h) < (u16)(sh + h)))
+        // compute global visibility for sprite ('unsigned' allow merged <0 test)
+        if (((x + w) < (sw + w)) && ((y + h) < (sh + h)))
             visibility = VISIBILITY_ON;
         else
             visibility = VISIBILITY_OFF;
     }
     else*/
     {
-        // sprite is fully visible ? --> set all sprite visible (use unsigned for merged <0 test)
-        if ((x < (u16)(sw - w)) && (y < (u16)(sh - h)))
+        // sprite is fully visible ? --> set all sprite visible ('unsigned' allow merged <0 test)
+        if ((x < (sw - w)) && (y < (sh - h)))
         {
             visibility = VISIBILITY_ON;
         }
-        // sprite is fully hidden ? --> set all sprite to hidden (use unsigned for merged <0 test)
-        else if (((u16)(x + w) >= (u16)(sw + w)) || ((u16)(y + h) >= (u16)(sh + h)))
+        // sprite is fully hidden ? --> set all sprite to hidden ('unsigned' allow merged <0 test)
+        else if (((x + w) >= (sw + w)) || ((y + h) >= (sh + h)))
         {
             visibility = VISIBILITY_OFF;
         }
@@ -71,7 +81,11 @@ static u16 updateVisibility(Sprite* sprite, u16 status)
                 visibility = ((bx < mx) && (by < my))?0x8000:0;
             else
             {
+                #if SPR_ENG_ALLOW_MULTI_PALS
+                FrameVDPSpriteWithPal* frameSprite = (FrameVDPSpriteWithPal*)frame->frameVDPSprites;
+                #else
                 FrameVDPSprite* frameSprite = frame->frameVDPSprites;
+                #endif
                 visibility = 0;
 
                 switch(sprite->attribut & (TILE_ATTR_HFLIP_MASK | TILE_ATTR_VFLIP_MASK))
@@ -82,8 +96,8 @@ static u16 updateVisibility(Sprite* sprite, u16 status)
                             // need to be done first
                             visibility <<= 1;
 
-                            // compute visibility (use unsigned for merged <0 test)
-                            if (((u16)(frameSprite->offsetX + bx) < mx) && ((u16)(frameSprite->offsetY + by) < my))
+                            // compute visibility ('unsigned' allow merged <0 test)
+                            if (((frameSprite->offsetX + bx) < mx) && ((frameSprite->offsetY + by) < my))
                                 visibility |= 1;
 
                             // next
@@ -97,8 +111,8 @@ static u16 updateVisibility(Sprite* sprite, u16 status)
                             // need to be done first
                             visibility <<= 1;
 
-                            // compute visibility (use unsigned for merged <0 test)
-                            if (((u16)(frameSprite->offsetXFlip + bx) < mx) && ((u16)(frameSprite->offsetY + by) < my))
+                            // compute visibility ('unsigned' allow merged <0 test)
+                            if (((frameSprite->offsetXFlip + bx) < mx) && ((frameSprite->offsetY + by) < my))
                                 visibility |= 1;
 
                             // next
@@ -112,8 +126,8 @@ static u16 updateVisibility(Sprite* sprite, u16 status)
                             // need to be done first
                             visibility <<= 1;
 
-                            // compute visibility (use unsigned for merged <0 test)
-                            if (((u16)(frameSprite->offsetX + bx) < mx) && ((u16)(frameSprite->offsetYFlip + by) < my))
+                            // compute visibility ('unsigned' allow merged <0 test)
+                            if (((frameSprite->offsetX + bx) < mx) && ((frameSprite->offsetYFlip + by) < my))
                                 visibility |= 1;
 
                             // next
@@ -127,8 +141,8 @@ static u16 updateVisibility(Sprite* sprite, u16 status)
                             // need to be done first
                             visibility <<= 1;
 
-                            // compute visibility (use unsigned for merged <0 test)
-                            if (((u16)(frameSprite->offsetXFlip + bx) < mx) && ((u16)(frameSprite->offsetYFlip + by) < my))
+                            // compute visibility ('unsigned' allow merged <0 test)
+                            if (((frameSprite->offsetXFlip + bx) < mx) && ((frameSprite->offsetYFlip + by) < my))
                                 visibility |= 1;
 
                             // next

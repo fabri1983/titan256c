@@ -15,20 +15,11 @@
 #include "utils.h"
 #include "logo_res.h"
 
+#define STR_VERSION "v2.09 (Mar 2025)"
+#define STR_VERSION_LEN 17 // String version length including \0
+
 void displayTeddyBearLogo ()
 {
-    //
-    // Initalization
-    //
-
-    // Setup VDP
-    VDP_setPlaneSize(64, 32, TRUE);
-    PAL_setPalette(PAL0, palette_black, CPU);
-    PAL_setColor(15, 0xCCC); // SGDK's font color
-
-    // Fill top plane with solid black tiles (tile index 1 seems to be a SGDK system tile)
-    VDP_fillTileMapRect(BG_A, TILE_ATTR_FULL(PAL0, 0, FALSE, FALSE, 1), 0, 0, screenWidth/8, screenHeight/8);
-
     //
     // Setup SGDK Teddy Bear animation
     //
@@ -49,16 +40,12 @@ void displayTeddyBearLogo ()
     SPR_update();
 
     //
-    // Setup SGDK version text
-    //
-
-    // Draw SGDK version number
-    const char* sgdk_version = "v2.0 (Dec 2024)";
-    VDP_drawText(sgdk_version, screenWidth/8 - (strlen(sgdk_version) + 1), screenHeight/8 - 1);
-
-    //
     // Fade In sprite and text
     //
+
+    // Draw SGDK version string
+    VDP_setTextPalette(PAL3);
+    VDP_drawText((const char*) STR_VERSION, screenWidth/8 - STR_VERSION_LEN, screenHeight/8 - 1);
 
     // Fade in to Sprite palette (previously located at PAL3)
     PAL_fadeIn(PAL3*16, PAL3*16 + 15, sprDefTeddyBearAnim.palette->data, 30, FALSE);
@@ -88,14 +75,13 @@ void displayTeddyBearLogo ()
 
     // Fade out all graphics to Black
     PAL_fadeOutAll(30, FALSE);
-    SYS_doVBlankProcess();
 
     SPR_end();
     SYS_doVBlankProcess();
 
     // restore planes
     VDP_clearPlane(BG_A, TRUE);
-    // restore SGDK's default palete for text
+    // Restore SGDK's font palette (VDP_resetScreen() doesn't restore it accordingly)
     VDP_setTextPalette(PAL0);
     // restore SGDK's default palettes
     PAL_setPalette(PAL0, palette_grey, DMA);
