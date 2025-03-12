@@ -7,6 +7,8 @@
 
 u16 setupSphereTextAnimations (u16 currTileIndex);
 
+void sphereTextAnimationFreeFrameIndexes ();
+
 void sphereTextAnimationsPosition (u16 posX, u16 posY);
 
 void toggleSphereTextAnimations ();

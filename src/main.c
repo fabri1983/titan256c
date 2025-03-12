@@ -122,17 +122,17 @@ static void showTransitionScreen () {
 
     SYS_disableInts();
 
-    SYS_setVBlankCallback(vertIntOnDrawTextCallback);
-    VDP_setHIntCounter(screenHeight/2 + (4*8) - 1); // scanline location for startText
-    SYS_setHIntCallback(horizIntOnDrawTextCallback);
-    VDP_setHInterrupt(TRUE);
+        SYS_setVBlankCallback(vertIntOnDrawTextCallback);
+        VDP_setHIntCounter(screenHeight/2 + (4*8) - 1); // scanline location for startText
+        SYS_setHIntCallback(horizIntOnDrawTextCallback);
+        VDP_setHInterrupt(TRUE);
+
+        JOY_setEventHandler(joyHandler);
+        joyStatusReset();
 
     SYS_enableInts();
 
     VDP_setEnable(TRUE);
-
-    JOY_setEventHandler(joyHandler);
-    joyStatusReset();
 
     u16 screenWidthTiles = screenWidth/8;
     u16 screenHeightTiles = screenHeight/8;
@@ -186,19 +186,19 @@ static void showTransitionScreen () {
         SYS_doVBlankProcess();
     }
 
+    VDP_clearPlane(VDP_getTextPlane(), TRUE);
+
     SYS_disableInts();
 
-    SYS_setVBlankCallback(NULL);
-    VDP_setHInterrupt(FALSE);
-    SYS_setHIntCallback(NULL);
+        SYS_setVBlankCallback(NULL);
+        VDP_setHInterrupt(FALSE);
+        SYS_setHIntCallback(NULL);
 
-    JOY_setEventHandler(NULL);
+        JOY_setEventHandler(NULL);
 
     SYS_enableInts();
 
     SYS_doVBlankProcess();
-
-    VDP_clearPlane(VDP_getTextPlane(), TRUE);
 }
 
 static s16 yPosOffset = 0; // 0: no direction by default
@@ -251,16 +251,21 @@ static void titan256cDisplay () {
 
     SYS_disableInts();
 
-    currTileIndex = TILE_USER_INDEX;
-    loadTitan256cTileSet(currTileIndex);
-    loadTitan256cTileMap(BG_B, currTileIndex);
-    currTileIndex += titanRGB.tileset->numTile;
-    unpackPalettes();
+        currTileIndex = TILE_USER_INDEX;
+        loadTitan256cTileSet(currTileIndex);
+        loadTitan256cTileMap(BG_B, currTileIndex);
+        currTileIndex += titanRGB.tileset->numTile;
+        unpackPalettes();
 
-    currTileIndex = setupSphereTextAnimations(currTileIndex);
+        #if TITAN_SPHERE_TEXT_ANIMATION
+        currTileIndex = setupSphereTextAnimations(currTileIndex);
+        #endif
 
-    setHVCallbacks(titan256cHIntMode);
-    VDP_setHInterrupt(TRUE);
+        setHVCallbacks(titan256cHIntMode);
+        VDP_setHInterrupt(TRUE);
+
+        JOY_setEventHandler(joyHandler);
+        joyStatusReset();
 
     SYS_enableInts();
 
@@ -268,9 +273,6 @@ static void titan256cDisplay () {
 
     // disable the fading effect on titan text
     setCurrentFadingStripForText(0);
-
-    JOY_setEventHandler(joyHandler);
-    joyStatusReset();
 
     yPos = TITAN_256C_HEIGHT;
     isManualPosY = FALSE;
@@ -332,8 +334,7 @@ static void titan256cDisplay () {
         if (titan256cHIntMode < (HINT_STRATEGY_TOTAL - 1)) {
             sphereTextAnimationsPosition(TITAN_SPHERE_TILEMAP_START_X_POS * 8, TITAN_SPHERE_TILEMAP_START_Y_POS * 8 - yPos);
             toggleSphereTextAnimations();
-            //SPR_update();
-            spr_eng_update();
+            spr_eng_update(); //SPR_update();
         }
         #endif
 
@@ -363,8 +364,7 @@ static void titan256cDisplay () {
         if (titan256cHIntMode < (HINT_STRATEGY_TOTAL - 1)) {
             updateSphereTextAnimFrameOnJoyInput(&buttonBitsChange, &buttonBitsState);
             toggleSphereTextAnimations();
-            //SPR_update();
-            spr_eng_update();
+            spr_eng_update(); //SPR_update();
         }
         #endif
 
@@ -413,8 +413,7 @@ static void titan256cDisplay () {
         #if TITAN_SPHERE_TEXT_ANIMATION
         if (titan256cHIntMode < (HINT_STRATEGY_TOTAL - 1)) {
             toggleSphereTextAnimations();
-            //SPR_update();
-            spr_eng_update();
+            spr_eng_update(); //SPR_update();
         }
         #endif
 
@@ -423,11 +422,11 @@ static void titan256cDisplay () {
 
     SYS_disableInts();
 
-    SYS_setVBlankCallback(NULL);
-    VDP_setHInterrupt(FALSE);
-    SYS_setHIntCallback(NULL);
+        SYS_setVBlankCallback(NULL);
+        VDP_setHInterrupt(FALSE);
+        SYS_setHIntCallback(NULL);
 
-    JOY_setEventHandler(NULL);
+        JOY_setEventHandler(NULL);
 
     SYS_enableInts();
 
@@ -438,6 +437,9 @@ static void titan256cDisplay () {
 
     SYS_doVBlankProcess();
 
+    #if TITAN_SPHERE_TEXT_ANIMATION
+    sphereTextAnimationFreeFrameIndexes();
+    #endif
     freePalettes();
     currTileIndex = TILE_USER_INDEX;
 }

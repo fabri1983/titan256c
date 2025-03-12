@@ -33,6 +33,11 @@ u16 setupSphereTextAnimations (u16 currTileIndex)
     return currTileIndex;
 }
 
+void sphereTextAnimationFreeFrameIndexes ()
+{
+
+}
+
 void sphereTextAnimationsPosition (u16 posX, u16 posY)
 {
     SPR_setPosition(titanSphereText_1_AnimSpr, posX, posY);
