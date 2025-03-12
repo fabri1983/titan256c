@@ -3,7 +3,6 @@
 
 #include <types.h>
 #include <vdp_bg.h>
-#include <sprite_eng.h>
 #include "titan256c_res.h"
 #include "compatibilities.h"
 #include "titan256c_consts.h"
@@ -21,7 +20,7 @@ u16* getGradientColorsBuffer ();
 void setCurrentFadingStripForText (u8 currFadingStrip_);
 void updateTextGradientColors ();
 
-void setSphereTextColorsIntoTitanPalettes (const SpriteDefinition sprDef);
+void setSphereTextColorsIntoTitanPalettes (const Palette* pal);
 void updateSphereTextColor ();
 
 #define FADE_OUT_COLOR_STEPS 8 // Max allowed is 8. Changing this value will affect assumptions made in fadingStepToBlack_pals() method for fading color calculations

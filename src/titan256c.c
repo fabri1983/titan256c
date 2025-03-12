@@ -1,6 +1,5 @@
 #include <types.h>
 #include <vdp_bg.h>
-#include <sprite_eng.h>
 #include <tools.h>
 #include <mapper.h>
 #include <memory.h>
@@ -144,7 +143,7 @@ void setCurrentFadingStripForText (u8 currFadingStrip_) {
     currFadingStrip = currFadingStrip_;
 }
 
-void NO_INLINE setSphereTextColorsIntoTitanPalettes (const SpriteDefinition sprDef) {
+void NO_INLINE setSphereTextColorsIntoTitanPalettes (const Palette* pal) {
     // The animation sprite expect color to be in PAL0, and we only use PAL0 at even strips
     u8 startingStrip = TITAN_SPHERE_TILEMAP_START_Y_POS - (TITAN_SPHERE_TILEMAP_START_Y_POS % 2);
     // Every other strip inside range [5,16] contains the color used by the sprite text surrounding the sphere.
@@ -152,7 +151,7 @@ void NO_INLINE setSphereTextColorsIntoTitanPalettes (const SpriteDefinition sprD
     u16* palsPtr = palettesData + (startingStrip * TITAN_256C_COLORS_PER_STRIP);
 
     //u16 colorAt15 = sprDef.palette->data[14];
-    u16 colorAt16 = sprDef.palette->data[15];
+    u16 colorAt16 = pal->data[15];
 
     for (u8 i=(TITAN_SPHERE_TILEMAP_HEIGHT+1)/2 + (TITAN_SPHERE_TILEMAP_START_Y_POS % 2); i--; ) {
         //*(palsPtr + 14) = colorAt15;

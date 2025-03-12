@@ -10,7 +10,7 @@ static Sprite* titanSphereText_2_AnimSpr;
 
 u16 setupSphereTextAnimations (u16 currTileIndex)
 {
-    setSphereTextColorsIntoTitanPalettes(sprDefTitanSphereText_1_Anim);
+    setSphereTextColorsIntoTitanPalettes(sprDefTitanSphereText_1_Anim.palette);
 
     SPR_initEx(sprDefTitanSphereText_1_Anim.maxNumTile + sprDefTitanSphereText_2_Anim.maxNumTile); // 137 + 127 tiles
 
