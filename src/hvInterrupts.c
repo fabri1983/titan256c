@@ -269,12 +269,16 @@ void vertIntOnTitan256cCallback_HIntEveryN () {
         SYS_setHIntCallback(horizIntScanlineStarterForBounceEffectCallback);
         vcounterManual = 0;
     }
+
+    updateTextGradientColors();
 }
 
 void vertIntOnTitan256cCallback_HIntOneTime () {
     varsSetup();
     vcounterManual = 0;
     VDP_setHIntCounter(0); // Every scanline
+
+    updateTextGradientColors();
 }
 
 HINTERRUPT_CALLBACK horizIntOnTitan256cCallback_CPU_EveryN_asm () {

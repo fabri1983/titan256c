@@ -143,7 +143,7 @@ void setCurrentFadingStripForText (u8 currFadingStrip_) {
     currFadingStrip = currFadingStrip_;
 }
 
-void NO_INLINE setSphereTextColorsIntoTitanPalettes (const Palette* pal) {
+void setSphereTextColorsIntoTitanPalettes (const Palette* pal) {
     // The animation sprite expect color to be in PAL0, and we only use PAL0 at even strips
     u8 startingStrip = TITAN_SPHERE_TILEMAP_START_Y_POS - (TITAN_SPHERE_TILEMAP_START_Y_POS % 2);
     // Every other strip inside range [5,16] contains the color used by the sprite text surrounding the sphere.
@@ -160,7 +160,7 @@ void NO_INLINE setSphereTextColorsIntoTitanPalettes (const Palette* pal) {
     }
 }
 
-void NO_INLINE updateSphereTextColor () {
+void updateSphereTextColor () {
     // The animation sprite expect color to be in PAL0, and we only use PAL0 at even strips
     u8 startingStrip = TITAN_SPHERE_TILEMAP_START_Y_POS - (TITAN_SPHERE_TILEMAP_START_Y_POS % 2);
     // Every other strip inside range [5,16] contains the color used by the sprite text surrounding the sphere.
@@ -173,7 +173,8 @@ void NO_INLINE updateSphereTextColor () {
         fadeAmount = 0x222 * factor;
     }
 
-    for (u8 i=(TITAN_SPHERE_TILEMAP_HEIGHT+1)/2 + (TITAN_SPHERE_TILEMAP_START_Y_POS % 2); i--; ) {
+    #pragma GCC unroll 16 // Always set the max number since it does not accept defines
+    for (u8 i=(TITAN_SPHERE_TILEMAP_HEIGHT+1)/2 + (TITAN_SPHERE_TILEMAP_START_Y_POS % 2) + 1; i--; ) {
         u16 d = gradColorsBuffer[0] - min(0xEEE, fadeAmount);
         fadeAmount = max(0, fadeAmount - 0x222); // diminish the fade out weight
 
@@ -189,7 +190,7 @@ void NO_INLINE updateSphereTextColor () {
 
 static u8 titanCharsCycleCnt = 0;
 
-void NO_INLINE updateTextGradientColors () {
+void updateTextGradientColors () {
     // Strips [21,25] (0 based) renders the letters using transparent color, and we want to use a scrolling ramp over time. So 5 strips.
     #if TITAN_TEXT_GRADIENT_FADE_TO_BLACK_STRATEGY_U32
     s32 fadeTextAmount = 0;
@@ -213,9 +214,12 @@ void NO_INLINE updateTextGradientColors () {
     }
 
     #if TITAN_TEXT_GRADIENT_FADE_TO_BLACK_STRATEGY_U32
+
     // Traverse titanCharsGradientColors from colorIdx position and copy the colors into gradColorsBuffer
     u32* palsPtr = (u32*)(titanCharsGradientColors + colorIdx);
     u32* rampBufPtr = (u32*)gradColorsBuffer;
+
+    #pragma GCC unroll 16 // Always set the max number since it does not accept defines
     for (u8 i=TITAN_TEXT_GRADIENT_ELEMS/2; i--;) {
         u32 d = *palsPtr++;
         d -= min(0xEEE0EEE, fadeTextAmount); // fadeTextAmount is 0 when is not in fading to black animation
@@ -244,10 +248,14 @@ void NO_INLINE updateTextGradientColors () {
         
         *rampBufPtr++ = d;
     }
+
     #else
+
     // Traverse titanCharsGradientColors from colorIdx position and copy the colors into gradColorsBuffer
     u16* palsPtr = (u16*)titanCharsGradientColors + colorIdx;
     u16* rampBufPtr = gradColorsBuffer;
+
+    #pragma GCC unroll 16 // Always set the max number since it does not accept defines
     for (u8 i=TITAN_TEXT_GRADIENT_ELEMS; i--;) {
         u16 d = *palsPtr++;
         d -= min(0xEEE, fadeTextAmount); // fadeTextAmount is 0 when is not in fading to black animation
@@ -279,7 +287,7 @@ void NO_INLINE updateTextGradientColors () {
     #endif
 }
 
-void NO_INLINE fadingStepToBlack_pals (u8 currFadingStrip, u8 cycle) {
+void fadingStepToBlack_pals (u8 currFadingStrip, u8 cycle) {
     // depending on the split cycle value we calculate the starting strip 
     currFadingStrip = max(0, currFadingStrip - cycle * (FADE_OUT_COLOR_STEPS / FADE_OUT_STRIPS_SPLIT_CYCLES));
     // starting strip is above the current strip
@@ -304,6 +312,8 @@ void NO_INLINE fadingStepToBlack_pals (u8 currFadingStrip, u8 cycle) {
         // or 0x2220222 (0b00000010001000100000001000100010) in 32 bits (2 colors)
 
         #if TITAN_256C_FADE_TO_BLACK_STRATEGY_U32
+
+        #pragma GCC unroll 32 // Always set the max number since it does not accept defines
         for (u8 i=TITAN_256C_COLORS_PER_STRIP/2; i--;) {
             // NOTE: here we decrement 2 colors at a time, hence the u32 type
             u32 d = *palsPtr - 0b00000010001000100000001000100010; // decrement 1 unit in every component
@@ -329,7 +339,10 @@ void NO_INLINE fadingStepToBlack_pals (u8 currFadingStrip, u8 cycle) {
 
             *palsPtr++ = d;
         }
+
         #else
+
+        #pragma GCC unroll 32 // Always set the max number since it does not accept defines
         for (u8 i=TITAN_256C_COLORS_PER_STRIP; i--;) {
             // NOTE: here we decrement 1 color at a time, hence the u16 type
             u16 d = *palsPtr - 0b0000001000100010; // decrement 1 unit in every component
@@ -359,7 +372,7 @@ void NO_INLINE fadingStepToBlack_pals (u8 currFadingStrip, u8 cycle) {
     }
 }
 
-// void NO_INLINE fadingStepToBlack_pals (u16 currFadingStrip, u16 cycle, u16 titan256cHIntMode) {
+// void fadingStepToBlack_pals (u16 currFadingStrip, u16 cycle, u16 titan256cHIntMode) {
 //     for (s16 stripN=currFadingStrip; stripN >= max(currFadingStrip - FADE_OUT_STEPS, 0); --stripN) {
 //         // fade the palettes of stripN
 //         u16* palsPtr = palettesData + stripN * TITAN_256C_COLORS_PER_STRIP;

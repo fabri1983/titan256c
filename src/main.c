@@ -265,11 +265,16 @@ static void titan256cDisplay () {
         VDP_setHInterrupt(TRUE);
 
         JOY_setEventHandler(joyHandler);
-        joyStatusReset();
 
     SYS_enableInts();
 
     VDP_setEnable(TRUE);
+
+    //---------------------------------
+    // TITAN BOUNCING EFFECT
+    //---------------------------------
+
+    joyStatusReset();
 
     // disable the fading effect on titan text
     setCurrentFadingStripForText(0);
@@ -320,12 +325,13 @@ static void titan256cDisplay () {
         setYPosFalling(yPos);
         VDP_setVerticalScrollVSync(BG_B, yPos);
 
-        #if TITAN_SPHERE_TEXT_ANIMATION
-        // if (titan256cHIntMode < (HINT_STRATEGY_TOTAL - 1))
-        //     updateSphereTextColor();
+        #if TITAN_SPHERE_TEXT_ANIMATION && TITAN_SPHERE_TEXT_ANIMATION_CHANGE_COLOR
+        if (titan256cHIntMode < (HINT_STRATEGY_TOTAL - 1))
+            updateSphereTextColor();
         #endif
 
-        updateTextGradientColors();
+        // NOTE: this is called from VInt
+        //updateTextGradientColors();
 
         // Enqueue 2 strips palettes depending on the Y position (in strips) of the image
         enqueue2Pals(yPos / TITAN_256C_STRIP_HEIGHT);
@@ -341,16 +347,21 @@ static void titan256cDisplay () {
         SYS_doVBlankProcess();
     }
 
+    //---------------------------------
+    // TITAN DISPLAY LOOP
+    //---------------------------------
+
     joyStatusReset();
 
     // Titan display loop
     while (currentGameStatus == STATIONARY) {
-        #if TITAN_SPHERE_TEXT_ANIMATION
-        // if (titan256cHIntMode < (HINT_STRATEGY_TOTAL - 1))
-        //     updateSphereTextColor();
+        #if TITAN_SPHERE_TEXT_ANIMATION && TITAN_SPHERE_TEXT_ANIMATION_CHANGE_COLOR
+        if (titan256cHIntMode < (HINT_STRATEGY_TOTAL - 1))
+            updateSphereTextColor();
         #endif
 
-        updateTextGradientColors();
+        // NOTE: this is called from VInt
+        //updateTextGradientColors();
 
         // Load 1st and 2nd strip's palette
         enqueue2Pals(0);
@@ -370,6 +381,10 @@ static void titan256cDisplay () {
 
         SYS_doVBlankProcess();
     }
+
+    //---------------------------------
+    // TITAN FADING TO BLACK EFFECT
+    //---------------------------------
 
     joyStatusReset();
 
@@ -391,12 +406,13 @@ static void titan256cDisplay () {
         // Enable the fading effect on titan text calculated on VInt
         setCurrentFadingStripForText(currFadingStrip);
 
-        #if TITAN_SPHERE_TEXT_ANIMATION
-        // if (titan256cHIntMode < (HINT_STRATEGY_TOTAL - 1))
-        //     updateSphereTextColor();
+        #if TITAN_SPHERE_TEXT_ANIMATION && TITAN_SPHERE_TEXT_ANIMATION_CHANGE_COLOR
+        if (titan256cHIntMode < (HINT_STRATEGY_TOTAL - 1))
+            updateSphereTextColor();
         #endif
 
-        updateTextGradientColors();
+        // NOTE: this is called from VInt
+        //updateTextGradientColors();
 
         // Load 1st and 2nd strip's palettes
         enqueue2Pals(0);
