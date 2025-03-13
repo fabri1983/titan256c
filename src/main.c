@@ -258,7 +258,7 @@ static void titan256cDisplay () {
         unpackPalettes();
 
         #if TITAN_SPHERE_TEXT_ANIMATION
-        currTileIndex = setupSphereTextAnimations(currTileIndex);
+        setupSphereTextAnimations();
         #endif
 
         setHVCallbacks(titan256cHIntMode);
@@ -437,9 +437,6 @@ static void titan256cDisplay () {
 
     SYS_doVBlankProcess();
 
-    #if TITAN_SPHERE_TEXT_ANIMATION
-    sphereTextAnimationFreeFrameIndexes();
-    #endif
     freePalettes();
     currTileIndex = TILE_USER_INDEX;
 }

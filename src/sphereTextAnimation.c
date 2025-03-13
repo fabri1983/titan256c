@@ -1,5 +1,6 @@
 #include <types.h>
 #include <joy.h>
+#include <memory.h>
 #include "sphereTextAnimation.h"
 #include "titan256c_consts.h"
 #include "titan256c.h"
@@ -8,34 +9,25 @@
 static Sprite* titanSphereText_1_AnimSpr;
 static Sprite* titanSphereText_2_AnimSpr;
 
-u16 setupSphereTextAnimations (u16 currTileIndex)
+void setupSphereTextAnimations ()
 {
     setSphereTextColorsIntoTitanPalettes(sprDefTitanSphereText_1_Anim.palette);
 
-    SPR_initEx(sprDefTitanSphereText_1_Anim.maxNumTile + sprDefTitanSphereText_2_Anim.maxNumTile); // 137 + 127 tiles
+    SPR_initEx(sprDefTitanSphereText_1_Anim.maxNumTile + sprDefTitanSphereText_2_Anim.maxNumTile); // Eg: 117 + 124 tiles
+
+    u16 flags = SPR_FLAG_AUTO_TILE_UPLOAD | SPR_FLAG_AUTO_VRAM_ALLOC;
 
     titanSphereText_1_AnimSpr = SPR_addSpriteExSafe(&sprDefTitanSphereText_1_Anim, 
         TITAN_SPHERE_TILEMAP_START_X_POS * 8, TITAN_SPHERE_TILEMAP_START_Y_POS * 8, 
-        TILE_ATTR_FULL(PAL0, 0, FALSE, FALSE, currTileIndex),
-        SPR_FLAG_AUTO_TILE_UPLOAD | SPR_FLAG_AUTO_VRAM_ALLOC);
-    // always visible or always hidden along the three effects of the scene
+        TILE_ATTR(PAL0, 0, FALSE, FALSE), flags);
+    // Starts visible
     SPR_setVisibility(titanSphereText_1_AnimSpr, VISIBLE);
-    currTileIndex += sprDefTitanSphereText_1_Anim.maxNumTile;
 
     titanSphereText_2_AnimSpr = SPR_addSpriteExSafe(&sprDefTitanSphereText_2_Anim, 
         TITAN_SPHERE_TILEMAP_START_X_POS * 8, TITAN_SPHERE_TILEMAP_START_Y_POS * 8, 
-        TILE_ATTR_FULL(PAL0, 0, FALSE, FALSE, currTileIndex),
-        SPR_FLAG_AUTO_TILE_UPLOAD | SPR_FLAG_AUTO_VRAM_ALLOC);
-    // always visible or always hidden along the three effects of the scene
+        TILE_ATTR(PAL0, 0, FALSE, FALSE), flags);
+    // Starts hidden
     SPR_setVisibility(titanSphereText_2_AnimSpr, HIDDEN);
-    currTileIndex += sprDefTitanSphereText_2_Anim.maxNumTile;
-
-    return currTileIndex;
-}
-
-void sphereTextAnimationFreeFrameIndexes ()
-{
-
 }
 
 void sphereTextAnimationsPosition (u16 posX, u16 posY)

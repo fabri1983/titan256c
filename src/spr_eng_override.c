@@ -228,20 +228,15 @@ static FORCE_INLINE void loadTiles (Sprite* sprite)
         // TODO: separate tileset per VDP sprite and only unpack/upload visible VDP sprite (using visibility) to VRAM
 
         // need unpacking ?
-        #if TITAN_SPHERE_TEXT_COMPRESSED
+        #if TITAN_SPHERE_TEXT_ANIMATION_COMPRESSED
         u16 compression = tileset->compression;
         if (compression != COMPRESSION_NONE)
         {
-            // get buffer
-            u8* buf = DMA_allocateTemp(lenInWord);
+            // get buffer and send to DMA queue
+            u8* buf = DMA_allocateAndQueueDma(DMA_VRAM, (sprite->attribut & TILE_INDEX_MASK) * 32, lenInWord, 2);
 
             // unpack in temp buffer obtained from DMA queue
-            //if (buf)
-            {
-                unpackSelector(compression, (u8*) FAR_SAFE(tileset->tiles, lenInWord * 2), buf);
-                DMA_queueDmaFast(DMA_VRAM, buf, (sprite->attribut & TILE_INDEX_MASK) * 32, lenInWord, 2);
-                DMA_releaseTemp(lenInWord);
-            }
+            if (buf) unpack(compression, (u8*) FAR_SAFE(tileset->tiles, lenInWord * 2), buf);
         }
         else
         #endif

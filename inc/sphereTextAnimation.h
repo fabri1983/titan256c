@@ -5,9 +5,7 @@
 
 #define SPRITE_ANIM_MANUAL_EFFECT_DELAY_FRAMES 1
 
-u16 setupSphereTextAnimations (u16 currTileIndex);
-
-void sphereTextAnimationFreeFrameIndexes ();
+void setupSphereTextAnimations ();
 
 void sphereTextAnimationsPosition (u16 posX, u16 posY);
 
