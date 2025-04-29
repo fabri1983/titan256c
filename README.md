@@ -1,6 +1,6 @@
 ## Megadrive Titan 256 Colors Forever
 
-This is a personal project using [SGDK v2.09](https://github.com/Stephane-D/SGDK) (with latest changes) 
+This is a personal project using [SGDK v2.12](https://github.com/Stephane-D/SGDK) (with latest changes) 
 as an attempt to recreate the great Titan 512C Forever section from Titan Overdrive mega demo v1.1, 
 and learning the functioning of the megadrive and its architecture in the go.  
 This version displays **256+ colors**.
