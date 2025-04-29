@@ -261,7 +261,7 @@ opt_EniDec_SubE:
 opt_EniDec_End:
     addq.l      #2,%sp          // deallocate those 2 bytes
 #if _Eni_CompatibilityMode == 0
-    movem.l     (%sp)+,%d1-%d7/%a2-%a6      // restore registers (except the scratch pad)
+    movem.l     (%sp)+,%d1-%d7/%a2-%a6      // restore registers
 #else
 * this code figures out where a0 should end
     subq.w	    #1,a0
@@ -275,7 +275,7 @@ opt_EniDec_End:
     andi.w	    #1,d0
     adda.w	    d0,a0           // ensure we're on an even byte
 #endif
-    movem.l     (%sp)+,%d0-%d7/%a1-%a6      // restore registers (except the scratch pad)
+    movem.l     (%sp)+,%d1-%d7/%a2-%a6      // restore registers
 #endif
     rts
 * ===========================================================================

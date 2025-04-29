@@ -1,3 +1,4 @@
+#include <types.h>
 #include <memory.h>
 #include "decomp/clownnemesis.h"
 #include "compatibilities.h"

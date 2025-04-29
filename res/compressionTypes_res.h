@@ -1,3 +1,5 @@
+#include <genesis.h>
+
 #ifndef _RES_COMPRESSIONTYPES_RES_H_
 #define _RES_COMPRESSIONTYPES_RES_H_
 

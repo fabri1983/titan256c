@@ -119,26 +119,6 @@ static FORCE_INLINE void waitVCounterReg (u16 n) {
     );
 }
 
-/**
- * \brief Writes into VDP_CTRL_PORT (0xC00004) the setup for DMA (length and source address).
- * \param len How many colors to move.
- * \param fromAddr Must be >> 1 (shifted to right).
-*/
-/*static void NO_INLINE setupDMAForPals (u16 len, u32 fromAddr) {
-    // Uncomment if you previously change it to 1 (CPU access to VRAM is 1 byte length, and 2 bytes length for CRAM and VSRAM)
-    //VDP_setAutoInc(2);
-
-    // Setup DMA length (in long word here): low at higher word, high at lower word
-    vu32* dmaPtr_l = (vu32*) VDP_CTRL_PORT;
-    *dmaPtr_l = ((0x9300 | (u8)len) << 16) | (0x9400 | (u8)(len >> 8));
-
-    // Setup DMA address
-    vu16* dmaPtr_w = (vu16*) VDP_CTRL_PORT;
-    *dmaPtr_w = 0x9500 | (u8)fromAddr; // low
-    *dmaPtr_w = 0x9600 | (u8)(fromAddr >> 8); // mid
-    *dmaPtr_w = 0x9700 | ((fromAddr >> 16) & 0x7f); // high
-}*/
-
 void setHVCallbacks (u8 titan256cHIntMode) {
     switch (titan256cHIntMode) {
         // Call the HInt every N scanlines. Uses CPU for palette swapping. In ASM.
@@ -463,7 +443,7 @@ HINTERRUPT_CALLBACK horizIntOnTitan256cCallback_CPU_EveryN_asm () {
 		// turn on VDP
 		"   move.w      %%a6,(%%a2)\n"          // *(vu16*) VDP_CTRL_PORT = 0x8100 | (reg01 | 0x40);
 
-        // restore a6 before is too late
+        // restore a6 before is too late (if not then it crashes)
         "   move.l      %%usp,%%a6\n"
 
 		".set_bgColor_4_%=:\n"

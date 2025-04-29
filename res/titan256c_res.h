@@ -1,3 +1,5 @@
+#include <genesis.h>
+
 #ifndef _RES_TITAN256C_RES_H_
 #define _RES_TITAN256C_RES_H_
 

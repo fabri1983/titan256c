@@ -1,10 +1,4 @@
-#include "genesis.h"
-
-#ifdef __GNUC__
-#define EXTERNALLY_VISIBLE_DEF __attribute__((externally_visible))
-#elif defined(_MSC_VER)
-#define EXTERNALLY_VISIBLE_DEF __declspec(dllexport)
-#endif
+#include <genesis.h>
 
 EXTERNALLY_VISIBLE_DEF
 const ROMHeader rom_header = {
