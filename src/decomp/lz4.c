@@ -12,7 +12,7 @@ void lz4_normal_caller (u8* src, u8* dest) {
     u8* a0 = src;
     u8* a1 = dest;
 #endif
-	ASM_STATEMENT volatile (
+	__asm volatile (
 		"jsr lz4_frame_depack_normal"
 		: "+a" (a1)
 		: "a" (a0)
@@ -28,7 +28,7 @@ void lz4_fastest_caller (u8* src, u8* dest) {
     u8* a0 = src;
     u8* a1 = dest;
 #endif
-	ASM_STATEMENT volatile (
+	__asm volatile (
 		"jsr lz4_frame_depack_fastest"
 		: "+a" (a1)
 		: "a" (a0)

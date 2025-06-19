@@ -12,7 +12,7 @@ void elektro_unpack_caller (u8* src, u8* dest) {
     u8* a1 = src;
     u8* a2 = dest;
 #endif
-	ASM_STATEMENT volatile (
+	__asm volatile (
 		"jsr elektro_unpack"
 		: "+a" (a2)
 		: "a" (a1)

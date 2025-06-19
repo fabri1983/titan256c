@@ -104,6 +104,16 @@ FORCE_INLINE void unpackSelector (u16 compression, u8* src, u8* dest, u16 outSiz
             Denibble(src, dest);
             break;
         #endif
+        #ifdef USING_PACKFIRE_TINY
+        case PACKFIRE_TINY:
+            depacker_tiny(src, dest);
+            break;
+        #endif
+        #ifdef USING_PACKFIRE_LARGE
+        case PACKFIRE_LARGE:
+            depacker_large_caller(src, dest);
+            break;
+        #endif
         #ifdef USING_RNC1
         case RNC1:
             rnc1c_Unpack(src, dest);

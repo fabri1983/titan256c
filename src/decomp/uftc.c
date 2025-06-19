@@ -15,7 +15,7 @@
 //***************************************************************************
 
 void uftc_unpack (u16* out, u16* in, u16 start, u16 count) {
-    ASM_STATEMENT volatile (
+    __asm volatile (
       "moveq #0,%%d2\n\t"           // Get size of dictionary
       "move.w (%0)+,%%d2\n\t"
       

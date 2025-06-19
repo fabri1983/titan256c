@@ -10,7 +10,7 @@ void init_mega_caller () {
 // #else
 //     vu8* a2 =  (vu8*)0xFFD4CA;
 // #endif
-//     ASM_STATEMENT volatile (
+//     __asm volatile (
 //         "jsr init_mega"
 //         : "+a" (a2)
 //         : "a" (a2)
@@ -26,7 +26,7 @@ void megaunp_caller (const u8* data, u8* dest) {
 //     u8* a0 = data;
 //     u8* a1 = dest;
 // #endif
-//     ASM_STATEMENT volatile (
+//     __asm volatile (
 //         "jsr megaunp"
 //         : "+a" (a0), "+a" (a1)
 //         : "a" (a0), "a" (a1)

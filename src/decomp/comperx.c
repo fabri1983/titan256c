@@ -12,7 +12,7 @@ void ComperXDec_caller (u8* src, u8* dest) {
     u8* a0 = src;
     u8* a1 = dest;
 #endif
-	ASM_STATEMENT volatile (
+	__asm volatile (
 		"jsr ComperXDec"
 		: "+a" (a1)
 		: "a" (a0)
@@ -28,7 +28,7 @@ void ComperXMDec_caller (u8* src, u8* dest) {
     u8* a0 = src;
     u8* a1 = dest;
 #endif
-	ASM_STATEMENT volatile (
+	__asm volatile (
 		"jsr ComperXMDec"
 		: "+a" (a1)
 		: "a" (a0)

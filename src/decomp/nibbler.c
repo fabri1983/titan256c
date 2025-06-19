@@ -12,7 +12,7 @@ void Denibble_caller (u8* src, u8* dest) {
 //     u8* a0 = src;
 //     u8* a1 = dest;
 // #endif
-// 	ASM_STATEMENT volatile (
+// 	__asm volatile (
 // 		"jsr Denibble"
 // 		: "+a" (a1)
 // 		: "a" (a0)

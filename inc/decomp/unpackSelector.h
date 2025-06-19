@@ -19,6 +19,7 @@
 #include "decomp/megaunp.h"
 #include "decomp/nemesis.h"
 #include "decomp/nibbler.h"
+#include "decomp/packfire.h"
 #include "decomp/rnc.h"
 #include "decomp/rocket.h"
 #include "decomp/saxman.h"

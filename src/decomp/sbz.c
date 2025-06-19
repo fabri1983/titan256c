@@ -118,7 +118,7 @@ u8* SBZ_blob_decompress(const u8* in, u8* out)
     u8* a1 = out;
 #endif
 
-	ASM_STATEMENT volatile (
+	__asm volatile (
 		"jsr %2"
 		: "+a" (a1)
 		: "a" (a0), "m" (asm_blob)
@@ -136,7 +136,7 @@ void SBZ_decompress_caller (u8* in, u8* out) {
     u8* a0 = in;
     u8* a1 = out;
 #endif
-	ASM_STATEMENT volatile (
+	__asm volatile (
 		"jsr SBZ_decompress"
 		: "+a" (a1)
 		: "a" (a0)

@@ -25,19 +25,20 @@
 #define MEGAPACK 24
 #define NEMESIS 25
 #define NIBBLER 26
-#define PACKFIRE 27
-#define RLEW_A 28
-#define RLEW_B 29
-#define RNC1 30
-#define RNC2 31
-#define ROCKET 32
-#define SAXMAN 33
-#define SBZ 34
-#define SNKRLE 35
-#define UFTC 36
-#define UFTC15 37
-#define UNAPLIB 38
-#define ZX0 39
+#define PACKFIRE_LARGE 27
+#define PACKFIRE_TINY 28
+#define RLEW_A 29
+#define RLEW_B 30
+#define RNC1 31
+#define RNC2 32
+#define ROCKET 33
+#define SAXMAN 34
+#define SBZ 35
+#define SNKRLE 36
+#define UFTC 37
+#define UFTC15 38
+#define UNAPLIB 39
+#define ZX0 40
 
 
 #endif // _RES_COMPRESSIONTYPES_RES_H_

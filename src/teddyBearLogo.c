@@ -15,8 +15,8 @@
 #include "utils.h"
 #include "logo_res.h"
 
-#define STR_VERSION "v2.12 (Apr 2025)"
-#define STR_VERSION_LEN 17 // String version length including \0
+#define STR_VERSION "v2.12 (June 2025)"
+#define STR_VERSION_LEN 18 // String version length including \0
 
 void displayTeddyBearLogo ()
 {
@@ -47,8 +47,8 @@ void displayTeddyBearLogo ()
     VDP_setTextPalette(PAL3);
     VDP_drawText((const char*) STR_VERSION, screenWidth/8 - STR_VERSION_LEN, screenHeight/8 - 1);
 
-    // Fade in to Sprite palette (previously located at PAL3)
-    PAL_fadeIn(PAL3*16, PAL3*16 + 15, sprDefTeddyBearAnim.palette->data, 30, FALSE);
+    // Fade in to Sprite palette (previously loaded at PAL3)
+    PAL_fadeIn(PAL3*16, PAL3*16 + (16-1), sprDefTeddyBearAnim.palette->data, 30, FALSE);
 
     //
     // Display loop for SGDK Teddy Bear animation
