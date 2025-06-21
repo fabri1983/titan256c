@@ -1,5 +1,33 @@
 #include "decomp/unpackSelector.h"
+#include "compressionTypes_res.h"
 #include "compressionTypesTracker.h"
+#include "decomp/bytekiller.h"
+#include "decomp/clownnemesis.h"
+#include "decomp/comper.h"
+#include "decomp/comperx.h"
+#include "decomp/elektro.h"
+#include "decomp/enigma.h"
+#include "decomp/fc8.h"
+#include "decomp/fc8Unpack.h"
+#include "decomp/hiverle.h"
+#include "decomp/kosinski.h"
+#include "decomp/kosinskiplus.h"
+#include "decomp/lz4.h"
+#include "decomp/lz4tiny.h"
+#include "decomp/lzkn1.h"
+#include "decomp/megaunp.h"
+#include "decomp/nemesis.h"
+#include "decomp/nibbler.h"
+#include "decomp/packfire.h"
+#include "decomp/rnc.h"
+#include "decomp/rocket.h"
+#include "decomp/saxman.h"
+#include "decomp/sbz.h"
+#include "decomp/snkrle.h"
+#include "decomp/twizzler.h"
+#include "decomp/uftc.h"
+#include "decomp/unaplib.h"
+#include "decomp/zx0.h"
 #include <tools.h> // constants: COMPRESSION_APLIB and COMPRESSION_LZ4W
 #include "compatibilities.h"
 
@@ -58,7 +86,12 @@ FORCE_INLINE void unpackSelector (u16 compression, u8* src, u8* dest, u16 outSiz
         #ifdef USING_FC8
         case FC8:
             fc8Decode(src, dest, TRUE); // m68k version
-            // fc8Unpack(src, dest, TRUE); // C version
+            //fc8Unpack(src, dest, TRUE); // C version
+            break;
+        #endif
+        #ifdef USING_HIVERLE
+        case HIVERLE:
+            HiveDec(src, dest);
             break;
         #endif
         #ifdef USING_KOSINSKI
@@ -144,6 +177,11 @@ FORCE_INLINE void unpackSelector (u16 compression, u8* src, u8* dest, u16 outSiz
         #ifdef USING_SNKRLE
         case SNKRLE:
             SNKDec(src, dest);
+            break;
+        #endif
+        #ifdef USING_TWIZZLER
+        case TWIZZLER:
+            TwizDec(src, dest);
             break;
         #endif
         #ifdef USING_UFTC

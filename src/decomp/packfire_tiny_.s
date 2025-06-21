@@ -29,8 +29,8 @@
 ;// ------------------------------------------
 ;// packed data in a0
 ;// dest in a1
-*-------------------------------------------------------------------------------
-* C prototype: extern void depacker_tiny (u8* in, u8* out);
+;// -------------------------------------------------------------------------------
+;// C prototype: extern void depacker_tiny (u8* in, u8* out);
 func depacker_tiny
                         movem.l	4(sp),a0-a1          ;// copy parameters into registers a0-a1
                         movem.l	d2-d7/a2-a3,-(sp)     ;// save used registers (except the scratch pad)

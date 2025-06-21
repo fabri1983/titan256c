@@ -43,8 +43,8 @@
 ;// packed data in a0
 ;// dest in a1
 ;// probs buffer in a2 (must be 15980 bytes)
-*-------------------------------------------------------------------------------
-* C prototype: extern void depacker_large (u8* in, u8* out, u8* buf);
+;// -------------------------------------------------------------------------------
+;// C prototype: extern void depacker_large (u8* in, u8* out, u8* buf);
 func depacker_large
                         movem.l	4(sp),a0-a2           ;// copy parameters into registers a0-a2
                         movem.l	d2-d7/a3-a6,-(sp)     ;// save used registers (except the scratch pad)

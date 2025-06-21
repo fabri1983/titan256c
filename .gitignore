@@ -14,3 +14,7 @@ pids
 # Builds
 out/
 build/
+
+# Specific to this project
+res/decompressors/*.lst
+res/decompressors/*.bin

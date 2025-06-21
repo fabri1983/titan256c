@@ -25,7 +25,7 @@ void loadTitan256cTileSet (u16 currTileIndex) {
     if (tileset->compression != COMPRESSION_NONE) {
         TileSet *unpacked = unpackTileSet_custom(tileset);
         VDP_loadTileData(unpacked->tiles, currTileIndex, unpacked->numTile, DMA);
-        // Be careful, we are releasing buffer here so DMA_QUEUE transfer isn't safe here, use DMA_QUEUE_COPY instead for safe operation
+        // Be careful, we are releasing buffer here so DMA_QUEUE transfer isn't safe here
         MEM_free(unpacked);
     }
     else
@@ -56,7 +56,7 @@ void loadTitan256cTileMap (VDPPlane plane, u16 currTileIndex) {
         TileMap *unpacked = unpackTileMap_custom(tilemap);
         VDP_setTileMapDataRectEx(plane, unpacked->tilemap + offset, baseTileAttribs, 0, 0, TITAN_256C_WIDTH/8, TITAN_256C_HEIGHT/8, 
             TITAN_256C_WIDTH/8, DMA_QUEUE_COPY);
-        // Be careful, we are releasing buffer here so DMA_QUEUE transfer isn't safe here, use DMA_QUEUE_COPY instead for safe operation
+        // Be careful, we are releasing buffer here so DMA_QUEUE transfer isn't safe here
         MEM_free(unpacked);
     }
     else
