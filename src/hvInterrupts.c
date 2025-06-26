@@ -168,43 +168,47 @@ void setHIntScanlineStarterForBounceEffect (u16 yPos, u8 hintMode) {
 static u16 vcounterManual;
 
 HINTERRUPT_CALLBACK horizIntScanlineStarterForBounceEffectCallback () {
-    if (vcounterManual < startingScanlineForBounceEffect) {
-        ++vcounterManual;
+    ++vcounterManual;
+    // if vcounterManual is not at the correct scanline then return
+    if (vcounterManual-1 < startingScanlineForBounceEffect) {
         return;
     }
-    else {
-        switch (titan256cHIntMode) {
-            case HINT_STRATEGY_0:
+
+    switch (titan256cHIntMode) {
+        case HINT_STRATEGY_0:
+            if (startingScanlineForBounceEffect == 0)
                 SYS_setHIntCallback(horizIntOnTitan256cCallback_CPU_EveryN_asm);
-                // instead of VDP_setHIntCounter(TITAN_256C_STRIP_HEIGHT - 1) due to additionals read and write from/to internal regValues[]
-                *((u16*) VDP_CTRL_PORT) = 0x8A00 | (TITAN_256C_STRIP_HEIGHT - 1);
-                break;
-            case HINT_STRATEGY_1:
+            // instead of VDP_setHIntCounter(TITAN_256C_STRIP_HEIGHT - 1) due to additionals read and write from/to internal regValues[]
+            *((u16*) VDP_CTRL_PORT) = 0x8A00 | (TITAN_256C_STRIP_HEIGHT - 1);
+            break;
+        case HINT_STRATEGY_1:
+            if (startingScanlineForBounceEffect == 0)
                 SYS_setHIntCallback(horizIntOnTitan256cCallback_CPU_EveryN);
-                // instead of VDP_setHIntCounter(TITAN_256C_STRIP_HEIGHT - 1) due to additionals read and write from/to internal regValues[]
-                *((u16*) VDP_CTRL_PORT) = 0x8A00 | (TITAN_256C_STRIP_HEIGHT - 1);
-                break;
-            case HINT_STRATEGY_2:
+            // instead of VDP_setHIntCounter(TITAN_256C_STRIP_HEIGHT - 1) due to additionals read and write from/to internal regValues[]
+            *((u16*) VDP_CTRL_PORT) = 0x8A00 | (TITAN_256C_STRIP_HEIGHT - 1);
+            break;
+        case HINT_STRATEGY_2:
+            if (startingScanlineForBounceEffect == 0)
                 SYS_setHIntCallback(horizIntOnTitan256cCallback_DMA_EveryN_asm);
-                // instead of VDP_setHIntCounter(TITAN_256C_STRIP_HEIGHT - 1) due to additionals read and write from/to internal regValues[]
-                *((u16*) VDP_CTRL_PORT) = 0x8A00 | (TITAN_256C_STRIP_HEIGHT - 1);
-                break;
-            case HINT_STRATEGY_3:
+            // instead of VDP_setHIntCounter(TITAN_256C_STRIP_HEIGHT - 1) due to additionals read and write from/to internal regValues[]
+            *((u16*) VDP_CTRL_PORT) = 0x8A00 | (TITAN_256C_STRIP_HEIGHT - 1);
+            break;
+        case HINT_STRATEGY_3:
+            if (startingScanlineForBounceEffect == 0)
                 SYS_setHIntCallback(horizIntOnTitan256cCallback_DMA_EveryN);
-                // instead of VDP_setHIntCounter(TITAN_256C_STRIP_HEIGHT - 1) due to additionals read and write from/to internal regValues[]
-                *((u16*) VDP_CTRL_PORT) = 0x8A00 | (TITAN_256C_STRIP_HEIGHT - 1);
-                break;
-            case HINT_STRATEGY_4:
+            // instead of VDP_setHIntCounter(TITAN_256C_STRIP_HEIGHT - 1) due to additionals read and write from/to internal regValues[]
+            *((u16*) VDP_CTRL_PORT) = 0x8A00 | (TITAN_256C_STRIP_HEIGHT - 1);
+            break;
+        case HINT_STRATEGY_4:
+            if (startingScanlineForBounceEffect == 0)
                 SYS_setHIntCallback(horizIntOnTitan256cCallback_DMA_OneTime);
-                // instead of VDP_setHIntCounter(0xFF) due to additionals read and write from/to internal regValues[]
-                *((u16*) VDP_CTRL_PORT) = 0x8A00 | 0xFF;
-                break;
-            default: return;
-        }
-        ++vcounterManual;
-        startingScanlineForBounceEffect = 0;
-        titan256cHIntMode = 0xFF;
+            // instead of VDP_setHIntCounter(0xFF) due to additionals read and write from/to internal regValues[]
+            *((u16*) VDP_CTRL_PORT) = 0x8A00 | 0xFF;
+            break;
+        default: break;
     }
+
+    startingScanlineForBounceEffect = 0;
 }
 
 static u16* titan256cPalsPtr; // 1st and 2nd strip's palette are loaded at the beginning of the display loop, so it points to 3rd strip

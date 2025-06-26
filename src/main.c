@@ -318,7 +318,7 @@ static void titan256cDisplay () {
             }
         }
 
-        // The bouncing effect has the side effect of offsets strips into scanlines not alligned with expected 
+        // The bouncing effect has the side effect of making rendered strips to be not alligned with expected 
         // palettes distribution, hence we need to shift the scanline at which the HInt gets into action.
         //setHIntScanlineStarterForBounceEffect(yPos, titan256cHIntMode);
 
