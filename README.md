@@ -9,7 +9,7 @@ This version displays **256+ colors**.
 
 For convenience testing you can directly try the last compiled rom [titan256c_rom.bin](titan256c_rom.bin?raw=true "titan256c_rom.bin").
 
-## 4 Strategies  
+## 5 Strategies  
 
 **(Pressing START cycles between them)**  
 
@@ -20,7 +20,8 @@ Swapping writes beetwen:
 And
 - Four u32 values holding 8 colors from palette.
 The writes are made by CPU to CRAM every scanline along the duration of 8 scanlines, sending a total 2 palettes (32 colors) and 4 bg colors (text color ramp effect).  
-This strategies has better ramp effect since the change in color happens every other scanline.
+
+These strategies has better ramp effect since the change in color happens every other scanline.
 
 **Strategies** **C** and **D**.  
 DMA of 32 colors holding 2 palettes splitted in 3 chunks, plus 4 BG color writes (text color ramp effect).  
@@ -29,7 +30,7 @@ All done inside the duration of 8 scanlines.
 
 **Strategy** **E**.  
 Same than D but calling only once the HInt with `VDP_setHIntCounter(0)` (every scanline) and disabling it using 
-`VDP_setHIntCounter(255)` at the first line of the HInt (which takes effect in the next line).
+`VDP_setHIntCounter(255)` at the first line of the HInt (which takes effect in the next interrupt).
 
 Strategy **A**:  
 ![titan_cpu.jpg](screenshots/titan_cpu.jpg?raw=true "titan_cpu.jpg")
