@@ -104,8 +104,10 @@ FORCE_INLINE void unpackSelector (u16 compression, u8* src, u8* dest, u16 outSiz
             KosPlusDec(src, dest);
             break;
         #endif
-        #ifdef USING_LZ4
+        #if defined(USING_LZ4) || defined(USING_LZ4_SMALL) || defined(USING_LZ4X)
         case LZ4:
+        case LZ4_SMALL:
+        case LZ4X:
             lz4_fastest_caller(src, dest); // m68k version
             // lz4FrameUnpack(src, dest); // C tiny version
             break;

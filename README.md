@@ -46,8 +46,7 @@ the VDP will never see the "end" and keep rendering forever.
 This doesn't affect sync (as long as you always have the same V28/V30 setting by the time vsync comes it'll be safe) but it completely gets 
 rid of the top and bottom borders.
 Note that this also means no vblank time at all (well, unless you manually enable or disable display to make up for it).
-- Fix display corruption on strategy C, due to how DMA is setup.
-- Fix black BG color lines over text in strategies with DMA. Check if they appear in Nuked-MD.
+- Fix display corruption on strategy C. Possibly due to how DMA is prepared.
 - Fix incorrect value for VDP_setHIntCounter() when on bouncing effect to avoid wrong strip and palette alignment.
 - Fix TITAN_256C_FADE_TO_BLACK_STRATEGY 0 and 1: wrong bitwise operations.
 - Add DMA command buffering as Stef does to avoid error in some MD consoles. See dma.c.

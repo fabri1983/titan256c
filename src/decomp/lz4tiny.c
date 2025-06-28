@@ -10,7 +10,7 @@
 #include "decomp/lz4tiny.h"
 
 #include "compressionTypesTracker.h"
-#ifdef USING_LZ4
+#if defined(USING_LZ4) || defined(USING_LZ4_SMALL) || defined(USING_LZ4X)
 
 static u32 lz4_rlen (u32 size, u8* ppRead)
 {

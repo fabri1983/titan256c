@@ -2,7 +2,7 @@
 #include "compatibilities.h"
 
 #include "compressionTypesTracker.h"
-#ifdef USING_LZ4
+#if defined(USING_LZ4) || defined(USING_LZ4_SMALL) || defined(USING_LZ4X)
 
 void lz4_normal_caller (u8* src, u8* dest) {
 #ifdef __GNUC__
