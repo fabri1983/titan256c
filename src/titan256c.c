@@ -173,7 +173,7 @@ void updateSphereTextColor () {
         fadeAmount = 0x222 * factor;
     }
 
-    //#pragma GCC unroll 16 // Always set the max number since it does not accept defines
+    //#pragma GCC unroll 256 // Always set a big number since it does not accept defines
     for (u8 i=(TITAN_SPHERE_TILEMAP_HEIGHT+1)/2 + (TITAN_SPHERE_TILEMAP_START_Y_POS % 2) + 1; i--; ) {
         u16 d = gradColorsBuffer[0] - min(0xEEE, fadeAmount);
         fadeAmount = max(0, fadeAmount - 0x222); // diminish the fade out weight
@@ -219,7 +219,7 @@ void updateTextGradientColors () {
     u32* palsPtr = (u32*)(titanCharsGradientColors + colorIdx);
     u32* rampBufPtr = (u32*)gradColorsBuffer;
 
-    //#pragma GCC unroll 16 // Always set the max number since it does not accept defines
+    //#pragma GCC unroll 256 // Always set a big number since it does not accept defines
     for (u8 i=TITAN_TEXT_GRADIENT_ELEMS/2; i--;) {
         u32 d = *palsPtr++;
         d -= min(0xEEE0EEE, fadeTextAmount); // fadeTextAmount is 0 when is not in fading to black animation
@@ -255,7 +255,7 @@ void updateTextGradientColors () {
     u16* palsPtr = (u16*)titanCharsGradientColors + colorIdx;
     u16* rampBufPtr = gradColorsBuffer;
 
-    //#pragma GCC unroll 16 // Always set the max number since it does not accept defines
+    //#pragma GCC unroll 256 // Always set a big number since it does not accept defines
     for (u8 i=TITAN_TEXT_GRADIENT_ELEMS; i--;) {
         u16 d = *palsPtr++;
         d -= min(0xEEE, fadeTextAmount); // fadeTextAmount is 0 when is not in fading to black animation
@@ -315,7 +315,7 @@ void fadingStepToBlack_pals (u8 currFadingStrip, u8 cycle) {
 
         #if TITAN_256C_FADE_TO_BLACK_STRATEGY_U32
 
-        #pragma GCC unroll 32 // Always set the max number since it does not accept defines
+        #pragma GCC unroll 256 // Always set a big number since it does not accept defines
         for (u8 i=TITAN_256C_COLORS_PER_STRIP/2; i--;) {
             // NOTE: here we decrement 2 colors at a time, hence the u32 type
             u32 d = *palsPtr - 0b00000010001000100000001000100010; // decrement in 1 unit every component
@@ -344,7 +344,7 @@ void fadingStepToBlack_pals (u8 currFadingStrip, u8 cycle) {
 
         #else
 
-        #pragma GCC unroll 32 // Always set the max number since it does not accept defines
+        #pragma GCC unroll 256 // Always set a big number since it does not accept defines
         for (u8 i=TITAN_256C_COLORS_PER_STRIP; i--;) {
             // NOTE: here we decrement 1 color at a time, hence the u16 type
             u16 d = *palsPtr - 0b0000001000100010; // decrement in 1 unit every component

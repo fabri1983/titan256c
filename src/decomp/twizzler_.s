@@ -22,6 +22,7 @@
 #define         TwizBufferSize		0x1000
 #define         TwizBufferPre		0xFFFF8400		// $1000 bytes
 #define         TwizBuffer		    0xFFFF9400		// $1000 bytes
+                                    ;// fabri1983: we need to change this by using a dynamic allocated buffer
 
 ;// ===========================================================================
 ;// ---------------------------------------------------------------------------

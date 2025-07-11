@@ -9,12 +9,12 @@
 * CMP D0,D1
 * Relationship    Signed     Unsigned
 * -------------------------------------------------------
-* D1 <  D0        BLT        BCS (branch on Carry Set) (instead of BLO?)
+* D1 <  D0        BLT        BLO or BCS (branch on Carry Set)
 * D1 <= D0        BLE        BLS
 * D1 =  D0        BEQ        BEQ
 * D1 <> D0        BNE        BNE
 * D1 >  D0        BGT        BHI
-* D1 >= D0        BGE        BCC (branch on Carry Clear) (instead of BHS?)
+* D1 >= D0        BGE        BHS or BCC (branch on Carry Clear)
 
 * CMP
     cmp     d1,d0
