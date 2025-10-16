@@ -1,5 +1,3 @@
-* This file included from other .s files
-
 .macro func _name, _align=2
     .section .text.asm.\_name
     .globl  \_name
