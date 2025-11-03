@@ -5,7 +5,7 @@ as an attempt to recreate the great Titan 512C Forever section from Titan Overdr
 and learning the functioning of the megadrive and its architecture in the go.  
 This version displays **256+ colors**.
 
-**Work In Progress. Only tested with Blastem and Nuked-MD.**
+**Work In Progress. Only tested with Blastem, Nuked-MD, and on real hardware.**
 
 For convenience testing you can directly try the last compiled rom [titan256c_rom.bin](titan256c_rom.bin?raw=true "titan256c_rom.bin").
 

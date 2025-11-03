@@ -844,7 +844,7 @@ HINTERRUPT_CALLBACK horizIntOnTitan256cCallback_DMA_EveryN_asm () {
 		[palette_black] "m" (palette_black),
 		[turnOff] "i" (0x8100 | (0x74 & ~0x40)), // 0x8134
 		[turnOn] "i" (0x8100 | (0x74 | 0x40)), // 0x8174
-        [hcLimit] "i" (154),
+        [hcLimit] "i" (156),
 		[_TITAN_256C_COLORS_PER_STRIP] "i" (TITAN_256C_COLORS_PER_STRIP),
         [_TITAN_256C_COLORS_PER_STRIP_DIV_3] "i" (TITAN_256C_COLORS_PER_STRIP/3),
         [_TITAN_256C_COLORS_PER_STRIP_DIV_3_REM] "i" (TITAN_256C_COLORS_PER_STRIP/3 + TITAN_256C_COLORS_PER_STRIP_REMAINDER(3)),
@@ -1040,7 +1040,7 @@ HINTERRUPT_CALLBACK horizIntOnTitan256cCallback_DMA_OneTime () {
         u32 fromAddrForDMA;
         u16 fromAddrForDMA_hi;
         u16 bgColor=0;
-        const u8 hcLimit = 156;
+        const u8 hcLimit = 158;
 
         fromAddrForDMA = (u32) titan256cPalsPtr >> 1; // here we manipulate the memory address not its content
         fromAddrForDMA_hi = 0x9700 | ((fromAddrForDMA >> 16) & 0x7f);
@@ -1191,7 +1191,7 @@ void vertIntOnDrawTextCallback () {
 }
 
 HINTERRUPT_CALLBACK horizIntOnDrawTextCallback () {
-    waitHCounter_old(150);
+    waitHCounter_old(144);
     turnOffVDP(0x74);
     *((vu32*) VDP_CTRL_PORT) = VDP_WRITE_CRAM_ADDR((u32)(CUSTOM_FONT_COLOR_INDEX * 2));
     *((vu16*) VDP_DATA_PORT) = textColor;
