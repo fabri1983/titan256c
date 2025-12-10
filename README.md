@@ -30,7 +30,7 @@ All done inside the duration of 8 scanlines.
 
 **Strategy** **E**.  
 Same than D but calling only once the HInt with `VDP_setHIntCounter(0)` (every scanline) and disabling it using 
-`VDP_setHIntCounter(255)` at the first line of the HInt (which takes effect in the next interrupt).
+`VDP_setHIntCounter(255)` at the first line of the HInt (which takes effect in the next interrupt callback).
 
 Strategy **A**:  
 ![titan_cpu.jpg](screenshots/titan_cpu.jpg?raw=true "titan_cpu.jpg")
@@ -38,8 +38,10 @@ Strategy **A**:
 Strategy **C**:  
 ![titan_dma.jpg](screenshots/titan_dma.jpg?raw=true "titan_dma.jpg")
 
+You can find me in the SGDK Discord server: https://discord.gg/xmnBWQS
 
 ### TODO:
+- Fix incorrect value for VDP_setHIntCounter() when on bouncing effect to avoid wrong strip and palette alignment.
 - When on PAL, use VDP trick to avoid top and bottom bands:
 Basically the VDP only checks where the display ends on the specific scanline it should end.
 So if you switch to V30 (240px tall) before line 224, then wait until V counter is between 225 and 239, then switch back to V28 (224px tall), 
@@ -48,7 +50,6 @@ This doesn't affect sync (as long as you always have the same V28/V30 setting by
 rid of the top and bottom borders.
 Note that this also means no vblank time at all (well, unless you manually enable or disable display to make up for it).
 - Fix display corruption on strategy C. Possibly due to how DMA is prepared.
-- Fix incorrect value for VDP_setHIntCounter() when on bouncing effect to avoid wrong strip and palette alignment.
 - Fix TITAN_256C_FADE_TO_BLACK_STRATEGY 0 and 1: wrong bitwise operations.
 - Add DMA command buffering as Stef does to avoid error in some MD consoles. See dma.c.
 - Try to use titan256c_rgb.png as input and do the color ramp effect over the white text color.

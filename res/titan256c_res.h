@@ -24,6 +24,13 @@ typedef struct {
 } TileMapCustomCompField;
 
 typedef struct {
+    u16 startingIdx;
+    u16 endingIdx;
+    u16 numTiles;
+    u32* data;
+} ImageCommonTilesRange;
+
+typedef struct {
     TileSetOriginalCustom* tileset;
     TileMapOriginalCustom* tilemap;
 } ImageNoPals;
@@ -114,6 +121,10 @@ typedef struct {
 typedef struct {
     u16* data;
 } Palette32;
+
+typedef struct {
+    u16* data;
+} Palette64;
 
 typedef struct {
     u16* data;
