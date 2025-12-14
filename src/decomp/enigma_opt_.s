@@ -149,7 +149,11 @@ opt_EniDec_Loop:
     bhi.s       .opt_nonewbyte_a    // if not, branch
     addq.w      #8,%d6          // 8 bits = 1 byte
 
-    asl.w       #8,%d5          // shift up by a byte
+*   asl.w       #8,%d5          // shift up by a byte
+    move.b      %d5,-(%sp)
+    move.w      (%sp)+,%d5
+    clr.b       %d5
+
     move.b      (%a0)+,%d5      // store next byte in lower register byte
 .opt_nonewbyte_a:
 #endif
@@ -296,8 +300,8 @@ opt_EniDec_GetInlineCopyVal:
     move.w      %d6,%d7         // get remaining bits
     sub.w       %a2,%d7         // subtract minimum bit number
     bhs.s       .opt_got_enough     // if we're beyond that, branch
-    move.w      %d7,%d6
-    addi.w      #16,%d6         // 16 bits = 2 bytes
+    moveq       #16,%d6         // 16 bits = 2 bytes
+    add.w       %d7,%d6
     neg.w       %d7             // calculate bit deficit
     lsl.w       %d7,%d1         // make space for this many bits
     move.b      (%a0),%d5       // get next byte
@@ -348,7 +352,11 @@ opt_EniDec_ChkGetNextByte:
     bhi.s       .opt_nonewbyte_b    // if not, branch
     addq.w      #8,%d6      // 8 bits = 1 byte
 * shift lowest byte to highest byte, and load a new value into low byte
-    asl.w       #8,%d5      // 22 ; shift up by a byte
+*   asl.w       #8,%d5      // 22 ; shift up by a byte
+    move.b      %d5,-(%sp)
+    move.w      (%sp)+,%d5
+    clr.b       %d5
+
     move.b      (%a0)+,%d5  // 08 ; store next byte in lower register byte
                             *  30 cycles total
 *    move.b    d5,(a6)+     // 08
