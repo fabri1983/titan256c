@@ -19,10 +19,12 @@
 #include "decomp/nemesis.h"
 #include "decomp/nibbler.h"
 #include "decomp/packfire.h"
+#include "decomp/rlew.h"
 #include "decomp/rnc.h"
 #include "decomp/rocket.h"
 #include "decomp/saxman.h"
 #include "decomp/sbz.h"
+#include "decomp/shrinkler.h"
 #include "decomp/snkrle.h"
 #include "decomp/twizzler.h"
 #include "decomp/uftc.h"
@@ -35,7 +37,8 @@
 static bool megainitCalled = FALSE;
 #endif
 
-FORCE_INLINE void unpackSelector (u16 compression, u8* src, u8* dest, u16 outSizeInBytes) {
+FORCE_INLINE void unpackSelector (u16 compression, u8* src, u8* dest, u16 additionalArg) {
+
     switch (compression) {
         #ifdef USING_APLIB
         case COMPRESSION_APLIB:
@@ -149,6 +152,18 @@ FORCE_INLINE void unpackSelector (u16 compression, u8* src, u8* dest, u16 outSiz
             depacker_large_caller(src, dest);
             break;
         #endif
+        #ifdef USING_RLEW_A
+        case RLEW_A:
+            // rlew_decomp_A(additionalArg, src, dest);
+            rlew_decomp_A_asm(additionalArg, src, dest);
+            break;
+        #endif
+        #ifdef USING_RLEW_B
+        case RLEW_B:
+            // rlew_decomp_B(additionalArg, src, dest);
+            rlew_decomp_B_asm(additionalArg, src, dest);
+            break;
+        #endif
         #ifdef USING_RNC1
         case RNC1:
             rnc1c_Unpack(src, dest);
@@ -176,6 +191,11 @@ FORCE_INLINE void unpackSelector (u16 compression, u8* src, u8* dest, u16 outSiz
             SBZ_decompress_caller(src, dest); // faster m68k version
             break;
         #endif
+        #ifdef USING_SHRINKLER
+        case SHRINKLER:
+            ShrinklerDecompress(src, dest);
+            break;
+        #endif
         #ifdef USING_SNKRLE
         case SNKRLE:
             SNKDec(src, dest);
@@ -188,12 +208,14 @@ FORCE_INLINE void unpackSelector (u16 compression, u8* src, u8* dest, u16 outSiz
         #endif
         #ifdef USING_UFTC
         case UFTC:
-            uftc_unpack((u16*)src, (u16*)dest, 0, outSizeInBytes/32);
+            // additionalArg is decompressed size in bytes
+            uftc_unpack((u16*)src, (u16*)dest, 0, additionalArg/32);
             break;
         #endif
         #ifdef USING_UFTC15
         case UFTC15:
-            uftc15_unpack((s16*)src, (s16*)dest, 0, (s16)outSizeInBytes/32);
+            // additionalArg is decompressed size in bytes
+            uftc15_unpack((s16*)src, (s16*)dest, 0, (s16)additionalArg/32);
             break;
         #endif
         #ifdef USING_UNAPLIB

@@ -37,13 +37,14 @@
 #define ROCKET 36
 #define SAXMAN 37
 #define SBZ 38
-#define SNKRLE 39
-#define TWIZZLER 40
-#define TWIZZLERMOD 41
-#define UFTC 42
-#define UFTC15 43
-#define UNAPLIB 44
-#define ZX0 45
+#define SHRINKLER 39
+#define SNKRLE 40
+#define TWIZZLER 41
+#define TWIZZLERMOD 42
+#define UFTC 43
+#define UFTC15 44
+#define UNAPLIB 45
+#define ZX0 46
 
 
 #endif // _RES_COMPRESSIONTYPES_RES_H_

@@ -5,6 +5,7 @@
 #include <memory.h>
 #include "titan256c.h"
 #include "decomp/unpackSelector.h"
+#include "compressionTypesTracker.h"
 
 static TileSet* allocateTileSetInternal (VOID_OR_CHAR* adr) {
     TileSet *result = (TileSet*) adr;
@@ -43,7 +44,12 @@ static TileMap* unpackTileMap_custom(TileMap *src) {
     result->w = src->w;
     result->h = src->h;
     result->compression = src->compression;
-    unpackSelector(src->compression, (u8*) FAR_SAFE(src->tilemap, (src->w * src->h) * 2), (u8*) result->tilemap, src->w * src->h * 2);
+    #if defined(USING_RLEW_A) || defined(USING_RLEW_B)
+    u16 additionalArg = 0; // no jump gap value
+    #else
+    u16 additionalArg = src->w * src->h * 2;
+    #endif
+    unpackSelector(src->compression, (u8*) FAR_SAFE(src->tilemap, (src->w * src->h) * 2), (u8*) result->tilemap, additionalArg);
     return result;
 }
 
