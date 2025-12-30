@@ -25,9 +25,7 @@ typedef struct {
 
 typedef struct {
     u16 startingIdx;
-    u16 endingIdx;
     u16 numTiles;
-    u32* data;
 } ImageCommonTilesRange;
 
 typedef struct {
