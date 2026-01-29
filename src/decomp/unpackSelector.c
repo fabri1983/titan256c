@@ -1,6 +1,8 @@
-#include "decomp/unpackSelector.h"
+#include <types.h>
+#include <sys.h>
 #include "compressionTypes_res.h"
 #include "compressionTypesTracker.h"
+#include "decomp/unpackSelector.h"
 #include "decomp/bytekiller.h"
 #include "decomp/clownnemesis.h"
 #include "decomp/comper.h"
@@ -31,7 +33,6 @@
 #include "decomp/unaplib.h"
 #include "decomp/zx0.h"
 #include <tools.h> // constants: COMPRESSION_APLIB and COMPRESSION_LZ4W
-#include "compatibilities.h"
 
 #ifdef USING_MEGAPACK
 static bool megainitCalled = FALSE;

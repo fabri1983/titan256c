@@ -2,7 +2,8 @@
 #define _UTILS_H
 
 #include <types.h>
-#include <timer.h>
+
+#define MEMORY_BARRIER() __asm volatile ("" : : : "memory")
 
 #define CLAMP(x, minimum, maximum) ( min(max((x),(minimum)),(maximum)) )
 

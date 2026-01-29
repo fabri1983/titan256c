@@ -1,3 +1,5 @@
+#include <types.h>
+#include <timer.h>
 #include "utils.h"
 
 void waitMs_ (u32 ms) {

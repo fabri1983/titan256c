@@ -1,7 +1,7 @@
 #include <types.h>
+#include <sys.h>
 #include <memory.h>
 #include "decomp/clownnemesis.h"
-#include "compatibilities.h"
 
 #ifndef CC_COUNT_OF
 #define CC_COUNT_OF(array) (sizeof(array) / sizeof((array)[0]))

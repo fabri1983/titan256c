@@ -2,9 +2,9 @@
 #define TITAN_256C_H
 
 #include <types.h>
+#include <sys.h>
 #include <vdp_bg.h>
 #include "titan256c_res.h"
-#include "compatibilities.h"
 #include "titan256c_consts.h"
 
 #define HINT_STRATEGY_0 0

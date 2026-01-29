@@ -1,6 +1,7 @@
+#include <types.h>
+#include <sys.h>
+#include <memory.h>
 #include "decomp/packfire.h"
-#include "compatibilities.h"
-#include "memory.h"
 
 #include "compressionTypesTracker.h"
 #if defined(USING_PACKFIRE_TINY) || defined(USING_PACKFIRE_LARGE)

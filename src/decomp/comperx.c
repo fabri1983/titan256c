@@ -1,5 +1,6 @@
+#include <types.h>
+#include <sys.h>
 #include "decomp/comperx.h"
-#include "compatibilities.h"
 
 #include "compressionTypesTracker.h"
 #if defined(USING_COMPERX) || defined(USING_COMPERXM)

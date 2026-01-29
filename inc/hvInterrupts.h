@@ -3,7 +3,6 @@
 
 #include <types.h>
 #include <sys.h>
-#include "compatibilities.h"
 
 void setGradientPtrToBlack ();
 

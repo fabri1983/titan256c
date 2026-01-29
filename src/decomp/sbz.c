@@ -22,8 +22,9 @@
 //    distribution.
 //=====================================================================
 
+#include <types.h>
+#include <sys.h>
 #include "decomp/sbz.h"
-#include "compatibilities.h"
 
 #include "compressionTypesTracker.h"
 #ifdef USING_SBZ

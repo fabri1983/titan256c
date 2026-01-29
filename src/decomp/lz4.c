@@ -1,5 +1,6 @@
+#include <types.h>
+#include <sys.h>
 #include "decomp/lz4.h"
-#include "compatibilities.h"
 
 #include "compressionTypesTracker.h"
 #if defined(USING_LZ4) || defined(USING_LZ4_SMALL) || defined(USING_LZ4X)

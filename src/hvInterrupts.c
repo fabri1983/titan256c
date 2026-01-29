@@ -3,11 +3,12 @@
 #include <pal.h>
 #include <sys.h>
 #include <timer.h>
-#include <tools.h> // KLog methods
+#include <tools.h>
 #include "hvInterrupts.h"
 #include "titan256c.h"
 #include "custom_font_res.h"
 #include "customFont_consts.h"
+#include "utils.h"
 
 // u8 reg01; // Holds current VDP register 1 whole value (it holds other bits than VDP ON/OFF status)
 

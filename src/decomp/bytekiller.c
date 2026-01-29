@@ -1,5 +1,6 @@
+#include <types.h>
+#include <sys.h>
 #include "decomp/bytekiller.h"
-#include "compatibilities.h"
 
 #include "compressionTypesTracker.h"
 #ifdef USING_BYTEKILLER
