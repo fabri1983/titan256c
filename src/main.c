@@ -230,7 +230,8 @@ static void updateBounceEffectOnJoyInput () {
             isManualPosY = TRUE;
             velocity = 0;
             yPosOffset = -1; // scanlines down
-            yPos += yPosOffset;
+            if (yPos > 0)
+                yPos += yPosOffset;
         }
         else {
             if (yPosOffset < 0) // check if the other direction is not being used

@@ -15,6 +15,7 @@
     "*.c": "c"
 },
 "C_Cpp.errorSquiggles": "enabled",
+"terminal.integrated.defaultProfile.windows": "Command Prompt",
 "[m68k]": {
     "editor.rulers": []
 },

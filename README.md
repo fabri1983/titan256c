@@ -42,14 +42,17 @@ You can find me in the SGDK Discord server: https://discord.gg/xmnBWQS
 
 ### TODO:
 - Fix incorrect value for VDP_setHIntCounter() when on bouncing effect to avoid wrong strip and palette alignment.
-- When on PAL, use VDP trick to avoid top and bottom bands:
-Basically the VDP only checks where the display ends on the specific scanline it should end.
-So if you switch to V30 (240px tall) before line 224, then wait until V counter is between 225 and 239, then switch back to V28 (224px tall), 
-the VDP will never see the "end" and keep rendering forever.
-This doesn't affect sync (as long as you always have the same V28/V30 setting by the time vsync comes it'll be safe) but it completely gets 
-rid of the top and bottom borders.
-Note that this also means no vblank time at all (well, unless you manually enable or disable display to make up for it).
 - Fix display corruption on strategy C. Possibly due to how DMA is prepared.
 - Fix TITAN_256C_FADE_TO_BLACK_STRATEGY 0 and 1: wrong bitwise operations.
 - Add DMA command buffering as Stef does to avoid error in some MD consoles. See dma.c.
-- Try to use titan256c_rgb.png as input and do the color ramp effect over the white text color.
+- When on PAL, use VDP trick to avoid top and bottom bands:
+Basically the VDP only checks where the display ends on the specific scanline it should end.  
+So if you switch to V30 (240px tall) before line 224, then wait until V counter is between 225 and 239, then switch back to V28 (224px tall), 
+the VDP will never see the "end" and keep rendering forever.  
+This doesn't affect sync (as long as you always have the same V28/V30 setting by the time vsync comes it'll be safe) but it completely gets 
+rid of the top and bottom borders.  
+Note that this should work even on 60Hz systems since the viewport check is always the same (what does break on 60Hz is the vsync check, 
+but you're setting V28 again before that point arrives, so that part is safe).  
+You'd lose the vblank interrupt too since it's tied to the beginning of the bottom border (so you'll need to rely on hblank interrupt for timing, 
+or polling the V counter carefully, or manually enable or disable display to make up for it).
+- Try to use titan256c_rgb.png as input and do the color ramp effect over the white color.
