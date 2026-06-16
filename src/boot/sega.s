@@ -158,8 +158,8 @@ no_bmp_task:
         movem.l (%sp)+,%d0-%d1/%a0-%a1
         rte
 
-* Custom version of the _VINT vector which discards User tasks, Bitmap tasks, and XGM tasks, 
-* uses usp to backup a1, and immediately calls user's VInt callback.
+* Custom version of the _VINT vector which discards User tasks and Bitmap tasks.
+* It uses usp to backup a1, and immediately calls user's VInt callback.
 _VINT_lean:
         movem.l %d0-%d1/%a0, -(%sp)         /* Save the scratch pad since it won't be saved by the function pointed by vintCB */
         move.l  %a1, %usp

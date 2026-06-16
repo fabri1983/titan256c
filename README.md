@@ -9,8 +9,17 @@ This version displays **256+ colors**.
 
 For convenience testing you can directly try the last compiled rom [titan256c_rom.bin](titan256c_rom.bin?raw=true "titan256c_rom.bin").
 
-## 5 Strategies  
+### Features
+---
+- Custom `_VInt_lean` interrupt handler in `sega.s` for faster execution wihtout unused features.
 
+### SGDK lib config
+---
+Before you compile this project, make sure your SGDK library was built with next switches in `config.h`:
+- `LEGACY_SPRITE_ENGINE    0`
+
+### 5 Strategies  
+---
 **(Pressing START cycles between them)**  
 
 **Strategies** **A** and **B**.  
@@ -40,7 +49,8 @@ Strategy **C**:
 
 You can find me in the SGDK Discord server: https://discord.gg/xmnBWQS
 
-### TODO:
+### TODO
+---
 - Fix incorrect value for VDP_setHIntCounter() when on bouncing effect to avoid wrong strip and palette alignment.
 - Fix display corruption on strategy C. Possibly due to how DMA is prepared.
 - Fix TITAN_256C_FADE_TO_BLACK_STRATEGY 0 and 1: wrong bitwise operations.

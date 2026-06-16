@@ -8,6 +8,7 @@
 #include "customFont.h"
 #include "spr_eng_override.h"
 #include "sphereTextAnimation.h"
+#include "vgm_res.h"
 
 typedef enum {
     TRANSITION_SCREEN, FALL_AND_BOUNCE, STATIONARY, FADE_OUT
@@ -487,6 +488,8 @@ int main (bool hardReset) {
 
     basicEngineConfig();
     initGameStatus();
+
+    //XGM2_play(vgm_titan_overdrive);
 
     for (;;) {
         showTransitionScreen();

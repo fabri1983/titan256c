@@ -314,7 +314,7 @@ HINTERRUPT_CALLBACK horizIntOnTitan256cCallback_CPU_EveryN_asm () {
             // translate vcounterManual to base textRampEffectLimitTop:
         "   sub.w       %[textRampEffectLimitTop],%%d0\n"      // d0: vcounterManual - textRampEffectLimitTop
             // _TEXT_RAMP_EFFECT_HEIGHT is the amount of scanlines the text ramp effect takes:
-        "   cmpi.w      %[_TEXT_RAMP_EFFECT_HEIGHT],%%d0\n"    // d0 -= TEXT_RAMP_EFFECT_HEIGHT
+        "   cmpi.w      %[_TEXT_RAMP_EFFECT_HEIGHT],%%d0\n"    // d0 - TEXT_RAMP_EFFECT_HEIGHT
         "   scs.b       %%d4\n"                                // if d0 >= 0 => d4=0xFF (enable bg color), if d0 < 0 => d4=0x00 (no bg color)
         // Next instructions not needed, logic works fine without them. I don't get it.
       //"   bls.s       .color_batch_1_cmd\n"                  // branch if d0 <= TEXT_RAMP_EFFECT_HEIGHT (at this moment d4 is correctly set)
@@ -690,7 +690,7 @@ HINTERRUPT_CALLBACK horizIntOnTitan256cCallback_DMA_EveryN_asm () {
             // translate vcounterManual to base textRampEffectLimitTop:
         "   sub.w       %[textRampEffectLimitTop],%%d0\n"      // d0: vcounterManual - textRampEffectLimitTop
             // _TEXT_RAMP_EFFECT_HEIGHT is the amount of scanlines the text ramp effect takes:
-        "   cmpi.w      %[_TEXT_RAMP_EFFECT_HEIGHT],%%d0\n"    // d0 -= TEXT_RAMP_EFFECT_HEIGHT
+        "   cmpi.w      %[_TEXT_RAMP_EFFECT_HEIGHT],%%d0\n"    // d0 - TEXT_RAMP_EFFECT_HEIGHT
         "   scs.b       %%d3\n"                                // if d0 >= 0 => d3=0xFF (enable bg color), if d0 < 0 => d3=0x00 (no bg color)
         // Next instructions not needed, logic works fine without them. I don't get it.
       //"   bls.s       .set_bgColor_1_%=\n"                   // branch if d0 <= TEXT_RAMP_EFFECT_HEIGHT (at this moment d3 is correctly set)

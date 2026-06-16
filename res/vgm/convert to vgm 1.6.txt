@@ -1,0 +1,2 @@
+Use SGDK's xgmtool to convert vgm from 1.5 to 1.6 format, and optimize it, so we can use it with XGM2 driver:
+%GDK%\bin\xgmtool.exe titan_overdrive_main_theme.vgm titan_overdrive_main_theme_opt.vgm
